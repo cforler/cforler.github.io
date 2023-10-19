@@ -1,0 +1,216 @@
+/*****************************************************************************/
+/*
+/* Beuth logo colors (dark to light):
+/* #00a0aa #39C5BD #BDDEDE
+/*
+/*****************************************************************************/
+
+@font-face {
+    font-family: "font-awesome";
+    src: url(../fonts/fa-solid-900.woff);
+}
+
+body {
+    color: #555555;
+    font-family: Raleway, sans-serif;
+}
+
+h1 {
+    line-height: 1em;
+    color: #004282;
+}
+
+h2{
+    color: #00a0aa;
+    /*font-size: 1.3em;*/
+}
+
+.content a:link{
+    color: #00a0aa;
+}
+.footer a:link{
+    color: #555555;
+}
+
+code {
+    font-family: monospace;
+    /*background-color: #f2f2f2;*/
+    /*padding: 2px;*/
+}
+
+/*****************************************************************************/
+/*
+/* Content Module Styles
+/*
+/*****************************************************************************/
+
+/* The content div is placed as a wrapper around all the docs */
+.content {
+    margin: 0 auto;
+    padding: 0 1em 10px 1em;
+    background-color: white;
+    box-shadow: 0 2px 11px #6d6b6b;
+    line-height: 1.2em;
+}
+
+@media only screen and (min-width: 900px) {
+
+    .content{
+        margin: 0 10%;
+    }
+}
+
+/* Apply the .box class on the immediate parent of any grid element (pure-u-*) to apply some padding. */
+.l-box {
+    padding: 1em;
+}
+
+/*****************************************************************************/
+/*
+/* List Styles
+/*
+/*****************************************************************************/
+
+ul.list { padding-left:20px; list-style:none; }
+ul.list li { padding: 1px 0; }
+
+ul.list li:before {
+    font-family: "font-awesome";
+    color: #7c7c7c;
+    content: '\f105';
+    margin:0 5px 0 -15px;
+}
+
+ul.list ul li:before{
+    font-family: "font-awesome";
+    color: #7c7c7c;
+    content: '\f101';
+    margin:0 5px 0 -15px;
+}
+
+ol.ebene1 {
+  counter-reset:listenpunkt_ebene1;
+  list-style-type:none;
+}
+ol.ebene1 li:before {
+  content: counter(listenpunkt_ebene1) ". ";
+  counter-increment:listenpunkt_ebene1;
+}
+ol.ebene2 {
+  counter-reset:listenpunkt_ebene2;
+  list-style-type:none;
+}
+ol.ebene2 li:before {
+  content: counter(listenpunkt_ebene1)"."counter(listenpunkt_ebene2,decimal) ". ";
+  counter-increment:listenpunkt_ebene2;
+}
+
+/*****************************************************************************/
+/*
+/* Beuth logo
+/*
+/*****************************************************************************/
+
+.beuth-div{
+    width: 100%;
+    background-color: white;
+}
+
+@media only screen and (max-width: 1570px) {
+    .beuth-img{
+        top: 0;
+        right: 10px;
+        margin: 10px 10px 0 20px;
+        min-width: 270px;
+        max-width: 300px;
+        background-color: white;
+    }
+}
+
+@media only screen and (min-width: 1570px) {
+    .beuth-img{
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 300px;
+        height: 70px;
+        margin: 0px 10px 5px 10px;
+    }
+}
+
+
+/*****************************************************************************/
+/*
+/* LaTeX Logo
+/*
+/*****************************************************************************/
+
+/*.latex sub, .latex sup {*/
+/*text-transform: uppercase;*/
+/*}*/
+
+.latex sub {
+    vertical-align: -0.2ex;
+    margin-left: -0.1667em;
+    margin-right: -0.125em;
+    bottom: -0.2em;
+}
+
+.latex, .latex sub {
+    font-size: 1em;
+}
+
+.latex sup {
+    font-size: 0.85em;
+    vertical-align: 0.15em;
+    margin-left: -0.36em;
+    margin-right: -0.1em;
+    top: -0.2em;
+}
+
+/*****************************************************************************/
+/*
+/* Footer Styles
+/*
+/*****************************************************************************/
+
+footer {
+    background-color: #f4f4f4;
+    border-top: 5px solid #333333;
+    margin: 0 auto;
+    padding: 15px 1em 10px 1em;
+}
+
+.float-right {
+    float: right;
+}
+
+@media only screen and (min-width: 900px) {
+
+    .footer{
+        margin: 0 10%;
+        padding: 15px 0 10px 0;
+    }
+}
+
+.legal {
+    line-height: 1.6;
+}
+
+p.align-left{
+    text-align: left;
+}
+
+p.align-right{
+    text-align: right;
+}
+
+p.link-extern:before{
+    display: inline-block;
+    text-decoration: none;
+    padding: 0 5px 0 3px;
+    font-family: "font-awesome";
+    font-size: small;
+    color: #7c7c7c;
+    content: '\f35d';
+}
