@@ -218,29 +218,7 @@
          </p>
           
       
-       
- <!--    
-        <h4>Management von Identitäten mittels PGP</h4>
-        <p>
-          Im Rahmen dieser Bachelorarbeit soll eine Linux-Anwendung
-          erstellt werden, mit deren Hilfe sich Identitäten
-          (E-Mail-Adressen) mit Hilfe von PGP-Schlüsseln verwaltet
-          lassen. Der Fokus liegt bei dieser Anwendung auf der
-          Benutzerfreundlichkeit. Es soll einfach und intuitiv
-          bedienbar sein und kein Expertenwissen von PGP und GPG
-          voraussetzen.
-        </p>
-        <p>
-          Die Anwendung muss in der Lage sein, einen bereits
-          existierenden PGP-Schlüssel zu importieren. Weiterhin soll
-          es in der Lage sein, einen öffentlicher PGP-Schlüssel
-          mit <code>n</code> Identitäten in <code>n</code> öffentliche
-          PGP-Schlüssel mit jeweils einer Identitäten zu
-          zerlegen. Hierbei ist zu beachten, dass alle öffentlichen
-          PGP Schlüssel einen gemeinsamen privaten Schlüssel teilen
-          sollen.
-        </p>
-!-->
+    
 
 
          <h4>Generierung von UML-Diagrammen</h4>
@@ -259,7 +237,23 @@
           target="_blank" rel="noopener noreferrer"> UML </a> ist.
         </p>
         
-        
+        <h4>Privilege Separation Bibliothek</h4>
+        <p>
+    In dieser Arbeit soll eine Bibliothek für Linux programmiert
+    werden, mit der sich
+    <a href="https://en.wikipedia.org/wiki/Privilege_separation" target="_blank" rel="noopener noreferrer">Privilege separation</a> realisieren lässt. Hierbei handelt es sich um ein Prinzip, bei dem ein Programm nur mit den Privilegien arbeitet, welche für die Erledigung der Aufgabe nötig sind.
+        </p>
+        <p>
+    Die Bibliothek soll möglichst einfach das folgende Verhalten
+    unterstützen: Ein Programm wird zunächst mit Root-Rechten
+    gestartet und erstellt zwei Pipes, um eine bidirektionale
+    Kommunikation mit seinem Kindprozess zu ermöglichen, welcher im
+    Anschluss generiert wird. Die <i>Privilegien</i> des Kindprozesses
+    werden mit der <i>Systemcall-Sandbox</i>
+    <a href="https://code.google.com/archive/p/seccompsandbox/wikis/overview.wiki" target="_blank" rel="noopener noreferrer">seccomp</a> eingeschränkt. Der Elternprozess gibt seine Root-Rechte ab und läuft dann als unprivilegierter Prozess weiter. Privilegierte Operationen werden vom Elternprozess an das Kind delegiert.
+        </p>
+
+
         
         <h3>Masterarbeiten</h3>
 
