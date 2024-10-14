@@ -56,6 +56,43 @@
         -->
         <h2>Bachelorarbeiten</h2>
 
+        <h4>Web-Authentication basierend auf Asymmetrischer Kryptographie</h4>
+
+        <p>Bei dieser Arbeit soll eine Webanwendung entwickelt werden, bei der
+          sich der Nutzer nicht mit seinem Passwort, sondern mit digitalen
+          Unterschriften authentifiziert. Der geheime Schlüssel muss hierbei im
+          Webbrowser gespeichert werden. Gegebenenfalls muss hier ein Plugin
+          entwickelt werden. Für eine Proof-of-Concept (PoC)-Implementierung
+          kann der geheime Schlüssel auch base64-kodiert in einem Secure-Cookie
+          gespeichert werden. Der dazugehörige öffentliche Schlüssel kann
+          zusammen mit den restlichen Nutzerdaten in einer Datenbank gespeichert
+          werden.</p>
+
+        <p>Bei der Anmeldung soll der Client zunächst eine 128-Bit
+          Zufallszahl <code>R</code> digital signieren und an den Server
+          senden. Der Server verifiziert die Signatur und generiert ebenfalls
+          eine 128-Bit Zufallszahl <code>S</code>, die er an den Client
+          sendet. Anschließend signiert der Client die Nachricht <code>(S,
+            R)</code> mit seinem geheimen Schlüssel und sendet die Signatur an den
+          Server, welcher diese verifiziert. Bei erfolgreicher Verifizierung ist
+          der Nutzer angemeldet.</p>
+
+        <p>Die Implementierung kann mithilfe der kryptographischen
+          Bibliothek <a href="https://nacl.cr.yp.to/" target="_blank"
+                        rel="noopener noreferrer">NaCl</a> realisiert werden. Hier sind ein
+          paar Implementierungen dieser Bibliothek für die
+          Skript-/Programmiersprachen C, Python und Javascript:</p>
+
+        <ul>
+          <li><a href="https://www.npmjs.com/package/js-nacl" target="_blank" rel="noopener noreferrer">https://www.npmjs.com/package/js-nacl</a></li>
+          <li><a href="https://doc.libsodium.org/" target="_blank" rel="noopener noreferrer">https://doc.libsodium.org/</a></li>
+          <li><a href="https://pypi.org/project/libnacl/" target="_blank" rel="noopener noreferrer">https://pypi.org/project/libnacl/</a></li>
+        </ul>
+
+        
+
+        
+
         <h4>Editor für SAVE.DAT-Dateien</h4>
         <p>Bei SAVE.DAT handelt es sich um ein Dateiformat, welches
           bei den Computerspielen Fallout und Fallout 2 zur Anwendung
