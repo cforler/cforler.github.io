@@ -254,9 +254,6 @@
           Kreativität keine Grenzen gesetzt.
         </p>
         
-        
-        
-
 
         <h4>Generierung von UML-Diagrammen</h4>
         <p>
@@ -289,10 +286,58 @@
           werden mit der <i>Systemcall-Sandbox</i>
           <a href="https://code.google.com/archive/p/seccompsandbox/wikis/overview.wiki" target="_blank" rel="noopener noreferrer">seccomp</a> eingeschränkt. Der Elternprozess gibt seine Root-Rechte ab und läuft dann als unprivilegierter Prozess weiter. Privilegierte Operationen werden vom Elternprozess an das Kind delegiert.
         </p>
-
+        p>
 
         
+        <h4>Dateiverschlüsselung für Cloudstorage</h4>
+        <p>
+          In dieser Abschlussarbeit soll unter Linux eine Lösung
+          entwickelt werden, um Dateien sicher in einem oder über
+          mehrere Cloudspeicher hinweg zu speichern. Dazu sollen die
+          Dateien verschlüsselt werden. Der Chiffretext soll dabei in
+          4-KiB große Blöcke zerlegt werden. Der Dateiname soll den
+          Hashwert des Inhalts darstellen.
+        </p>
+        <p>
+          Informationen darüber, welche Blöcke zu welcher Datei
+          gehören, können beispielsweise in einer Datenbank
+          gespeichert werden. Diese Datenbank kann zusätzliche
+          Metadaten wie Dateinamen und Zugriffsrechte enthalten. Es
+          soll die Möglichkeit geben, anzugeben, in welchem Ordner die
+          Chiffretextblöcke gespeichert werden. Wenn mehrere Ordner
+          angegeben werden, sollen die Chiffretextblöcke zufällig auf
+          diese Ordner verteilt werden.
+        </p><p> Diese Vorgehensweise ermöglicht es, Dateien über
+          mehrere Cloudspeicherlösungen – die als Ordner im
+          Dateisystem eingebunden sind – zu verteilen. Der Schlüssel
+          soll mit einem Passwort gesichert werden, das beispielsweise
+          via XOR mit einem Passworthash kombiniert werden kann.
+        </p>
+        <ul class="list">
+          <li>
+            Die Dateien sollen mithilfe eines modernen und robusten AE-Schemas
+            (Authenticated Encryption) verschlüsselt werden. Geeignete
+            Kandidaten wären beispielsweise
+            <a href="https://github.com/medsec/riv" target="_blank"
+               rel="noopener noreferrer">RIV</a> oder
+            <a href="https://github.com/medsec/poet" target="_blank"
+               rel="noopener noreferrer">POET</a>.
+          </li>
+          <li>
+            Der geheime Schlüssel soll aus dem Login-Passwort mithilfe einer
+            modernen Key-Derivation-Funktion (KDF) abgeleitet werden, wie
+            beispielsweise
+            <a href="https://github.com/Tarsnap/scrypt" target="_blank"
+               rel="noopener noreferrer">scrypt</a> oder
+            <a href="https://github.com/medsec/catena" target="_blank" rel="noopener noreferrer">Catena</a>.
+          </li>
+        </ul>
+
+        
+        
         <h2>Masterarbeiten</h2>
+
+        
 
         <h4>Vergleich des Speicherverbrauchs eigener Implementierungen von Echo-Servern bei parallelen Verbindungen</h4>
         <p>Die Masterarbeit widmet sich einem detaillierten Vergleich des
