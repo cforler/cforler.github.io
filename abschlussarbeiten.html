@@ -42,6 +42,1063 @@
       <div class="l-box">
         <h1>Themen für Abschlussarbeiten</h1>
 
+
+        <h4>Visualisierung von Seitenersetzungsalgorithmen</h4>
+        <p>
+          Wenn ein Betriebssystem mehr virtuellen Speicher verwaltet als
+          physikalischer RAM vorhanden ist, müssen Seiten zwischen RAM und
+          Hintergrundspeicher ausgelagert werden. Welche Seite dabei verdrängt
+          wird, entscheidet der Seitenersetzungsalgorithmus — eine
+          Designentscheidung mit erheblichem Einfluss auf die
+          Systemperformance. Für Studierende ist das Verhalten dieser
+          Algorithmen oft schwer nachzuvollziehen, da es stark vom konkreten
+          Zugriffsmuster abhängt.
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit soll eine interaktive und visuelle
+          Anwendung entwickelt werden, die das Verhalten der folgenden
+          Seitenersetzungsalgorithmen schrittweise animiert und vergleichbar
+          macht:
+        </p>
+        <ul class="list">
+          <li>
+            <strong>FIFO</strong> (First In, First Out) — die älteste Seite
+            im RAM wird verdrängt.
+          </li>
+          <li>
+            <strong>OPT</strong> (Optimaler Algorithmus nach Bélády) — die
+            Seite, die am längsten nicht mehr benötigt wird, wird verdrängt.
+            Dient als theoretische Referenz.
+          </li>
+          <li>
+            <strong>LRU</strong> (Least Recently Used) — die zuletzt am
+            längsten nicht verwendete Seite wird verdrängt.
+          </li>
+          <li>
+            <strong>Clock-Algorithmus</strong> (Second Chance) — eine
+            praxisnahe Annäherung an LRU, die in realen Betriebssystemen
+            eingesetzt wird.
+          </li>
+        </ul>
+        <p>
+          Die Anwendung soll es ermöglichen, eine beliebige Seitenreferenzfolge
+          sowie die Anzahl der verfügbaren Rahmen (Frames) einzugeben.
+          Der Ablauf soll schrittweise animiert werden, inklusive Anzeige
+          des aktuellen RAM-Inhalts, der aufgetretenen Page Faults und einer
+          abschließenden Statistik zum Vergleich der Algorithmen. Optional
+          soll Bélády's Anomalie (das paradoxe Verhalten von FIFO bei mehr
+          Frames) demonstrierbar sein.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen geeignet:</p>
+        <ul class="list">
+          <li>
+            Tanenbaum, Andrew S.:
+            <em>Modern Operating Systems</em>, Kapitel zur Speicherverwaltung
+            — das Standardlehrbuch, das alle vier Algorithmen verständlich
+            und mit Beispielen erklärt.
+          </li>
+          <li>
+            Bélády, L.&nbsp;A.:
+            <a href="https://dl.acm.org/doi/10.1145/363095.363141"
+               target="_blank" rel="noopener noreferrer">
+              A Study of Replacement Algorithms for a Virtual-Storage Computer
+            </a>
+            (IBM Systems Journal, 1966) — das Originalpaper, das den
+            optimalen Algorithmus einführt und Bélády's Anomalie beschreibt.
+          </li>
+        </ul>
+
+
+        <h4>Visualisierung des Erweiterten Euklidischen Algorithmus (XGCD)</h4>
+        <p>
+          Der Erweiterte Euklidische Algorithmus (engl.
+          <em>Extended Greatest Common Divisor</em>, XGCD) ist ein
+          fundamentaler Algorithmus der algorithmischen Zahlentheorie.
+          Er berechnet nicht nur den größten gemeinsamen Teiler zweier
+          ganzer Zahlen, sondern liefert zusätzlich die Koeffizienten
+          der zugehörigen Bézout-Darstellung — und damit insbesondere
+          das modulare Inverse, das für kryptografische Verfahren wie
+          RSA unverzichtbar ist. Für Studierende ist der Algorithmus
+          oft eine Black Box: Die Rekursion und die Rückwärtssubstitution
+          zur Berechnung der Koeffizienten sind schwer zu durchschauen.
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit soll eine interaktive Anwendung
+          entwickelt werden, die den XGCD schrittweise visualisiert.
+          Die Anwendung soll dabei zwei Ansichten bieten:
+        </p>
+        <ul class="list">
+          <li>
+            <strong>Vorwärtsphase:</strong> Tabellarische Darstellung der
+            Divisionsschritte des Euklidischen Algorithmus, bei der der
+            Studierende jeden Schritt einzeln durchklicken kann.
+          </li>
+          <li>
+            <strong>Rückwärtsphase:</strong> Schrittweise Rücksubstitution
+            zur Berechnung der Bézout-Koeffizienten, visuell hervorgehoben
+            welcher Ausdruck jeweils substituiert wird.
+          </li>
+        </ul>
+        <p>
+          Als praktische Anwendung soll die Berechnung des modularen
+          Inversen direkt in die Oberfläche integriert werden, sodass
+          Studierende den Zusammenhang zwischen XGCD und RSA-Schlüsselerzeugung
+          unmittelbar nachvollziehen können.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen geeignet:</p>
+        <ul class="list">
+          <li>
+            Cormen, Leiserson, Rivest, Stein:
+            <em>Introduction to Algorithms</em>, Kapitel zur Zahlentheorie
+            — beschreibt den XGCD präzise und mit Pseudocode, der direkt
+            als Implementierungsgrundlage dienen kann.
+          </li>
+          <li>
+            Khan Academy:
+            <a href="https://www.khanacademy.org/computing/computer-science/cryptography/modarithmetic/a/the-euclidean-algorithm"
+               target="_blank" rel="noopener noreferrer">
+              The Euclidean Algorithm
+            </a>
+            — ein sehr zugänglicher Einstieg mit interaktiven Beispielen,
+            der gut als didaktische Inspiration für die eigene Anwendung
+            dient.
+          </li>
+        </ul>
+
+
+        <h4>Shamir's Secret Sharing — Interaktives Lehrtool</h4>
+        <p>
+          Wie kann ein Geheimnis — etwa ein kryptografischer Schlüssel —
+          so auf mehrere Personen aufgeteilt werden, dass es nur
+          rekonstruiert werden kann, wenn mindestens <em>k</em> von
+          <em>n</em> Beteiligten kooperieren, aber kein Einzelner oder
+          eine Gruppe von weniger als <em>k</em> Personen irgendetwas
+          über das Geheimnis erfährt? Diese Frage beantwortet
+          <strong>Shamir's Secret Sharing</strong> (1979), ein elegantes
+          Verfahren das auf der Interpolation von Polynomen über endlichen
+          Körpern basiert.
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit soll ein interaktives Lehrtool
+          entwickelt werden, das das Verfahren für kleine Zahlen vollständig
+          und nachvollziehbar visualisiert. Die Anwendung soll dabei
+          folgende Schritte darstellen:
+        </p>
+        <ul class="list">
+          <li>
+            <strong>Share-Erzeugung:</strong> Der Nutzer gibt ein Geheimnis,
+            die Schwelle <em>k</em> und die Gesamtzahl der Shares <em>n</em>
+            ein. Die Anwendung zeigt das zufällig gewählte Polynom grafisch
+            als Kurve und die einzelnen Shares als Punkte darauf.
+          </li>
+          <li>
+            <strong>Rekonstruktion:</strong> Der Nutzer wählt <em>k</em>
+            Shares aus und die Anwendung zeigt die Lagrange-Interpolation
+            schrittweise — und damit die Rekonstruktion des Geheimnisses.
+          </li>
+          <li>
+            <strong>Informationstheoretische Sicherheit:</strong> Die
+            Anwendung soll visuell demonstrieren, dass <em>k</em>-1 Shares
+            keinerlei Information über das Geheimnis liefern — z.&nbsp;B.
+            indem gezeigt wird, dass unendlich viele Polynome durch
+            <em>k</em>-1 Punkte verlaufen können.
+          </li>
+        </ul>
+        <p>
+          Für die Visualisierung soll eine Webanwendung entwickelt werden.
+          Die Berechnungen sollen für kleine Primzahlen als Modulus
+          vollständig nachvollziehbar dargestellt werden.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen geeignet:</p>
+        <ul class="list">
+          <li>
+            Shamir, Adi:
+            <a href="https://dl.acm.org/doi/10.1145/359168.359176"
+               target="_blank" rel="noopener noreferrer">
+              How to Share a Secret
+            </a>
+            (Communications of the ACM, 1979) — das Originalpaper,
+            das das Verfahren auf zwei Seiten präzise und verständlich
+            einführt. Pflichtlektüre.
+          </li>
+          <li>
+            Christof Paar und Jan Pelzl:
+            <a href="https://www.crypto-textbook.com/"
+               target="_blank" rel="noopener noreferrer">
+              Understanding Cryptography
+            </a>
+          </li>
+        </ul>
+
+
+        <h4>Square-and-Multiply — Visualisierung der schnellen Modularen Exponentiation</h4>
+        <p>
+          Kryptografische Verfahren wie RSA oder Diffie-Hellman erfordern
+          die Berechnung großer Potenzen modulo einer Zahl —
+          z.&nbsp;B. <code>3^1000 mod 17</code>. Eine naive Implementierung,
+          die tausend Multiplikationen nacheinander ausführt, ist dabei
+          völlig unpraktikabel. Der
+          <strong>Square-and-Multiply-Algorithmus</strong> löst dieses
+          Problem, indem er den Exponenten in seiner Binärdarstellung
+          verarbeitet und die Anzahl der nötigen Multiplikationen auf
+          <em>O(log n)</em> reduziert. Für Studierende ist dieser
+          Algorithmus oft schwer zu durchschauen, da die Verbindung
+          zwischen der Binärdarstellung des Exponenten und den
+          ausgeführten Operationen nicht intuitiv ist.
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit soll eine interaktive Anwendung
+          entwickelt werden, die den Square-and-Multiply-Algorithmus
+          schrittweise visualisiert. Die Anwendung soll:
+        </p>
+        <ul class="list">
+          <li>
+            Basis, Exponent und Modulus als Eingabe entgegennehmen.
+          </li>
+          <li>
+            Den Exponenten in seiner Binärdarstellung anzeigen und
+            hervorheben, welches Bit im aktuellen Schritt verarbeitet wird.
+          </li>
+          <li>
+            Für jeden Schritt anzeigen, ob eine reine Quadrierung
+            oder eine Quadrierung gefolgt von einer Multiplikation
+            ausgeführt wird — inklusive der Zwischenergebnisse.
+          </li>
+          <li>
+            Die naive Methode und Square-and-Multiply nebeneinander
+            ausführen und die Anzahl der benötigten Operationen vergleichen,
+            um den Effizienzgewinn zu verdeutlichen.
+          </li>
+        </ul>
+        <p>
+          Als Erweiterung soll der Zusammenhang mit RSA-Ver- und
+          Entschlüsselung für kleine Schlüssel demonstriert werden.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen geeignet:</p>
+        <ul class="list">
+          <li>
+            Christof Paar und Jan Pelzl:
+            <a href="https://www.crypto-textbook.com/"
+               target="_blank" rel="noopener noreferrer">
+              Understanding Cryptography
+            </a>
+            — behandelt Square-and-Multiply im Kontext von RSA und
+            Diffie-Hellman mit anschaulichen Beispielen.
+          </li>
+          <li>
+            Cormen, Leiserson, Rivest, Stein:
+            <em>Introduction to Algorithms</em>, Kapitel zur modularen
+            Arithmetik — liefert die algorithmische Grundlage und
+            Komplexitätsanalyse.
+          </li>
+        </ul>
+
+
+        <h4>Interaktives Lehrtool: Hashtabellen und Kollisionsstrategien</h4>
+        <p>
+          Hashtabellen sind eine der wichtigsten und am häufigsten
+          verwendeten Datenstrukturen in der Informatik. Sie ermöglichen
+          das Einfügen, Suchen und Löschen von Elementen in amortisiert
+          konstanter Zeit — vorausgesetzt, Kollisionen werden geschickt
+          behandelt. Für Studierende ist das Verhalten einer Hashtabelle
+          bei steigender Auslastung und unterschiedlichen
+          Kollisionsstrategien oft schwer zu durchschauen, da es stark
+          vom konkreten Hashwert der eingefügten Schlüssel abhängt.
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit soll eine interaktive Anwendung
+          entwickelt werden, die die folgenden Kollisionsstrategien
+          schrittweise visualisiert und vergleichbar macht:
+        </p>
+        <ul class="list">
+          <li>
+            <strong>Separate Chaining</strong> — Kollisionen werden durch
+            verkettete Listen in den Buckets aufgelöst.
+          </li>
+          <li>
+            <strong>Linear Probing</strong> — bei einer Kollision wird
+            der nächste freie Slot sequenziell gesucht.
+          </li>
+          <li>
+            <strong>Quadratic Probing</strong> — die Schrittweite bei
+            der Suche nach einem freien Slot wächst quadratisch.
+          </li>
+        </ul>
+        <p>
+          Die Anwendung soll beim Einfügen jedes Elements visuell zeigen,
+          wie die Hashfunktion den Index berechnet, wie eine Kollision
+          erkannt wird und wie die jeweilige Strategie einen alternativen
+          Platz findet. Zusätzlich soll die aktuelle Auslastung (Load
+          Factor) angezeigt und das Phänomen des
+          <em>Primary Clustering</em> beim Linear Probing visuell
+          hervorgehoben werden. Ein direkter Vergleich der durchschnittlichen
+          Suchlänge zwischen den Strategien bei gleicher Eingabe und
+          Auslastung soll die didaktische Aussagekraft erhöhen.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen geeignet:</p>
+        <ul class="list">
+          <li>
+            Cormen, Leiserson, Rivest, Stein:
+            <em>Introduction to Algorithms</em>, Kapitel zu Hashtabellen
+            — die maßgebliche algorithmische Referenz, die alle vier
+            Strategien mit Pseudocode und Komplexitätsanalyse beschreibt.
+          </li>
+          <li>
+            Knuth, Donald E.:
+            <em>The Art of Computer Programming, Vol. 3: Sorting and
+              Searching</em>, Abschnitt zu Hashing — der klassische
+            Referenztext, der die mathematischen Eigenschaften der
+            verschiedenen Sondierungsstrategien detailliert analysiert.
+          </li>
+        </ul>
+
+        
+        <h4>Linux Capabilities: Analyse und Bewertung von Prozessrechten</h4>
+        <p>
+          Traditionell kennt Linux nur zwei Klassen von Prozessen: privilegierte
+          Prozesse, die als Root laufen und keinerlei Einschränkungen unterliegen,
+          und unprivilegierte Prozesse, denen fast alle sicherheitsrelevanten
+          Operationen verwehrt sind. Dieses Alles-oder-nichts-Prinzip ist ein
+          bekanntes Sicherheitsproblem: Wird ein Prozess mit Root-Rechten
+          kompromittiert, hat der Angreifer sofort vollständige Kontrolle über
+          das System.
+        </p>
+        <p>
+          Seit Linux 2.2 gibt es mit den
+          <a href="https://man7.org/linux/man-pages/man7/capabilities.7.html"
+             target="_blank" rel="noopener noreferrer">Linux Capabilities</a>
+          einen Mechanismus, der die Root-Privilegien in ca. 40 einzelne,
+          unabhängig voneinander vergebbare Rechte aufteilt — zum Beispiel
+          <code>CAP_NET_BIND_SERVICE</code> (Binden an privilegierte Ports),
+          <code>CAP_SYS_TIME</code> (Systemzeit ändern) oder
+          <code>CAP_NET_RAW</code> (Zugriff auf Raw Sockets). Ein Prozess
+          erhält damit nur genau die Rechte, die er tatsächlich benötigt
+          (<em>Principle of Least Privilege</em>).
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit soll zunächst das Capability-Modell
+          von Linux (Permitted, Effective, Inheritable, Ambient und Bounding
+          Sets) erarbeitet und verständlich dokumentiert werden. Als praktischer
+          Schwerpunkt soll anschließend ein Kommandozeilenwerkzeug in C oder
+          Python entwickelt werden, das für laufende Prozesse und ausführbare
+          Dateien auf dem System die gesetzten Capabilities ausliest, anzeigt
+          und bewertet. Das Tool soll insbesondere Prozesse und Binärdateien
+          identifizieren, die mehr Capabilities besitzen als für ihre Funktion
+          notwendig wäre — eine Art <em>Capability-Scanner</em> für
+          Linux-Systeme.
+        </p>
+        <p>
+          Abschließend soll für eine Auswahl bekannter Systemdienste
+          (z.&nbsp;B. <code>ping</code>, <code>nginx</code>, <code>sshd</code>)
+          ein minimales Capability-Set ermittelt und dokumentiert werden.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen als
+          Pflichtlektüre vorgesehen:</p>
+        <ul class="list">
+          <li>
+            Linux Man Page:
+            <a href="https://man7.org/linux/man-pages/man7/capabilities.7.html"
+               target="_blank" rel="noopener noreferrer">
+              capabilities(7) — overview of Linux capabilities
+            </a>
+          </li>
+          <li>
+            Arch Linux Wiki:
+            <a href="https://wiki.archlinux.org/title/Capabilities"
+               target="_blank" rel="noopener noreferrer">
+              Capabilities
+            </a>
+          </li>
+        </ul>
+
+
+        <h4>Linux Namespaces: Einen einfachen Container von Hand bauen</h4>
+        <p>
+          Container-Technologien wie Docker sind aus der modernen
+          Softwareentwicklung nicht mehr wegzudenken. Was Docker intern
+          jedoch zusammenhält, ist kein Magie, sondern ein Satz von
+          Linux-Kernelfunktionen namens
+          <a href="https://man7.org/linux/man-pages/man7/namespaces.7.html"
+             target="_blank" rel="noopener noreferrer">Namespaces</a>.
+          Namespaces isolieren verschiedene Sichten auf Systemressourcen:
+          Ein Prozess in einem eigenen PID-Namespace sieht nur seine
+          eigenen Prozesse, in einem eigenen Network-Namespace nur seine
+          eigenen Netzwerkinterfaces, und so weiter. Linux unterstützt
+          derzeit acht Namespace-Typen, darunter PID, Network, Mount,
+          UTS, IPC und User.
+        </p>
+        <p>
+          Ziel dieser Bachelorarbeit ist es, die Funktionsweise von Linux
+          Namespaces von Grund auf zu verstehen und praktisch anzuwenden, und
+          zwar indem Schritt für Schritt ein einfacher Container
+          <strong>ohne Docker</strong> gebaut wird, nur mit den
+          Linux-Syscalls <code>clone()</code>, <code>unshare()</code>
+          und <code>chroot()</code> sowie einem minimalen Root-Dateisystem.
+          Der fertige Mini-Container soll dabei folgende Isolationseigenschaften
+          besitzen:
+        </p>
+        <ul class="list">
+          <li>Isolierter Prozessbaum (PID-Namespace)</li>
+          <li>Eigenes Netzwerkinterface mit NAT-Anbindung (Network-Namespace)</li>
+          <li>Isoliertes Dateisystem (Mount-Namespace, <code>chroot</code>)</li>
+          <li>Eigener Hostname (UTS-Namespace)</li>
+          <li>Unprivilegierter Betrieb durch User-Namespaces</li>
+        </ul>
+        <p>
+          Der Fokus liegt nicht auf Vollständigkeit, sondern auf dem
+          <em>Verständnis</em>: Für jeden Namespace-Typ soll erklärt werden,
+          was er isoliert, wie er im Kernel umgesetzt ist, und wie Docker
+          ihn intern verwendet. Die Implementierung kann in C oder Python
+          erfolgen.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen hilfreich:</p>
+        <ul class="list">
+          <li>
+            Linux Man Page:
+            <a href="https://man7.org/linux/man-pages/man7/namespaces.7.html"
+               target="_blank" rel="noopener noreferrer">
+              namespaces(7) — overview of Linux namespaces
+            </a>
+            — die vollständige Referenz aller Namespace-Typen mit
+            Erklärung der relevanten Syscalls.
+          </li>
+          <li>
+            Liz Rice:
+            <a href="https://github.com/lizrice/containers-from-scratch"
+               target="_blank" rel="noopener noreferrer">
+              Containers From Scratch
+            </a>
+            — ein bekannter Vortrag und begleitender Go-Quellcode, der
+            zeigt wie ein einfacher Container in wenigen Dutzend Zeilen
+            Code gebaut werden kann. Hervorragend als Inspiration und
+            Ausgangspunkt geeignet.
+          </li>
+        </ul>
+
+
+        <h4>Automatisierte Härtung eines Linux-Systems nach CIS Benchmark</h4>
+        <p>
+          Ein frisch installiertes Linux-System ist in der Regel nicht für
+          den produktiven Einsatz gehärtet: Unnötige Dienste laufen,
+          Passwortrichtlinien sind zu lax, Logging ist unvollständig und
+          Dateiberechtigungen sind zu permissiv. Der
+          <a href="https://www.cisecurity.org/benchmark/ubuntu_linux"
+             target="_blank" rel="noopener noreferrer">CIS Benchmark
+            für Ubuntu Linux</a>
+          ist ein kostenlos verfügbarer, branchenübergreifend anerkannter
+          Leitfaden des <em>Center for Internet Security</em>, der mehrere
+          hundert konkrete Härtungsmaßnahmen definiert — von der
+          Dateisystemkonfiguration über SSH-Härtung bis hin zu
+          Kernel-Parametern und Audit-Logging.
+        </p>
+        <p>
+          Ziel dieser Bachelorarbeit ist die Entwicklung eines
+          <a href="https://www.ansible.com/" target="_blank"
+             rel="noopener noreferrer">Ansible</a>-Playbooks,
+          das ein Debian-System automatisiert und reproduzierbar nach
+          CIS Benchmark Level&nbsp;1 härtet. Ansible ist ein
+          agentenloses Automatisierungswerkzeug, das Konfigurationen
+          in lesbarem YAML beschreibt und ohne vorherige
+          Programmiererfahrung gut erlernbar ist. Das Playbook sollte
+          die folgenden Bereiche abdecken:
+        </p>
+        <ul class="list">
+          <li>Dateisystemhärtung (Deaktivierung unnötiger Dateisysteme,
+            restriktive Mount-Optionen)</li>
+          <li>Minimierung laufender Dienste</li>
+          <li>SSH-Härtung (Root-Login deaktivieren, starke Algorithmen
+            erzwingen)</li>
+          <li>Passwort- und Kontosperrrichtlinien</li>
+          <li>Kernel-Parameter (<code>sysctl</code>-Härtung)</li>
+          <li>Audit-Logging mit <code>auditd</code></li>
+        </ul>
+        <p>
+          Für jeden umgesetzten Bereich soll dokumentiert werden,
+          <em>warum</em> die jeweilige Maßnahme sicherheitsrelevant ist —
+          die Arbeit soll also nicht nur ein fertiges Skript liefern,
+          sondern das Sicherheitswissen dahinter vermitteln. Abschließend
+          soll der Vorher-Nachher-Zustand des Systems mithilfe eines
+          Audit-Tools (z.&nbsp;B.
+          <a href="https://github.com/ansible-lockdown/UBUNTU22-CIS-Audit"
+             target="_blank" rel="noopener noreferrer">CIS-CAT</a>
+          oder
+          <a href="https://github.com/CISOfy/lynis" target="_blank"
+             rel="noopener noreferrer">Lynis</a>)
+          gemessen und verglichen werden.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen geeignet:</p>
+        <ul class="list">
+          <li>
+            Center for Internet Security:
+            <a href="https://www.cisecurity.org/benchmark/ubuntu_linux"
+               target="_blank" rel="noopener noreferrer">
+              CIS Benchmark für Ubuntu Linux
+            </a>
+          </li>
+          <li>
+            Ansible Dokumentation:
+            <a href="https://docs.ansible.com/ansible/latest/getting_started/index.html"
+               target="_blank" rel="noopener noreferrer">
+              Getting Started with Ansible
+            </a>
+          </li>
+        </ul>
+        
+        
+        <h4>Raspberry Pi als Netzwerkmonitor: Aufzeichnung und Analyse von Netzwerkverbindungen</h4>
+        <p>
+          Moderne Betriebssysteme und Anwendungen kommunizieren im
+          Hintergrund kontinuierlich mit externen Servern, um
+          beispielsweise Updates, Lizenzprüfungen oder Telemetrie durchzuführen.
+          Welche Server dabei kontaktiert werden, ist
+          für den Endnutzer in der Regel nicht transparent. Ziel
+          dieser Bachelorarbeit ist die Entwicklung einer
+          kostengünstigen, hardwarenahen Lösung, die diesen
+          Datenverkehr sichtbar macht, ohne dass Software auf den
+          überwachten Geräten installiert werden muss.
+        </p>
+        <p>
+          Konkret soll ein
+          <a href="https://www.raspberrypi.org/" target="_blank"
+             rel="noopener noreferrer">Raspberry Pi</a>
+          als transparente <strong>Netzwerkbrücke</strong> zwischen dem lokalen
+          Netzwerk und dem Router betrieben werden. In dieser Position kann er
+          den gesamten Datenverkehr passiv mitlesen, ohne dass die übrigen
+          Geräte im Netzwerk konfiguriert werden müssen. Für jeden erfassten
+          Verbindungsversuch sollen mindestens folgende Daten in einer lokalen
+          <a href="https://www.sqlite.org/" target="_blank"
+             rel="noopener noreferrer">SQLite</a>- oder
+          <a href="https://www.postgresql.org/" target="_blank"
+             rel="noopener noreferrer">PostgreSQL</a>-Datenbank gespeichert
+          werden:
+        </p>
+        <ul class="list">
+          <li>IP-Adresse und Hostname des sendenden Geräts</li>
+          <li>IP-Adresse und — soweit auflösbar — Hostname des Zielservers</li>
+          <li>verwendetes Netzwerkprotokoll (TCP/UDP) und Zielport</li>
+          <li>Zeitstempel der Verbindung</li>
+        </ul>
+        <p>
+          Der inhaltliche Schwerpunkt der Arbeit liegt auf der
+          <strong>Auswertung der erfassten Daten</strong>. Das zu entwickelnde
+          Webportal soll über eine einfache Übersichtsseite hinausgehen und
+          unter anderem folgende Fragen beantwortbar machen:
+        </p>
+        <ul class="list">
+          <li>
+            Welche Geräte im Netzwerk senden die meisten ausgehenden
+            Verbindungen?
+          </li>
+          <li>
+            Welche Zielserver werden am häufigsten kontaktiert, und lassen
+            sich diese bekannten Telemetrie-Endpunkten zuordnen
+            (z.&nbsp;B. Microsoft, Apple, Google, Adobe)?
+          </li>
+          <li>
+            Gibt es Verbindungen zu unbekannten oder auffälligen Zielen?
+          </li>
+        </ul>
+        <p>
+          Hierfür soll eine kleine, lokal gepflegte Referenzdatenbank bekannter
+          Telemetrie-Endpunkte angelegt werden, gegen die die erfassten
+          Verbindungen abgeglichen werden. Als Datenerfassungsbibliothek
+          empfiehlt sich
+          <a href="https://scapy.net/" target="_blank"
+             rel="noopener noreferrer">Scapy</a> oder alternativ
+          <a href="https://www.tcpdump.org/" target="_blank"
+             rel="noopener noreferrer">tcpdump</a> in Kombination mit einem
+          Python-Auswerteskript. Das Webportal kann mit einem leichtgewichtigen
+          Framework wie
+          <a href="https://flask.palletsprojects.com/" target="_blank"
+             rel="noopener noreferrer">Flask</a> realisiert werden.
+        </p>
+        <p>
+          Als optionale Erweiterung kann der Raspberry Pi zusätzlich als
+          <strong>WLAN-Access-Point</strong> betrieben werden, sodass sich
+          mobile Geräte direkt mit ihm verbinden können, ohne die
+          Netzwerkinfrastruktur zu verändern.
+        </p>
+        <p>
+          Die Arbeit verbindet Themen aus der Netzwerktechnik (Bridging,
+          Paketanalyse, DNS), der Systemprogrammierung (Linux, Python) und der
+          Webentwicklung und eignet sich daher sowohl für den Studiengang
+          Technische Informatik als auch IT-Sicherheit.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen als
+          Pflichtlektüre vorgesehen:</p>
+        <ul class="list">
+          <li>
+            Die offizielle Dokumentation zur Einrichtung einer Netzwerkbrücke
+            unter Linux:
+            <a href="https://wiki.archlinux.org/title/Network_bridge"
+               target="_blank" rel="noopener noreferrer">
+              Arch Linux Wiki — Network Bridge
+            </a>
+          </li>
+          <li>
+            Scapy-Dokumentation:
+            <a href="https://scapy.readthedocs.io/en/latest/"
+               target="_blank" rel="noopener noreferrer">
+              Scapy — Packet crafting for Python
+            </a>
+          </li>
+        </ul>
+        
+        <h4>Kerberoasting und AS-REP Roasting: Angriffe auf Active Directory</h4>
+        <p>
+          Active Directory (AD) ist der de-facto-Standard für die
+          Benutzerverwaltung und Authentifizierung in Unternehmensnetzen.
+          Das zugrunde liegende Authentifizierungsprotokoll
+          <strong>Kerberos</strong> gilt als sicher. Dennoch gibt es eine
+          Klasse von Angriffen, die ohne besondere Privilegien ausgeführt
+          werden kann und im schlimmsten Fall zur vollständigen Kompromittierung
+          einer Windows-Domäne führt.
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit sollen zwei verwandte Angriffe
+          analysiert, in einer lokalen Laborumgebung demonstriert und
+          Gegenmaßnahmen erarbeitet werden:
+        </p>
+        <ul class="list">
+          <li>
+            <strong>Kerberoasting</strong> (MITRE ATT&amp;CK
+            <a href="https://attack.mitre.org/techniques/T1558/003/"
+               target="_blank" rel="noopener noreferrer">T1558.003</a>):
+            Jeder authentifizierte Domänenbenutzer kann für Dienste, die mit
+            einem sogenannten <em>Service Principal Name</em> (SPN) registriert
+            sind, ein Kerberos-Ticket anfordern. Dieses Ticket ist mit dem
+            Passwort-Hash des zugehörigen Service-Accounts verschlüsselt.
+            Ein Angreifer kann das Ticket offline — also ohne weiteren
+            Netzwerkkontakt — mit Tools wie
+            <a href="https://hashcat.net/hashcat/" target="_blank"
+               rel="noopener noreferrer">Hashcat</a> einem Wörterbuchangriff
+            oder Brute-Force unterziehen, um das Klartextpasswort zu ermitteln.
+          </li>
+          <li>
+            <strong>AS-REP Roasting</strong> (MITRE ATT&amp;CK
+            <a href="https://attack.mitre.org/techniques/T1558/004/"
+               target="_blank" rel="noopener noreferrer">T1558.004</a>):
+            Eine verwandte Technik, die Konten angreift, bei denen die
+            Kerberos-Vorauthentifizierung deaktiviert ist. In diesem Fall
+            kann ein Angreifer ohne gültige Anmeldedaten ein verschlüsseltes
+            Ticket vom Key Distribution Center (KDC) anfordern und dieses
+            ebenfalls offline cracken.
+          </li>
+        </ul>
+        <p>
+          Für die praktischen Versuche soll eine vollständig lokale
+          virtuelle Laborumgebung aufgebaut werden. Als Grundlage empfiehlt
+          sich das Open-Source-Projekt
+          <a href="https://github.com/Orange-Cyberdefense/GOAD"
+             target="_blank" rel="noopener noreferrer">GOAD
+            (Game of Active Directory)</a>, das eine absichtlich verwundbare
+          Active-Directory-Umgebung per Skript automatisch aufsetzt. Die
+          Umgebung läuft vollständig lokal auf zwei virtuellen Maschinen
+          (ein Windows-Server als Domain Controller, eine Angreifer-Maschine
+          mit Kali Linux) und erfordert keine externe Infrastruktur. Für den
+          Windows Server stellt Microsoft kostenlose
+          <a href="https://www.microsoft.com/de-de/evalcenter/evaluate-windows-server-2022"
+             target="_blank" rel="noopener noreferrer">Evaluation-Versionen
+            (180 Tage)</a> bereit.
+        </p>
+        <p>
+          Als Angriffswerkzeuge sollen
+          <a href="https://github.com/fortra/impacket" target="_blank"
+             rel="noopener noreferrer">Impacket</a>
+          (Python-Bibliothek für Netzwerkprotokolle) sowie
+          <a href="https://github.com/GhostPack/Rubeus" target="_blank"
+             rel="noopener noreferrer">Rubeus</a>
+          eingesetzt und verglichen werden. Abschließend sollen konkrete
+          Gegenmaßnahmen erarbeitet werden, darunter die Verwendung langer
+          und zufälliger Service-Account-Passwörter, die Einschränkung
+          von SPNs sowie der Einsatz von
+          <a href="https://docs.microsoft.com/de-de/windows-server/security/group-managed-service-accounts/group-managed-service-accounts-overview"
+             target="_blank" rel="noopener noreferrer">Group Managed Service
+            Accounts (gMSA)</a>.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen als
+          Pflichtlektüre vorgesehen:</p>
+        <ul class="list">
+          <li>
+            Sean Metcalf (ADSecurity):
+            <a href="https://adsecurity.org/?p=2293" target="_blank"
+               rel="noopener noreferrer">
+              Cracking Kerberos TGS Tickets Using Kerberoast.
+            </a>
+            Der der klassische Referenzartikel, der das Angriffsprinzip
+            detailliert und praxisnah erklärt.
+          </li>
+          <li>
+            MITRE ATT&amp;CK:
+            <a href="https://attack.mitre.org/techniques/T1558/"
+               target="_blank" rel="noopener noreferrer">
+              Steal or Forge Kerberos Tickets (T1558).
+            </a>
+            Die offizielle Einordnung beider Angriffe im ATT&amp;CK-Framework
+            inklusive realer Angreifergruppen, Erkennungshinweisen und
+            Gegenmaßnahmen.
+          </li>
+        </ul>
+        
+
+        <h4>BEAST und CRIME: Angriffe auf TLS durch CBC und Kompression</h4>
+        <p>
+          Das TLS-Protokoll soll die Vertraulichkeit und Integrität von Daten
+          bei der Übertragung im Internet gewährleisten. Trotzdem wurden in
+          älteren Versionen des Protokolls mehrere schwerwiegende Schwachstellen
+          entdeckt, die zeigen, dass ein korrekt spezifiziertes Protokoll durch
+          fehlerhafte Designentscheidungen angreifbar werden kann.
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit sollen zwei verwandte Angriffe auf TLS
+          analysiert, nachvollzogen und demonstriert werden:
+        </p>
+        <ul class="list">
+          <li>
+            <strong>BEAST</strong> (<em>Browser Exploit Against SSL/TLS</em>,
+            CVE-2011-3389): Der Angriff wurde 2011 von Thai Duong und Juliano Rizzo
+            demonstriert und nutzt eine Schwäche im CBC-Modus von TLS&nbsp;1.0 aus.
+            Da der Initialisierungsvektor (IV) für jeden TLS-Record vorhersagbar
+            war, lässt sich ein Chosen-Plaintext-Angriff durchführen, mit dem ein
+            Angreifer verschlüsselte Session-Cookies byteweise rekonstruieren kann.
+          </li>
+          <li>
+            <strong>CRIME</strong> (<em>Compression Ratio Info-leak Made Easy</em>,
+            CVE-2012-4929): Ebenfalls von Duong und Rizzo entwickelt und 2012
+            vorgestellt. Der Angriff nutzt aus, dass TLS-Kompression die
+            Länge des verschlüsselten Datenstroms in Abhängigkeit vom Klartextinhalt
+            verändert. Über diesen Seitenkanal lassen sich geheime Werte wie
+            Session-Tokens Zeichen für Zeichen erraten.
+          </li>
+        </ul>
+        <p>
+          Für beide Angriffe soll zunächst die technische Funktionsweise
+          verständlich erklärt und anschließend eine Demo-Implementierung in
+          Python erstellt werden, die den jeweiligen Angriff in einer
+          kontrollierten lokalen Testumgebung veranschaulicht. Abschließend
+          soll erläutert werden, warum beide Angriffe in TLS&nbsp;1.3 nicht mehr
+          möglich sind: CBC-Cipher-Suites und TLS-Kompression wurden in
+          TLS&nbsp;1.3 vollständig entfernt.
+        </p>
+        <p>Zur Einarbeitung in die Thematik eignen sich die beiden folgende Quellen:</p>
+        <ul class="list">
+          <li>
+            Duong und Rizzo:
+            <a href="https://www.nccgroup.com/media/1nqor5lm/_ssl_attacks_survey.pdf"
+               target="_blank" rel="noopener noreferrer">
+              Attacks on SSL — A Comprehensive Study of BEAST, CRIME, TIME and BREACH
+            </a>. Ein übersichtliches Survey, der beide Angriffe verständlich
+            nebeneinanderstellt.
+          </li>
+          <li>
+            GitHub PoC-Implementierung von BEAST:
+            <a href="https://github.com/mpgn/BEAST-PoC"
+               target="_blank" rel="noopener noreferrer">
+              mpgn/BEAST-PoC
+            </a> Ein gut kommentierter Proof-of-Concept als Ausgangspunkt für die
+            eigene Demo-Implementierung.
+          </li>
+        </ul>
+
+
+        <h4>Lucky 13: Timing-Seitenkanalangriff auf TLS-CBC-Padding</h4>
+        <p>
+          Padding-Oracle-Angriffe auf TLS sind ein eindrucksvolles Beispiel
+          dafür, wie selbst gut gemeinte Gegenmaßnahmen neue Angriffsflächen
+          schaffen können. Im Mittelpunkt dieser Bachelorarbeit steht der
+          <strong>Lucky&nbsp;13</strong>-Angriff (CVE-2013-0169), der 2013 von
+          Nadhem J.&nbsp;AlFardan und Kenneth G.&nbsp;Paterson veröffentlicht wurde.
+        </p>
+        <p>
+          Der Angriff ist eine Weiterentwicklung des klassischen
+          Padding-Oracle-Angriffs von Vaudenay (2002): Auch wenn eine
+          TLS-Implementierung bei falschem Padding keine abweichende
+          Fehlermeldung mehr zurückgibt, so unterscheidet sich doch die
+          <em>Zeit</em>, die die Verarbeitung benötigt — je nachdem, wie viele
+          Bytes als gültiges Padding interpretiert werden. Aus diesem
+          Timing-Unterschied lässt sich Schritt für Schritt der Klartext
+          rekonstruieren. Der Name „Lucky&nbsp;13" spielt auf die 13&nbsp;Byte
+          großen TLS-Header-Daten an, die das Angriffsfenster aufspannen.
+        </p>
+        <p>
+          In dieser Arbeit soll zunächst die Funktionsweise von CBC-Padding
+          in TLS sowie der klassische Padding-Oracle-Angriff erklärt werden.
+          Anschließend wird der Lucky-13-Angriff im Detail nachvollzogen.
+          Als praktischer Teil soll mithilfe des Frameworks
+          <a href="https://github.com/tls-attacker/TLS-Padding-Oracles"
+             target="_blank" rel="noopener noreferrer">TLS-Padding-Oracles</a>
+          das Angriffsprinzip in einer lokalen Testumgebung demonstriert werden.
+          Abschließend soll erklärt werden, warum TLS&nbsp;1.3 diesen Angriff
+          strukturell ausschließt, indem es ausschließlich AEAD-Verfahren
+          (z.&nbsp;B. AES-GCM) verwendet, die Verschlüsselung und
+          Authentifizierung untrennbar verbinden.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sollten die folgende Veröffentlichungen
+          gelesen werden:</p>
+        <ul class="list">
+          <li>
+            AlFardan und Paterson:
+            <a href="https://www.ieee-security.org/TC/SP2013/papers/4977a526.pdf"
+               target="_blank" rel="noopener noreferrer">
+              Lucky Thirteen: Breaking the TLS and DTLS Record Protocols
+            </a>
+            (IEEE S&amp;P 2013). Das Originalpaper, das den Angriff einführt
+            und gut strukturiert erklärt.
+          </li>
+          <li>
+            Sjoerd Langkemper:
+            <a href="https://www.sjoerdlangkemper.nl/2022/03/20/padding-oracle-attacks-lucky13/"
+               target="_blank" rel="noopener noreferrer">
+              Lucky 13 and other padding oracle attacks on CBC ciphers
+            </a>
+            — ein verständlicher technischer Blogbeitrag, der die gesamte
+            Entwicklung von Vaudenay (1998) bis zu den neuesten Varianten
+            chronologisch aufarbeitet.
+          </li>
+        </ul>
+
+
+        <h4>Heartbleed: Implementierungsfehler in OpenSSL und seine Folgen</h4>
+        <p>
+          Nicht immer liegt ein Sicherheitsproblem im Design eines Protokolls —
+          manchmal steckt es in einer einzigen vergessenen Überprüfung im
+          Quellcode. <strong>Heartbleed</strong> (CVE-2014-0160) ist eines der
+          bekanntesten Beispiele dafür und gilt als einer der folgenreichsten
+          Sicherheitsfehler der Internetgeschichte.
+        </p>
+        <p>
+          Der Fehler steckte in der OpenSSL-Implementierung der
+          TLS-Heartbeat-Erweiterung (RFC&nbsp;6520): Ein Client kann dem Server
+          eine Heartbeat-Anfrage mit einem Nutzlast-Wert und einer
+          selbst angegebenen Länge schicken. OpenSSL vertraute der angegebenen
+          Länge ohne Überprüfung, ob die tatsächlich gesendeten Daten so lang
+          waren. Der Server las daraufhin bis zu 64&nbsp;KB aus seinem
+          Arbeitsspeicher aus und schickte diese Daten zurück — möglicherweise
+          inklusive privater Schlüssel, Passwörter und Session-Tokens anderer
+          Verbindungen. Der Bug war von März 2012 bis April 2014 unentdeckt
+          in OpenSSL vorhanden.
+        </p>
+        <p>
+          In dieser Bachelorarbeit soll zunächst die Heartbeat-Erweiterung und
+          die fehlerhafte OpenSSL-Implementierung anhand des Quellcodes erklärt
+          werden. Anschließend soll der Angriff in einer kontrollierten
+          Testumgebung mit einer verwundbaren OpenSSL-Version (z.&nbsp;B. in einer
+          Docker-Umgebung) praktisch demonstriert und die ausgelesenen
+          Speicherinhalte analysiert werden. Ein weiterer Schwerpunkt liegt auf
+          der Frage, wie ein solcher Fehler hätte verhindert werden können:
+          Code-Review, Fuzzing, und speichersichere Programmiersprachen sollen
+          als Gegenmaßnahmen diskutiert werden.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sollten die folgende Quellen gelesen werden:</p>
+        <ul class="list">
+          <li>
+            Codenomicon:
+            <a href="https://heartbleed.com/"
+               target="_blank" rel="noopener noreferrer">
+              The Heartbleed Bug
+            </a>
+            Die ursprüngliche offizielle Beschreibung des Fehlers, kompakt
+            und verständlich geschrieben.
+          </li>
+          <li>
+            Walden:
+            <a href="https://arxiv.org/pdf/2005.14242"
+               target="_blank" rel="noopener noreferrer">
+              The Impact of a Major Security Event on an Open Source Project:
+              The Case of OpenSSL
+            </a>
+            (2020) — untersucht, wie Heartbleed die Weiterentwicklung von
+            OpenSSL nachhaltig verändert hat, und gibt einen guten Einblick
+            in die Konsequenzen von Sicherheitsvorfällen für Open-Source-Projekte.
+          </li>
+        </ul>
+
+        
+        <h4>Interaktives Lehrtool zur Visualisierung von Echtzeit-Scheduling-Verfahren (EDF und RMS)</h4>
+        <p>
+          Echtzeit-Scheduling-Verfahren wie
+          <em>Earliest Deadline First</em> (EDF) und
+          <em>Rate Monotonic Scheduling</em> (RMS) sind zentrale
+          Themen in der Ausbildung von Informatiker/innen mit
+          Schwerpunkt Betriebssysteme oder eingebettete
+          Systeme. Erfahrungsgemäß fällt es Studierenden schwer, die
+          dynamische Natur dieser Verfahren allein anhand von Folien
+          oder Lehrbüchern nachzuvollziehen.
+        </p>
+        <p>
+          Ziel dieser Masterarbeit ist die Konzeption, Entwicklung und
+          didaktische Evaluation eines interaktiven Lehrtools, das EDF
+          und RMS für Studierende erfahrbar macht. Der Fokus liegt dabei
+          nicht nur auf der korrekten Implementierung der Algorithmen,
+          sondern explizit auf ihrer <strong>didaktischen Aufbereitung</strong>:
+          Das Tool soll nicht einfach ein fertiges Ergebnis zeigen,
+          sondern den Lernenden Schritt für Schritt durch den
+          Scheduling-Prozess führen.
+        </p>
+        <p>
+          Das Tool soll mindestens die folgenden Funktionen bieten:
+        </p>
+        <ul class="list">
+          <li>
+            Eingabe eines Tasksets über eine grafische Oberfläche:
+            Für jeden Task sind Periode, Worst-Case Execution Time
+            (WCET) und (bei EDF) relative Deadline konfigurierbar.
+          </li>
+          <li>
+            <strong>Schrittweise Animation</strong> des Schedulingvorgangs
+            als Gantt-Chart: Der Nutzer kann den Ablauf Zeiteinheit für
+            Zeiteinheit vorwärts (und rückwärts) navigieren und sieht
+            dabei, welche Entscheidung der Scheduler im aktuellen Schritt
+            trifft und warum (z.&nbsp;B. Anzeige der aktuellen Prioritäten
+            bzw. nächsten Deadlines aller Tasks).
+          </li>
+          <li>
+            Berechnung und Einblendung der Systemauslastung sowie der
+            theoretischen Auslastungsschranke für RMS.
+          </li>
+          <li>
+            Bewusste Unterstützung von Tasksets, die die Auslastungsschranke
+            überschreiten oder Deadline-Misses verursachen. Diese sollen
+            visuell hervorgehoben werden, damit Studierende die Konsequenzen
+            direkt beobachten können.
+          </li>
+          <li>
+            Export des erzeugten Gantt-Charts als Vektorgrafik (SVG oder PDF)
+            zur Verwendung in Übungsblättern und Lehrfolien.
+          </li>
+        </ul>
+        <p>
+          Die Anwendung kann auf Basis von Webtechnologien
+          (HTML, CSS, JavaScript bzw.
+          <a href="https://react.dev/" target="_blank"
+             rel="noopener noreferrer">React</a>)
+          entwickelt werden. Über das Framework
+          <a href="https://www.electronjs.org/" target="_blank"
+             rel="noopener noreferrer">Electron</a>
+          kann die Anwendung zusätzlich als plattformübergreifende
+          Desktop-Applikation für Windows, macOS und Linux ausgeliefert
+          werden, sodass Studierende sie lokal und ohne
+          Internetverbindung nutzen können.
+        </p>
+        <p>Zur Einarbeitung in die Thematik eignen sich die folgende Quellen:</p>
+        <ul class="list">
+          <li>
+            Liu und Layland:
+            <a href="https://dl.acm.org/doi/10.1145/321738.321743"
+               target="_blank" rel="noopener noreferrer">
+              Scheduling Algorithms for Multiprogramming in a
+              Hard-Real-Time Environment
+            </a>
+            (Journal of the ACM, 1973) — das Originalpaper, das RMS
+            einführt und die Auslastungsschranke beweist. Ein Klassiker
+            der Informatik, der trotz seines Alters sehr gut lesbar ist.
+          </li>
+          <li>
+            Buttazzo:
+            <a href="https://link.springer.com/book/10.1007/978-1-4614-0676-1"
+               target="_blank" rel="noopener noreferrer">
+              Hard Real-Time Computing Systems
+            </a>
+            (Springer, 3.&nbsp;Auflage 2011) — das Standardlehrbuch zu
+            Echtzeit-Scheduling, das EDF und RMS umfassend behandelt
+            und zahlreiche illustrierte Beispiele enthält.
+          </li>
+          <li>
+            Electron Dokumentation:
+            <a href="https://www.electronjs.org/docs/latest/"
+               target="_blank" rel="noopener noreferrer">
+              Electron — Build cross-platform desktop apps with
+              JavaScript, HTML, and CSS
+            </a>
+          </li>
+        </ul>
+        
+
+        <h4>Datei-Tagging-System als Thunar-Plugin oder eigenständiger Dateiexplorer</h4>
+        <p>
+          Moderne Dateisysteme organisieren Dateien ausschließlich über ihre Position in einer
+          Ordnerhierarchie. Dieses Prinzip stößt schnell an seine Grenzen, wenn eine Datei
+          thematisch zu mehreren Kategorien gehört oder wenn man Dateien nach inhaltlichen
+          Kriterien suchen möchte, die sich nicht in Ordnernamen abbilden lassen.
+        </p>
+        <p>
+          Ziel dieser Bachelorarbeit ist die Entwicklung eines Tag-basierten Dateiverwaltungssystems
+          für Linux. Dabei gibt es zwei mögliche Umsetzungsansätze, von denen einer gewählt
+          werden soll:
+        </p>
+        <ul class="list">
+          <li>
+            Ein <strong>Plugin für den Dateimanager Thunar</strong> (der Standard-Dateimanager
+            der XFCE-Desktopumgebung), das sich über die offizielle
+            <a href="https://developer.xfce.org/thunar/index.html"
+               target="_blank" rel="noopener noreferrer">Thunar Extension API</a>
+            in die bestehende Oberfläche integriert.
+          </li>
+          <li>
+            Ein <strong>eigenständiger grafischer Dateiexplorer</strong> (z.&nbsp;B. mit
+            <a href="https://www.gtk.org/" target="_blank" rel="noopener noreferrer">GTK</a> oder
+            <a href="https://www.qt.io/" target="_blank" rel="noopener noreferrer">Qt</a>),
+            der das Tagging als zentrales Organisationsprinzip direkt einbaut.
+          </li>
+        </ul>
+        <p>
+          In beiden Fällen sollen mindestens die folgenden Funktionen umgesetzt werden:
+        </p>
+        <ul class="list">
+          <li>
+            Dateien und Ordnern können über die Benutzeroberfläche beliebige Tags
+            (Textetiketten) zugewiesen, bearbeitet und wieder entfernt werden.
+          </li>
+          <li>
+            Alle Tag-Zuweisungen werden in einer lokalen
+            <a href="https://www.sqlite.org/" target="_blank" rel="noopener noreferrer">SQLite</a>-Datenbank
+            persistent gespeichert.
+          </li>
+          <li>
+            Eine Suchfunktion ermöglicht es, alle Dateien zu finden, die einen bestimmten
+            Tag oder eine Kombination mehrerer Tags besitzen.
+          </li>
+          <li>
+            Wird eine Datei umbenannt oder verschoben, sollen die zugehörigen Tags
+            soweit möglich automatisch aktualisiert werden.
+          </li>
+        </ul>
+        <p>
+          Der Fokus der Arbeit liegt auf einem sauberen Softwaredesign, einer
+          intuitiven Benutzeroberfläche und der korrekten Persistenz der Daten.
+          Der Umfang der Funktionalität ist bewusst begrenzt gehalten, um eine
+          vollständige und stabile Implementierung innerhalb der Bearbeitungszeit
+          zu ermöglichen.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende wissenschaftliche
+          Veröffentlichungen vorgesehen:</p>
+        <ul class="list">
+          <li>
+            Bloehdorn, Görlitz, Schenk und Völkel:
+            <a href="https://citeseerx.ist.psu.edu/document?repid=rep1&amp;type=pdf&amp;doi=8389bf4a6b9ed2f67e7afc75619933d0bdcb9ad8"
+               target="_blank" rel="noopener noreferrer">
+              TagFS — Tag Semantics for Hierarchical File Systems
+            </a> (2006).
+            Das Paper analysiert die grundlegenden Unterschiede zwischen
+            hierarchischer Ordnerstruktur und tag-basierter Organisation und
+            zeigt, wie sich beide Ansätze sinnvoll kombinieren lassen.
+          </li>
+          <li>
+            <a href="https://journal-isi.org/index.php/isi/article/view/1416"
+               target="_blank" rel="noopener noreferrer">
+              Design and Implementation of a Hierarchically Interoperable
+              Tag-Based File System using FUSE (PreTFS)
+            </a> (2026).
+            Das Paper beschreibt Design, Prototyp und Evaluation eines
+            Dateisystems, das die klassische Ordnerhierarchie beibehält und
+            gleichzeitig eine optionale tag-basierte Semantikschicht ergänzt —
+            ein nützliches Referenzsystem zur Abgrenzung der eigenen Arbeit.
+          </li>
+        </ul>
+        
+
+        
+        
         <h4>Vergleich von XOR-Gate-basierten AES-MixColumn-Implementierungen</h4>
         <p>
           Eslam Gamal, Ahmed Eman Shaaban und Mohamed Hashem haben 2009
@@ -100,7 +1157,7 @@
           verstehen:
         </p>
         <ul class="list">
-          <li>Last Come First Served</li>
+          <li>Shortest Job First</li>
           <li>Round Robin</li>
           <li>Strict Priority Scheduling</li>
           <li>Multilevel-Feedback Scheduling</li>
