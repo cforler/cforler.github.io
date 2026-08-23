@@ -41,7 +41,6 @@
     <div class="pure-u-md-1">
       <div class="l-box">
         <h1>Themen für Abschlussarbeiten</h1>
-
         <p>
           Die nachfolgenden Themen können als Bachelor- oder Masterarbeit
           vergeben werden. Eine Kennzeichnung
@@ -70,18 +69,26 @@
           <li><a href="#spiele-engine">Entwicklung einer Spiele-Engine für Puzzle-Videospiel mit visuellem Programmieransatz (B)</a></li>
         </ul>
 
-        <h3>2. Kryptographie &amp; IT-Sicherheit</h3>
+        
+        <h3>2. Kryptographie & IT-Sicherheit</h3>
         <ul class="list">
-          <li><a href="#shamir">Shamir's Secret Sharing — Interaktives Lehrtool (B)</a></li>
-          <li><a href="#web-auth">Web-Authentication basierend auf Asymmetrischer Kryptographie (B)</a></li>
-          <li><a href="#aes-mixcolumn">Vergleich von XOR-Gate-basierten AES-MixColumn-Implementierungen (B)</a></li>
-          <li><a href="#folder-encryption">Transparente Verschlüsselung von Ordnern (B)</a></li>
-          <li><a href="#passwort-hashing">Modernes Passwort Hashing (B)</a></li>
-          <li><a href="#beast-crime">BEAST und CRIME: Angriffe auf TLS durch CBC und Kompression (B)</a></li>
+          <li><a href="#shamir">Shamir's Secret Sharing — Interaktives Lehrtool</a></li>
+          <li><a href="#web-auth">Web-Authentication basierend auf Asymmetrischer Kryptographie</a></li>
+          <li><a href="#aes-mixcolumn">Vergleich von XOR-Gate-basierten AES-MixColumn-Implementierungen</a></li>
+          <li><a href="#folder-encryption">Transparente Verschlüsselung von Ordnern</a></li>
+          <li><a href="#passwort-hashing">Modernes Passwort Hashing</a></li>
+          <li><a href="#beast">BEAST: Chosen-Plaintext-Angriff auf TLS 1.0 (B)</a></li>
+          <li><a href="#crime">CRIME: Kompressions-Seitenkanal in TLS (B)</a></li>
+          <li><a href="#beast-crime">BEAST und CRIME: Angriffe auf TLS durch CBC und Kompression (M)</a></li>
           <li><a href="#lucky13">Lucky 13: Timing-Seitenkanalangriff auf TLS-CBC-Padding (B)</a></li>
-          <li><a href="#heartbleed">Heartbleed: Implementierungsfehler in OpenSSL und seine Folgen (B)</a></li>
-          <li><a href="#kerberoasting">Kerberoasting und AS-REP Roasting: Angriffe auf Active Directory (B)</a></li>
+          <li><a href="#terrapin">Terrapin: Prefix-Truncation-Angriff auf das SSH-Protokoll (B)</a></li>
+          <li><a href="#regreSSHion">regreSSHion: Remote Code Execution durch Race Condition in OpenSSH (B)</a></li>
+          <li><a href="#cvss">Analyse einer kritischen Sicherheitslücke (CVSS ≥ 9.0+) (B)</a></li>
+          <li><a href="#heartbleed">Heartbleed: Implementierungsfehler in OpenSSL und seine Folgen</a></li>
+          <li><a href="#kerberoasting">Kerberoasting und AS-REP Roasting: Angriffe auf Active Directory</a></li>
         </ul>
+
+        
 
         <h3>3. Linux &amp; Systemprogrammierung</h3>
         <ul class="list">
@@ -740,6 +747,8 @@
           </li>
         </ul>
 
+        <!-- ============================================================ -->
+        
         <h4 id="passwort-hashing">Modernes Passwort Hashing</h4>
         <p>
           Bei dieser Abschlussarbeit soll unter Linux eine modernes
@@ -774,7 +783,163 @@
           Sourcecode zurückgegriffen werden.
         </p>
 
-        <h4 id="beast-crime">BEAST und CRIME: Angriffe auf TLS durch CBC und Kompression</h4>
+        <!-- ============================================================ -->
+        
+        <h4 id="beast">BEAST: Chosen-Plaintext-Angriff auf TLS&nbsp;1.0 (B)</h4>
+        <p>
+          Das TLS-Protokoll soll die Vertraulichkeit von Daten bei der
+          Übertragung im Internet gewährleisten. Eine fundamentale
+          Designentscheidung in TLS&nbsp;1.0 führte jedoch dazu, dass der
+          Initialisierungsvektor (IV) für CBC-verschlüsselte Datensätze
+          vorhersagbar war — der IV eines neuen Records war stets der letzte
+          Chiffretext-Block des vorherigen. Diese theoretische Schwäche wurde
+          erstmals 2002 von Phillip Rogaway beschrieben, galt aber lange als
+          nicht praktisch ausnutzbar. Das änderte sich 2011, als Thai Duong
+          und Juliano Rizzo mit dem <strong>BEAST</strong>-Angriff
+          (<em>Browser Exploit Against SSL/TLS</em>, CVE-2011-3389) zeigten,
+          dass sich damit Session-Cookies zeichenweise rekonstruieren lassen —
+          und dies live gegen PayPal demonstrierten.
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit soll die technische Funktionsweise
+          des BEAST-Angriffs vollständig erarbeitet und in einer kontrollierten
+          lokalen Testumgebung demonstriert werden. Die Arbeit soll dabei
+          folgende Schwerpunkte setzen:
+        </p>
+        <ul class="list">
+          <li>
+            Erklärung der CBC-Verschlüsselung und der IV-Verkettung in
+            TLS&nbsp;1.0 sowie warum die vorhersagbare IV-Wahl ein
+            Sicherheitsproblem darstellt.
+          </li>
+          <li>
+            Nachvollziehen des blockweisen Chosen-Plaintext-Angriffs und der
+            sogenannten Record-Splitting-Technik, mit der Duong und Rizzo den
+            Angriff praktisch umsetzbar machten.
+          </li>
+          <li>
+            Demo-Implementierung des Angriffsprinzips in Python, basierend
+            auf dem öffentlich verfügbaren
+            <a href="https://github.com/mpgn/BEAST-PoC" target="_blank"
+               rel="noopener noreferrer">Proof-of-Concept von mpgn</a>.
+          </li>
+          <li>
+            Erläuterung der Gegenmaßnahmen: warum TLS&nbsp;1.1 den Angriff
+            durch echte Zufalls-IVs strukturell ausschließt und warum
+            TLS&nbsp;1.3 CBC-Cipher-Suites vollständig entfernt hat.
+          </li>
+        </ul>
+        <p>
+          <strong>Hinweis:</strong> Wer beide Angriffe BEAST und CRIME
+          gemeinsam und vergleichend behandeln möchte, findet dazu ein
+          <a href="#beast-crime-master">Masterarbeitsthema</a> weiter unten.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen als
+          Pflichtlektüre vorgesehen:</p>
+        <ul class="list">
+          <li>
+            Duong und Rizzo:
+            <a href="https://tlseminar.github.io/docs/beast.pdf"
+               target="_blank" rel="noopener noreferrer">
+              Here Come The Ninjas
+            </a>
+            (2011) — das Originalpaper, das den BEAST-Angriff einführt
+            und die blockweise Chosen-Plaintext-Technik erklärt.
+          </li>
+          <li>
+            Matthew Green:
+            <a href="https://blog.cryptographyengineering.com/2011/09/21/brief-diversion-beast-attack-on-tlsssl/"
+               target="_blank" rel="noopener noreferrer">
+              A diversion: BEAST Attack on TLS/SSL Encryption
+            </a>
+            — ein sehr verständlicher Blogbeitrag eines renommierten
+            Kryptographen, der die Kernidee des Angriffs klar erklärt.
+          </li>
+        </ul>
+
+        <!-- ============================================================ -->
+        
+
+        <h4 id="crime">CRIME: Kompressions-Seitenkanal in TLS (B)</h4>
+        <p>
+          Datenkompression und Verschlüsselung vertragen sich nicht gut:
+          Wenn ein Angreifer beobachten kann, wie stark eine Nachricht
+          komprimiert wird, kann er daraus Rückschlüsse auf den
+          unverschlüsselten Inhalt ziehen. Genau dieses Prinzip nutzt der
+          <strong>CRIME</strong>-Angriff (<em>Compression Ratio Info-leak Made
+            Easy</em>, CVE-2012-4929) aus, den Thai Duong und Juliano Rizzo 2012
+          auf der Ekoparty-Konferenz vorstellten.
+        </p>
+        <p>
+          TLS bot optional eine DEFLATE-basierte Kompression der übertragenen
+          Daten an. Da Kompression identische Zeichenketten kürzt, verändert
+          sich die Länge des verschlüsselten Datenstroms je nachdem, ob ein
+          eingeschleuster Rateversuch mit dem geheimen Cookie-Wert
+          übereinstimmt oder nicht. Über diesen Seitenkanal lassen sich
+          Session-Tokens Zeichen für Zeichen erschließen — ganz ohne den
+          kryptografischen Schlüssel zu kennen.
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit soll der CRIME-Angriff in einer
+          kontrollierten lokalen Testumgebung nachvollzogen und demonstriert
+          werden. Die Arbeit soll dabei folgende Schwerpunkte setzen:
+        </p>
+        <ul class="list">
+          <li>
+            Erklärung der DEFLATE-Kompression und des Kompressions-Orakels:
+            warum die Länge eines komprimierten Textes Information über seinen
+            Inhalt preisgibt.
+          </li>
+          <li>
+            Nachvollziehen der byteweisen Cookie-Rekonstruktion anhand des
+            öffentlich verfügbaren
+            <a href="https://github.com/mpgn/CRIME-poc" target="_blank"
+               rel="noopener noreferrer">Proof-of-Concept von mpgn</a>.
+          </li>
+          <li>
+            Abgrenzung zu den verwandten Angriffen BREACH (HTTP-Kompression)
+            und TIME, die das gleiche Grundprinzip auf weitere Szenarien
+            anwenden.
+          </li>
+          <li>
+            Erläuterung der Gegenmaßnahme: In TLS&nbsp;1.3 ist
+            Protokoll-Kompression vollständig entfernt worden.
+          </li>
+        </ul>
+        <p>
+          <strong>Hinweis:</strong> Wer beide Angriffe BEAST und CRIME
+          gemeinsam und vergleichend behandeln möchte, findet dazu ein
+          <a href="#beast-crime-master">Masterarbeitsthema</a> weiter unten.
+        </p>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen als
+          Pflichtlektüre vorgesehen:</p>
+        <ul class="list">
+          <li>
+            Duong und Rizzo:
+            <a href="https://www.nccgroup.com/media/1nqor5lm/_ssl_attacks_survey.pdf"
+               target="_blank" rel="noopener noreferrer">
+              Attacks on SSL — A Comprehensive Study of BEAST, CRIME, TIME
+              and BREACH
+            </a>
+            — ein übersichtlicher Survey beider Angriffe von denselben
+            Autoren, der CRIME im Kontext weiterer Kompressions-Angriffe
+            einbettet.
+          </li>
+          <li>
+            Gluck, Harris und Prado:
+            <a href="https://css.csail.mit.edu/6.566/2018/readings/breach.pdf"
+               target="_blank" rel="noopener noreferrer">
+              BREACH: Reviving the CRIME Attack
+            </a>
+            (2013) — beschreibt, wie das CRIME-Prinzip auf HTTP-Kompression
+            übertragen wurde, und gibt damit einen sehr guten Einblick in die
+            allgemeine Klasse der Kompressions-Seitenkanalangriffe.
+          </li>
+        </ul>
+        
+        <!-- ============================================================ -->        
+        
+        <h4 id="beast-crime">BEAST und CRIME: Angriffe auf TLS durch CBC und Kompression (M)</h4>
         <p>
           Das TLS-Protokoll soll die Vertraulichkeit und Integrität von Daten
           bei der Übertragung im Internet gewährleisten. Trotzdem wurden in
@@ -833,7 +998,9 @@
           </li>
         </ul>
 
-        <h4 id="lucky13">Lucky 13: Timing-Seitenkanalangriff auf TLS-CBC-Padding</h4>
+        <!-- ============================================================ -->
+        
+        <h4 id="lucky13">Lucky 13: Timing-Seitenkanalangriff auf TLS-CBC-Padding (B)</h4>
         <p>
           Padding-Oracle-Angriffe auf TLS sind ein eindrucksvolles Beispiel
           dafür, wie selbst gut gemeinte Gegenmaßnahmen neue Angriffsflächen
@@ -889,6 +1056,239 @@
           </li>
         </ul>
 
+        <!-- ============================================================ -->
+
+        <h4 id="terrapin">Terrapin: Prefix-Truncation-Angriff auf das SSH-Protokoll (B)</h4>
+        <p>
+          Das SSH-Protokoll gilt als sicherer Standard für verschlüsselte
+          Fernzugriffe — und doch wurde 2023 eine grundlegende Schwäche im
+          Protokolldesign entdeckt. Der <strong>Terrapin</strong>-Angriff
+          (CVE-2023-48795), entwickelt von Fabian Bäumer, Marcus Brinkmann
+          und Jörg Schwenk an der Ruhr-Universität Bochum, zeigt, dass ein
+          aktiver Man-in-the-Middle die Integritätsprüfung des SSH-Handshakes
+          umgehen kann.
+        </p>
+        <p>
+          Das Angriffsprinzip: SSH verwendet während des Handshakes
+          Sequenznummern zur Integritätssicherung. Durch gezielte
+          Manipulation dieser Sequenznummern kann ein Angreifer Nachrichten
+          am Anfang des verschlüsselten SSH-Kanals unbemerkt entfernen — ein
+          sogenannter <em>Prefix Truncation Attack</em>. In der Praxis
+          ermöglicht dies einen Sicherheits-Downgrade: Der Client wird dazu
+          gebracht, schwächere Authentifizierungsalgorithmen zu akzeptieren
+          oder sicherheitsrelevante Erweiterungen (SSH Extension Negotiation,
+          RFC&nbsp;8308) zu ignorieren. Besonders betroffen sind die weit
+          verbreiteten Algorithmen ChaCha20-Poly1305 und Encrypt-then-MAC.
+          <cite>Laut den Forschern unterstützten zum Zeitpunkt
+            der Veröffentlichung mindestens 77&nbsp;% der SSH-Server im Internet
+            mindestens einen der angreifbaren Modi.</cite>
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit soll der Terrapin-Angriff technisch
+          vollständig erarbeitet und anhand der bereitgestellten Tools der
+          Forscher in einer kontrollierten lokalen Testumgebung demonstriert
+          werden. Die Arbeit soll dabei folgende Schwerpunkte setzen:
+        </p>
+        <ul class="list">
+          <li>
+            Erklärung der SSH Binary Packet Protocol (BPP) Struktur,
+            der Sequenznummern-Mechanik und der Extension Negotiation.
+          </li>
+          <li>
+            Nachvollziehen des Prefix-Truncation-Prinzips: Wie kann ein
+            Angreifer Nachrichten aus dem Handshake entfernen, ohne dass
+            Client oder Server dies bemerken?
+          </li>
+          <li>
+            Praktische Demonstration mithilfe des
+            <a href="https://github.com/RUB-NDS/Terrapin-Scanner"
+               target="_blank" rel="noopener noreferrer">Terrapin-Scanners</a>
+            der Forscher sowie einer lokalen OpenSSH-Testumgebung.
+          </li>
+          <li>
+            Vergleich mit dem TLS-Downgrade-Angriff POODLE: Gemeinsamkeiten
+            und Unterschiede in Angriffsprinzip und Gegenmaßnahmen.
+          </li>
+          <li>
+            Gegenmaßnahme: Das von OpenSSH eingeführte
+            <em>Strict Key Exchange</em>-Protokoll und warum ein Update auf
+            OpenSSH&nbsp;9.6 den Angriff verhindert.
+          </li>
+        </ul>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen als
+          Pflichtlektüre vorgesehen:</p>
+        <ul class="list">
+          <li>
+            Bäumer, Brinkmann und Schwenk:
+            <a href="https://terrapin-attack.com/TerrapinAttack.pdf"
+               target="_blank" rel="noopener noreferrer">
+              Terrapin Attack: Breaking SSH Channel Integrity By Sequence
+              Number Manipulation
+            </a>
+            (2023) — das Originalpaper der Ruhr-Universität Bochum,
+            sehr gut strukturiert und mit konkreten Angriffsbeispielen.
+          </li>
+          <li>
+            <a href="https://terrapin-attack.com/"
+               target="_blank" rel="noopener noreferrer">
+              terrapin-attack.com
+            </a>
+            — die offizielle Projektseite der Forscher mit Scanner,
+            FAQ und einer verständlichen Zusammenfassung des Angriffs.
+          </li>
+        </ul>
+        
+        <!-- ============================================================ -->
+
+        <h4 id="regreSSHion">regreSSHion: Remote Code Execution durch Race Condition in OpenSSH (B)</h4>
+        <p>
+          Manchmal kehren Sicherheitsprobleme zurück, die längst als behoben
+          galten. <strong>regreSSHion</strong> (CVE-2024-6387) ist ein
+          eindrucksvolles Beispiel: Eine Signal-Handler-Race-Condition in
+          OpenSSH, die 2006 ursprünglich gefixt worden war
+          (CVE-2006-5051), tauchte durch eine Regression in neueren
+          OpenSSH-Versionen erneut auf und wurde im Juli 2024 vom Qualys
+          Threat Research Team entdeckt.
+        </p>
+        <p>
+          Die Schwachstelle steckt im Authentifizierungsablauf des
+          OpenSSH-Servers: Schlägt die Authentifizierung eines Clients nicht
+          innerhalb der konfigurierten <code>LoginGraceTime</code>
+          (standardmäßig 120&nbsp;Sekunden) fehl, ruft der Server asynchron
+          den <code>SIGALRM</code>-Signal-Handler auf. Dieser ruft intern
+          Funktionen auf — darunter <code>syslog()</code> — die nicht
+          async-signal-safe sind. Ein Angreifer kann durch wiederholte
+          fehlgeschlagene Verbindungsversuche diese Race Condition triggern
+          und im Erfolgsfall unauthentifiziert beliebigen Code als Root
+          ausführen. Die Schwachstelle betraf Millionen von OpenSSH-Servern
+          weltweit.
+        </p>
+        <p>
+          In dieser Bachelorarbeit soll die Schwachstelle technisch vollständig
+          erarbeitet und in einer kontrollierten lokalen Testumgebung mit
+          einer verwundbaren OpenSSH-Version analysiert werden. Die Arbeit soll
+          dabei folgende Schwerpunkte setzen:
+        </p>
+        <ul class="list">
+          <li>
+            Erklärung von Signal-Handlern unter Linux und des Konzepts der
+            Async-Signal-Safety: Was darf ein Signal-Handler aufrufen und
+            was nicht?
+          </li>
+          <li>
+            Nachvollziehen der Race Condition: Wie kann ein Angreifer den
+            Zustand des Servers so manipulieren, dass der
+            <code>SIGALRM</code>-Handler zur falschen Zeit ausgelöst wird?
+          </li>
+          <li>
+            Analyse der historischen Verbindung zu CVE-2006-5051:
+            Warum ist derselbe Fehler nach 18 Jahren wieder aufgetaucht,
+            und was sagt das über Software-Qualitätssicherung aus?
+          </li>
+          <li>
+            Diskussion der Gegenmaßnahmen: Update auf OpenSSH&nbsp;9.8,
+            Konfiguration von <code>LoginGraceTime</code> und
+            <code>MaxStartups</code> als Mitigationsmaßnahmen.
+          </li>
+        </ul>
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen als
+          Pflichtlektüre vorgesehen:</p>
+        <ul class="list">
+          <li>
+            Qualys Threat Research Unit:
+            <a href="https://blog.qualys.com/vulnerabilities-threat-research/2024/07/01/regresshion-remote-unauthenticated-code-execution-vulnerability-in-openssh-server"
+               target="_blank" rel="noopener noreferrer">
+              regreSSHion: Remote Unauthenticated Code Execution
+              Vulnerability in OpenSSH Server (CVE-2024-6387)
+            </a>
+            (2024) — die originale Disclosure durch das Qualys-Team,
+            sehr detailliert und technisch präzise.
+          </li>
+          <li>
+            Wiz Research:
+            <a href="https://www.wiz.io/blog/cve-2024-6387-critical-rce-openssh"
+               target="_blank" rel="noopener noreferrer">
+              RCE vulnerability in OpenSSH: everything you need to know
+            </a>
+            — ein verständlicher Begleitartikel, der die technischen
+            Details gut aufbereitet und in den Kontext einbettet.
+          </li>
+        </ul>
+
+        <!-- ============================================================ -->
+        
+        <h4 id="cvss">Analyse einer kritischen Sicherheitslücke (CVSS&nbsp;&ge;&nbsp;9.0+) (B)</h4>
+        <p>
+          Sicherheitslücken mit einem
+          <a href="https://www.first.org/cvss/" target="_blank"
+             rel="noopener noreferrer">CVSS-Score</a>
+          von 9.0 oder höher stellen die schwerwiegendsten bekannten
+          Schwachstellen in Software und Protokollen dar. Sie ermöglichen
+          häufig unauthentifizierte Remote Code Execution, vollständige
+          Kompromittierung von Systemen oder den Zugriff auf sensible Daten
+          ohne jegliche Nutzerinteraktion. Entsprechend hoch ist ihre
+          praktische Relevanz für die IT-Sicherheit.
+        </p>
+        <p>
+          Im Rahmen dieser Bachelorarbeit wählt der Studierende — in
+          <strong>Absprache mit dem Betreuer</strong> — eine konkrete,
+          öffentlich dokumentierte Sicherheitslücke mit einem
+          CVSS&nbsp;v3-Score von mindestens 9.0 aus der
+          <a href="https://nvd.nist.gov/" target="_blank"
+             rel="noopener noreferrer">NVD-Datenbank</a>
+          aus und analysiert diese umfassend. Die Vorauswahl durch den
+          Betreuer stellt sicher, dass das gewählte Thema hinsichtlich
+          Zugänglichkeit, verfügbarer Dokumentation und Aufbaubarkeit einer
+          Laborumgebung für eine Bachelorarbeit geeignet ist.
+        </p>
+        <p>
+          Unabhängig von der konkreten Schwachstelle soll die Arbeit
+          folgende Bestandteile enthalten:
+        </p>
+        <ul class="list">
+          <li>
+            <strong>Technische Analyse:</strong> Vollständiges Verständnis
+            der Schwachstelle — welche Designentscheidung, welcher
+            Implementierungsfehler oder welche Protokollschwäche liegt
+            zugrunde?
+          </li>
+          <li>
+            <strong>Einordnung:</strong> Einbettung in die relevante
+            Angriffskategorie (z.&nbsp;B. Buffer Overflow, Race Condition,
+            Padding Oracle, Injection) und Beschreibung des Angreifermodells.
+          </li>
+          <li>
+            <strong>Labordemonstration:</strong> Aufbau einer kontrollierten
+            lokalen Testumgebung (z.&nbsp;B. mit Docker oder virtuellen
+            Maschinen) und Demonstration des Angriffs oder seines Prinzips.
+          </li>
+          <li>
+            <strong>Gegenmaßnahmen:</strong> Dokumentation der verfügbaren
+            Patches, Mitigationsmaßnahmen und — falls möglich — der
+            strukturellen Designänderungen, die den Fehler künftig
+            ausschließen.
+          </li>
+          <li>
+            <strong>Lessons Learned:</strong> Was lehrt diese Schwachstelle
+            über sicheres Software- oder Protokolldesign?
+          </li>
+        </ul>
+        <p>
+          Geeignete Ausgangspunkte für die Themenrecherche sind die
+          <a href="https://nvd.nist.gov/vuln/search?form_type=Advanced&amp;results_type=overview&amp;query=&amp;search_type=all&amp;cvss_version=3&amp;cvss_v3_severity=CRITICAL"
+             target="_blank" rel="noopener noreferrer">kritischen CVEs in der NVD</a>
+          sowie die jährlichen
+          <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+             target="_blank" rel="noopener noreferrer">CISA Known Exploited
+            Vulnerabilities</a>.
+          Themen aus dem Bereich Kernel-Exploits, Hardware-Seitenkanalangriffe
+          oder hochkomplexe Heap-Grooming-Techniken sind für eine Bachelorarbeit
+          in der Regel nicht geeignet und werden im Rahmen der Vorbesprechung
+          ausgeschlossen.
+        </p>
+        
+        
+        
         <h4 id="heartbleed">Heartbleed: Implementierungsfehler in OpenSSL und seine Folgen</h4>
         <p>
           Nicht immer liegt ein Sicherheitsproblem im Design eines Protokolls —
@@ -1242,7 +1642,7 @@
           Dateiberechtigungen sind zu permissiv. Der
           <a href="https://www.cisecurity.org/benchmark/ubuntu_linux"
              target="_blank" rel="noopener noreferrer">CIS Benchmark
-          für Ubuntu Linux</a>
+            für Ubuntu Linux</a>
           ist ein kostenlos verfügbarer, branchenübergreifend anerkannter
           Leitfaden des <em>Center for Internet Security</em>, der mehrere
           hundert konkrete Härtungsmaßnahmen definiert — von der
