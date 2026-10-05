@@ -63,7 +63,7 @@
           <li><a href="#tiefensuche">Visualisierung der Tiefensuche (B)</a></li>
           <li><a href="#avl">Visualisierung von Operationen auf einem AVL-Baum (B)</a></li>
           <li><a href="#sortieren">Anwendung zur Veranschaulichung von Sortierverfahren (B)</a></li>
-          <li><a href="#xgcd">Visualisierung des Erweiterten Euklidischen Algorithmus — XGCD (B)</a></li>
+          <li><a href="#xgcd">Interaktive Lernanwendung: Das multiplikative Inverse in Z<sub>n</sub> (B)</a></li>
           <li><a href="#square-multiply">Square-and-Multiply — Visualisierung der schnellen Modularen Exponentiation (B)</a></li>
           <li><a href="#hashtabellen">Interaktives Lehrtool: Hashtabellen und Kollisionsstrategien (B)</a></li>
           <li><a href="#spiele-engine">Entwicklung einer Spiele-Engine für Puzzle-Videospiel mit visuellem Programmieransatz (B)</a></li>
@@ -386,62 +386,88 @@
           Kreativität keine Grenzen gesetzt.
         </p>
 
-        <h4 id="xgcd">Visualisierung des Erweiterten Euklidischen Algorithmus (XGCD)</h4>
+
+        <h4 id="xgcd">Interaktive Lernanwendung: Das multiplikative Inverse in Z<sub>n</sub> <span class="badge">B</span></h4>
+
         <p>
-          Der Erweiterte Euklidische Algorithmus (engl.
-          <em>Extended Greatest Common Divisor</em>, XGCD) ist ein
-          fundamentaler Algorithmus der algorithmischen Zahlentheorie.
-          Er berechnet nicht nur den größten gemeinsamen Teiler zweier
-          ganzer Zahlen, sondern liefert zusätzlich die Koeffizienten
-          der zugehörigen Bézout-Darstellung — und damit insbesondere
-          das modulare Inverse, das für kryptografische Verfahren wie
-          RSA unverzichtbar ist. Für Studierende ist der Algorithmus
-          oft eine Black Box: Die Rekursion und die Rückwärtssubstitution
-          zur Berechnung der Koeffizienten sind schwer zu durchschauen.
+          Kryptografische Verfahren, wie RSA, setzen
+          voraus, dass man zu einer ganzen Zahl <em>a</em> das
+          <strong>multiplikative Inverse modulo n</strong> berechnen
+          kann: also eine Zahl <em>x</em>, für die gilt
+          <em>a · x ≡ 1 (mod n)</em>. Das wirkungsvolle Werkzeug
+          hinter dieser Berechnung ist der
+          <strong>Erweiterte Euklidische Algorithmus</strong> (XGCD).
+          Für Studierende bleibt beides häufig abstrakt: Warum
+          funktioniert das überhaupt? Welche Schritte führen von
+          zwei Eingabezahlen zum Inversen? Und wann existiert das
+          Inverse gar nicht?
         </p>
+
         <p>
-          Im Rahmen dieser Bachelorarbeit soll eine interaktive Anwendung
-          entwickelt werden, die den XGCD schrittweise visualisiert.
-          Die Anwendung soll dabei zwei Ansichten bieten:
+          Im Rahmen dieser Bachelorarbeit soll eine
+          <strong>interaktive Lernanwendung</strong> entwickelt werden,
+          die Studierende aktiv durch die Berechnung des multiplikativen
+          Inversen führt. Die Anwendung soll mindestens
+          folgende Funktionen bieten:
         </p>
+
         <ul class="list">
           <li>
-            <strong>Vorwärtsphase:</strong> Tabellarische Darstellung der
-            Divisionsschritte des Euklidischen Algorithmus, bei der der
-            Studierende jeden Schritt einzeln durchklicken kann.
+            <strong>Geführte Eingabe:</strong> Der Studierende gibt
+            zwei Zahlen <em>a</em> und <em>n</em> ein. Die Anwendung
+            prüft zunächst, ob ggT(<em>a</em>, <em>n</em>) = 1 gilt
+            (Voraussetzung für die Existenz des Inversen) und erklärt
+            anschaulich, warum dies notwendig ist.
           </li>
           <li>
-            <strong>Rückwärtsphase:</strong> Schrittweise Rücksubstitution
-            zur Berechnung der Bézout-Koeffizienten, visuell hervorgehoben
-            welcher Ausdruck jeweils substituiert wird.
+            <strong>Schrittweise Berechnung mit Übungscharakter:</strong>
+            Die Vorwärtsphase des XGCD (Divisionsschritte) und die
+            Rückwärtsphase (Rücksubstitution zur Bézout-Darstellung)
+            werden tabellarisch dargestellt. Der Studierende kann jeden
+            Schritt selbst ausrechnen und erhält sofortiges Feedback,
+            ob sein Ergebnis korrekt ist.
+          </li>
+          <li>
+            <strong>Ergebnisinterpretation:</strong> Das berechnete
+            Inverse wird abschließend durch eine Probe
+            (<em>a · x mod n = 1?</em>) verifiziert und der
+            Zusammenhang zur RSA-Schlüsselerzeugung
+            (Berechnung des privaten Exponenten <em>d</em> aus
+            <em>e</em> und φ(<em>n</em>)) konkret erläutert.
+          </li>
+          <li>
+            <strong>Aufgabenmodus:</strong> Die Anwendung kann
+            zufällige Eingabepaare generieren und den Studierenden
+            auffordern, das Inverse Schritt-für-Schritt selbstständig
+            zu bestimmen. Hier können dann auch gerne Gamification-Elemente wie
+            unterschiedliche Schwierigkeitsgrade und Belohnungen für das richtige Lösen erfolgen;
+            beispielsweise in Form von Punkte.
           </li>
         </ul>
+
         <p>
-          Als praktische Anwendung soll die Berechnung des modularen
-          Inversen direkt in die Oberfläche integriert werden, sodass
-          Studierende den Zusammenhang zwischen XGCD und RSA-Schlüsselerzeugung
-          unmittelbar nachvollziehen können.
+          Die Anwendung soll als Webanwendung realisiert werden, sodass
+          sie ohne Installation direkt im Browser läuft und in der Lehre
+          eingesetzt werden kann.
         </p>
-        <p>Zur Einarbeitung in die Thematik sind folgende Quellen geeignet:</p>
+
+        <p>Zur Einarbeitung in die Thematik sind folgende Quellen hilfreich:</p>
         <ul class="list">
           <li>
             Cormen, Leiserson, Rivest, Stein:
-            <em>Introduction to Algorithms</em>, Kapitel zur Zahlentheorie
-            — beschreibt den XGCD präzise und mit Pseudocode, der direkt
-            als Implementierungsgrundlage dienen kann.
+            <em>Introduction to Algorithms</em>, Kapitel zur Zahlentheorie.
           </li>
           <li>
             Khan Academy:
             <a href="https://www.khanacademy.org/computing/computer-science/cryptography/modarithmetic/a/the-euclidean-algorithm"
                target="_blank" rel="noopener noreferrer">
-              The Euclidean Algorithm
+              The Euclidean Algorithm.
             </a>
-            — ein sehr zugänglicher Einstieg mit interaktiven Beispielen,
-            der gut als didaktische Inspiration für die eigene Anwendung
-            dient.
           </li>
         </ul>
+        
 
+        
         <h4 id="square-multiply">Square-and-Multiply — Visualisierung der schnellen Modularen Exponentiation</h4>
         <p>
           Kryptografische Verfahren wie RSA oder Diffie-Hellman erfordern
