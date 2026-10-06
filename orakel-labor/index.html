@@ -1,0 +1,1563 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orakel-Labor</title>
+</head>
+<body>
+<style>
+/* Layout: Laborbank – links das Orakel-Terminal (Spiel), rechts das Protokollheft (Experiment, Chiffre, Tipps). */
+:root{
+  --bg:#E9EDF2; --surface:#FFFFFF; --sunk:#F3F5F8; --ink:#141C26; --muted:#5B6878; --line:#CBD3DD;
+  --real:#2A45C9; --real-soft:#E3E8FB; --rand:#B36A00; --rand-soft:#FBEEDB;
+  --ok:#1C7F52; --ok-soft:#DDF2E7; --bad:#B9372F; --bad-soft:#F8E1DF;
+  --hl:#FFE27A; --hl-ink:#3A2E00; --focus:#2A45C9;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E141B; --surface:#161F29; --sunk:#111922; --ink:#E4EAF1; --muted:#93A1B2; --line:#2A3746;
+  --real:#8EA2FF; --real-soft:#1D2550; --rand:#F2A944; --rand-soft:#3A2810;
+  --ok:#4CC58E; --ok-soft:#123326; --bad:#F0736A; --bad-soft:#3D1715;
+  --hl:#6B5A12; --hl-ink:#FFF3C4; --focus:#8EA2FF; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0E141B; --surface:#161F29; --sunk:#111922; --ink:#E4EAF1; --muted:#93A1B2; --line:#2A3746;
+  --real:#8EA2FF; --real-soft:#1D2550; --rand:#F2A944; --rand-soft:#3A2810;
+  --ok:#4CC58E; --ok-soft:#123326; --bad:#F0736A; --bad-soft:#3D1715;
+  --hl:#6B5A12; --hl-ink:#FFF3C4; --focus:#8EA2FF; color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.label{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+
+/* Kopf */
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+header.top h1{font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.02em}
+header.top h1 span{color:var(--real)}
+header.top p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.legend{display:flex;gap:8px;flex-wrap:wrap}
+.headright{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+@media (max-width:600px){.headright{align-items:flex-start}}
+.themesw{display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden;background:var(--surface)}
+.themesw button{border:0;background:none;padding:4px 12px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.themesw button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+footer p{margin:0 0 6px}
+.chip{font-size:12.5px;padding:3px 10px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+.chip b{font-weight:600}
+.chip.r b{color:var(--real)} .chip.z b{color:var(--rand)}
+
+/* Levelleiste */
+nav.levels{display:flex;flex-wrap:wrap;gap:14px 20px}
+.chap{flex:1 1 calc(var(--n,3) * 150px);min-width:0;display:flex;flex-direction:column;gap:6px}
+.chaphead{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.chaphead h3{font-size:15px;font-weight:700}
+.chaphead span{font-size:12.5px;color:var(--muted)}
+.chapgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.lvl{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-width:0}
+.lvl .n{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.lvl .t{font-weight:600;font-size:14px}
+.lvl .s{font-size:12px;color:var(--muted)}
+.lvl.on{border-color:var(--real);box-shadow:inset 0 0 0 1px var(--real)}
+.lvl .s.done{color:var(--ok)}
+
+/* Hauptbereich */
+main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:880px){main{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:16px;min-width:0}
+
+.lvlhead{display:flex;flex-direction:column;gap:4px}
+.lvlhead h2{font-size:24px;font-weight:700}
+.lvlhead .sub{color:var(--muted)}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:11.5px;padding:1px 7px;border-radius:4px;background:var(--sunk);border:1px solid var(--line);color:var(--muted);margin-right:6px}
+
+.statusbar{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;padding:10px 12px;background:var(--sunk);border-radius:8px}
+.statusbar .item{display:flex;gap:6px;align-items:baseline}
+.statusbar .v{font-family:var(--f-mono);font-weight:600}
+.dots{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.dot{width:12px;height:12px;border-radius:3px;border:1px solid var(--line);background:var(--surface)}
+.dot.ok{background:var(--ok);border-color:var(--ok)}
+.dot.bad{background:var(--bad);border-color:var(--bad)}
+.dot.cur{border-color:var(--ink)}
+
+/* Orakel-Eingabe */
+.oracle{display:flex;flex-direction:column;gap:8px}
+.inrow{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch}
+.inrow input{flex:1 1 200px;min-width:0;font-family:var(--f-mono);font-size:16px;padding:9px 12px;border:1px solid var(--line);border-radius:7px;background:var(--sunk);color:var(--ink);letter-spacing:.04em}
+.btn{padding:9px 16px;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.e3btns{display:flex;gap:8px;flex-wrap:wrap}
+.e3btns .btn{font-family:var(--f-mono);min-width:64px;font-size:17px}
+.err{color:var(--bad);font-size:13px;min-height:1.2em}
+.help{font-size:13px;color:var(--muted)}
+
+/* Protokoll */
+.logwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table.log{width:100%;border-collapse:collapse;font-size:14px}
+table.log th{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left;padding:7px 10px;background:var(--sunk);border-bottom:1px solid var(--line);font-weight:600}
+table.log td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+table.log tr:last-child td{border-bottom:0}
+table.log td.i{color:var(--muted);width:2.5em}
+.empty{color:var(--muted);font-style:italic;white-space:normal!important}
+.v{display:inline-block;font-family:var(--f-mono);padding:1px 5px;border-radius:4px;margin-right:4px;border:1px solid transparent;cursor:pointer}
+.v:hover{border-color:var(--line)}
+.v.iv{color:var(--muted);background:var(--sunk)}
+.v.hl{background:var(--hl);color:var(--hl-ink)}
+.dirtag{display:inline-block;font-size:12px;color:var(--muted);min-width:4.2em;margin-right:4px}
+.v.sep{cursor:default;padding:0;margin:0 2px;color:var(--muted)}
+.v.sep:hover{border-color:transparent}
+
+/* Entscheidung */
+.decide{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dec{padding:14px 12px;border-radius:9px;border:2px solid;font-family:var(--f-display);font-weight:700;font-size:19px;display:flex;flex-direction:column;align-items:center;gap:0;background:var(--surface)}
+.dec small{font-family:var(--f-mono);font-size:12px;font-weight:400;opacity:.8}
+.dec.real{border-color:var(--real);color:var(--real)}
+.dec.real:hover:not(:disabled){background:var(--real-soft)}
+.dec.rand{border-color:var(--rand);color:var(--rand)}
+.dec.rand:hover:not(:disabled){background:var(--rand-soft)}
+.dec:disabled{opacity:.4;cursor:not-allowed}
+.feedback{padding:12px 14px;border-radius:8px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.feedback p{margin:0;font-weight:600}
+.feedback p span{font-weight:400;color:var(--ink)}
+
+/* Auswertung */
+.summary{border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--sunk)}
+.summary h3{font-size:20px}
+.summary .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.summary .k{display:flex;flex-direction:column;gap:2px}
+.summary .k .big{font-family:var(--f-mono);font-size:22px;font-weight:600}
+.summary p{margin:0;max-width:65ch}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Rechte Spalte */
+aside{display:flex;flex-direction:column;gap:18px;min-width:0}
+.exp{font-family:var(--f-mono);font-size:13.5px;background:var(--sunk);border-radius:8px;padding:12px 14px;line-height:1.7;overflow-x:auto;white-space:nowrap}
+.exp .c{color:var(--muted)}
+.exp .r{color:var(--real);font-weight:600}
+.exp .z{color:var(--rand);font-weight:600}
+.exp .h{font-weight:600}
+.desc p{margin:0 0 8px;max-width:65ch}
+.desc p:last-child{margin-bottom:0}
+pre.code{margin:0 0 10px;font-family:var(--f-mono);font-size:13px;line-height:1.6;background:var(--sunk);border-radius:8px;padding:12px 14px;overflow-x:auto;tab-size:4}
+pre.code .kw{color:var(--real);font-weight:600}
+pre.code .num{color:var(--rand)}
+pre.code .cm{color:var(--muted);font-style:italic}
+.tblwrap{overflow-x:auto}
+table.e3t{border-collapse:collapse;font-family:var(--f-mono);font-size:13.5px;margin-top:4px}
+table.e3t th,table.e3t td{border:1px solid var(--line);padding:3px 10px;text-align:center}
+table.e3t th{background:var(--sunk);color:var(--muted);font-weight:500}
+.hints{display:flex;flex-direction:column;gap:8px}
+.hint{padding:10px 12px;border-left:3px solid var(--line);background:var(--sunk);border-radius:0 6px 6px 0;font-size:14px}
+.hint.sol{border-left-color:var(--ok)}
+.hint b{font-family:var(--f-mono);font-size:12px;color:var(--muted);display:block;font-weight:500}
+
+.tool{display:flex;flex-direction:column;gap:8px}
+.xor{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px;align-items:center}
+.xor input{min-width:0;font-family:var(--f-mono);font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--sunk);color:var(--ink)}
+.xor .op{font-family:var(--f-mono);color:var(--muted)}
+.xres{font-family:var(--f-mono);font-size:15px;padding:7px 9px;border-radius:6px;border:1px dashed var(--line);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.xres{overflow-x:auto}
+.xbtns{display:flex;gap:6px;flex-wrap:wrap}
+.xbtns .btn{font-size:13px;padding:5px 10px}
+.pm{display:flex;gap:6px;flex-wrap:wrap}
+.pm .btn{padding:5px 10px;font-size:13px;font-family:var(--f-mono)}
+/* Tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:8px 14px;margin-bottom:-1px;font-family:var(--f-display);font-weight:700;font-size:16px;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--real)}
+.tabs button:hover{color:var(--ink)}
+.tabpanel{display:flex;flex-direction:column;gap:18px}
+.linkbtn{background:none;border:0;padding:0;color:var(--real);font-weight:600;font-size:13px}
+.linkbtn:hover{text-decoration:underline}
+
+/* Erklärung */
+.learn{display:flex;flex-direction:column;gap:18px;max-width:820px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;align-self:flex-start;background:var(--surface)}
+.seg button{border:0;background:none;padding:8px 16px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+article.doc{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px clamp(16px,4vw,36px);display:flex;flex-direction:column;gap:14px;min-width:0}
+article.doc h2{font-size:26px;font-weight:800;letter-spacing:-.01em}
+article.doc h3{font-size:19px;font-weight:700;margin-top:14px}
+article.doc p,article.doc li{max-width:68ch}
+article.doc p{margin:0}
+article.doc ul,article.doc ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+article.doc .lead{font-size:17px;color:var(--muted)}
+.mathline{font-family:var(--f-mono);font-size:14px;background:var(--sunk);border-radius:8px;padding:10px 14px;overflow-x:auto;white-space:nowrap;line-height:1.8}
+.note{border-left:3px solid var(--real);background:var(--real-soft);padding:10px 14px;border-radius:0 8px 8px 0}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+.tbl table{border-collapse:collapse;width:100%;font-size:14px}
+.tbl th,.tbl td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.tbl th{background:var(--sunk);font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.num{font-family:var(--f-mono);white-space:nowrap}
+.steps{counter-reset:st;list-style:none;padding-left:0!important}
+.steps li{counter-increment:st;display:grid;grid-template-columns:2em minmax(0,1fr);gap:8px}
+.steps li::before{content:counter(st);font-family:var(--f-mono);font-weight:600;color:var(--real);background:var(--real-soft);border-radius:6px;text-align:center;height:1.6em;line-height:1.6em}
+.lit li{font-size:14px}
+article.doc a{color:var(--real);text-decoration-thickness:1px;text-underline-offset:2px}
+article.doc a:hover{text-decoration-thickness:2px}
+/* Fälschen, Finden, Manipulieren */
+.kv,.fgrid{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 12px;align-items:center}
+.kv{background:var(--sunk);border-radius:8px;padding:12px 14px;overflow-x:auto}
+.kv .k,.fgrid .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.plain{font-family:var(--f-mono);white-space:pre}
+.plain.good{color:var(--ok);font-weight:600}
+.v.txt{cursor:default}
+.fgrid input,.tool input.full{min-width:0;width:100%;font-family:var(--f-mono);font-size:15px;padding:8px 11px;border:1px solid var(--line);border-radius:7px;background:var(--sunk);color:var(--ink)}
+.muted{color:var(--muted);font-size:13px}
+.tasks{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.task{border:1px solid var(--line);border-radius:9px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.task p{margin:0}
+.task.solved{border-color:var(--ok);background:var(--ok-soft)}
+.taskhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.badge{font-family:var(--f-mono);font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);background:var(--surface)}
+.task.solved .badge{color:var(--ok);border-color:var(--ok)}
+.feedback .row{display:flex;gap:8px;flex-wrap:wrap}
+footer{color:var(--muted);font-size:12.5px;max-width:80ch}
+@media (prefers-reduced-motion:no-preference){.feedback,.summary{animation:pop .22s ease-out}@keyframes pop{from{transform:translateY(4px);opacity:.6}to{transform:none;opacity:1}}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Orakel-<span>Labor</span></h1>
+      <p>Du bist der Angreifer. Unterscheide echte Verschlüsselung von Zufall, verändere abgefangene Chiffrate, fälsche Tags und finde Kollisionen.</p>
+    </div>
+    <div class="headright">
+      <div class="themesw" role="group" aria-label="Darstellung">
+        <button data-theme-set="light" aria-pressed="false">Hell</button>
+        <button data-theme-set="dark" aria-pressed="false">Dunkel</button>
+        <button data-theme-set="auto" aria-pressed="true">Auto</button>
+      </div>
+      <div class="legend">
+        <span class="chip r"><b>Real</b> · b = 1</span>
+        <span class="chip z"><b>Random</b> · b = 0</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Bereiche">
+    <button role="tab" id="t-play" aria-selected="true" aria-controls="tab-play">Spiel</button>
+    <button role="tab" id="t-learn" aria-selected="false" aria-controls="tab-learn">Erklärung</button>
+  </div>
+
+  <div id="tab-play" role="tabpanel" aria-labelledby="t-play" class="tabpanel">
+  <nav class="levels" id="levels" aria-label="Level"></nav>
+
+  <main>
+    <section class="panel" id="game" aria-live="polite"></section>
+    <aside>
+      <section class="panel">
+        <div class="label">Das Experiment</div>
+        <pre class="code" id="exp"></pre>
+        <div class="help" id="advdef"></div>
+        <div class="help"><button class="linkbtn" id="golearn">Das Spielkonzept ausführlich erklärt →</button></div>
+      </section>
+      <section class="panel">
+        <div class="label">Die Chiffre</div>
+        <div class="desc" id="desc"></div>
+      </section>
+      <section class="panel tool" id="xortool">
+        <div class="label">Werkzeug: XOR-Rechner</div>
+        <div class="help">Klick auf einen Wert im Protokoll setzt ihn in das zuletzt gewählte Feld ein.</div>
+        <div class="xor">
+          <input id="xa" aria-label="Operand A (hex)" placeholder="hex A" autocomplete="off">
+          <span class="op">⊕</span>
+          <input id="xb" aria-label="Operand B (hex)" placeholder="hex B" autocomplete="off">
+        </div>
+        <div class="xres"><span id="xr" class="mono">—</span></div>
+        <div class="xbtns" id="xbtns"></div>
+        <div class="pm" id="pm"></div>
+      </section>
+      <section class="panel tool" id="asciitool" hidden>
+        <div class="label">Werkzeug: ASCII → Hex</div>
+        <input id="ain" class="full" aria-label="Text (ASCII)" placeholder="Text, z. B. Bob" autocomplete="off" spellcheck="false">
+        <div class="xres"><span id="aout" class="mono">—</span></div>
+        <div class="help">Klick auf das Ergebnis setzt es in das zuletzt gewählte Feld ein.</div>
+      </section>
+      <section class="panel">
+        <div class="label">Tipps</div>
+        <div class="hints" id="hints"></div>
+        <div><button class="btn" id="hintbtn">Tipp anzeigen</button></div>
+      </section>
+    </aside>
+  </main>
+  </div>
+
+  <div id="tab-learn" role="tabpanel" aria-labelledby="t-learn" class="tabpanel" hidden>
+  <div class="learn">
+    <div class="seg" role="group" aria-label="Niveau">
+      <button id="seg-basic" aria-pressed="true">Einsteiger</button>
+      <button id="seg-adv" aria-pressed="false">Fortgeschrittene</button>
+    </div>
+
+    <!-- ================= Einsteiger ================= -->
+    <article class="doc" id="learn-basic">
+      <h2>Sicherheit als Spiel</h2>
+      <p class="lead">Wann ist ein kryptographisches Verfahren sicher? Die Kryptographie beantwortet das mit Spielen. Ein Angreifer bekommt genau festgelegte Möglichkeiten und ein klares Ziel. Ein Verfahren gilt als sicher, wenn kein effizienter Angreifer dieses Ziel nennenswert öfter erreicht als durch Raten.</p>
+      <p>Im Orakel-Labor bist du dieser Angreifer. Du kennst das Verfahren vollständig, nur den Schlüssel nicht. Das ist das Kerckhoffs-Prinzip: Sicherheit darf nur vom Schlüssel abhängen, nicht von geheimen Algorithmen. Deshalb steht der Pseudocode jedes Verfahrens direkt neben dem Spiel.</p>
+
+      <h3>Vier Arten von Spielen</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Spiel</th><th>Kapitel</th><th>Dein Ziel</th><th>Gewonnen, wenn</th></tr></thead>
+        <tbody>
+          <tr><td><b>Unterscheiden</b></td><td>Vertraulichkeit, Nonce-Missbrauch</td><td>Erkennen, ob echte Verschlüsselung oder Zufall antwortet</td><td>du deutlich öfter richtig liegst als in der Hälfte der Runden</td></tr>
+          <tr><td><b>Manipulieren</b></td><td>Integrität von Chiffraten</td><td>Ein abgefangenes Chiffrat so ändern, dass der Empfänger eine andere Nachricht liest</td><td>der Empfänger genau deine Wunschnachricht liest</td></tr>
+          <tr><td><b>Fälschen</b></td><td>MACs, Nonce-Missbrauch</td><td>Einen gültigen Tag für eine neue Nachricht erzeugen</td><td>der Empfänger den Tag akzeptiert und du genau dieses Paar bzw. Tripel nie vom Orakel bekommen hast</td></tr>
+          <tr><td><b>Finden</b></td><td>Hashfunktionen</td><td>Kollisionen und Urbilder finden</td><td>H(m1) = H(m2) mit m1 ≠ m2 bzw. H(m) = y</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Unterscheiden: Real oder Random</h3>
+      <p>Stell dir eine Blindverkostung vor. Du bekommst ein Glas und sollst sagen, ob darin das Original oder eine Kopie ist. Wenn du auch nach mehreren Schlucken nur raten kannst, ist die Kopie für dich so gut wie das Original. Hier ist das „Original“ die echte Chiffre und die „Kopie“ reiner Zufall. Wenn Chiffrate wie Zufall aussehen, verraten sie nichts über den Klartext.</p>
+      <ol class="steps">
+        <li><span><b>Münzwurf.</b> Das Spiel wirft verdeckt eine Münze b. Bei b = 1 bist du im Fall <b>Real</b>, bei b = 0 im Fall <b>Random</b>. Außerdem wird ein frischer, geheimer Schlüssel K gezogen.</span></li>
+        <li><span><b>Das Orakel.</b> Du bekommst eine Blackbox O. Im Real-Fall verschlüsselt sie mit dem echten Verfahren und dem Schlüssel K. Im Random-Fall antwortet sie zufällig.</span></li>
+        <li><span><b>Anfragen.</b> Du wählst Eingaben m, schickst sie an O und siehst die Antworten. Die nächste Eingabe darfst du von den bisherigen Antworten abhängig machen.</span></li>
+        <li><span><b>Entscheidung.</b> Du tippst auf b′: Real oder Random.</span></li>
+        <li><span><b>Auflösung.</b> Gilt b′ = b, hast du die Runde gewonnen.</span></li>
+      </ol>
+      <p>Wer einfach rät, liegt in der Hälfte der Fälle richtig. 50 % sind also kein Erfolg. Gemessen wird, wie viel besser du bist als Raten. Dafür vergleichen wir zwei Häufigkeiten: Wie oft sagst du „Real“, wenn es wirklich Real ist? Und wie oft sagst du „Real“, obwohl es Random ist? Die Differenz heißt <b>Vorteil</b>.</p>
+      <div class="note">Beispiel: In 9 von 10 Real-Runden sagst du „Real“, das sind 0,9. In 2 von 10 Random-Runden sagst du ebenfalls „Real“, das sind 0,2. Dein Vorteil ist 0,9 − 0,2 = 0,7. Ein Vorteil nahe 0 heißt: Das Verfahren wirkt sicher. Ein Vorteil nahe 1 heißt: Es ist gebrochen.</div>
+      <p>Was „Random“ genau bedeutet, hängt vom Verfahren ab:</p>
+      <ul>
+        <li><b>Blockchiffren (E3, Feistel), Spiel PRP.</b> Im Random-Fall antwortet eine zufällige Permutation: eine Tabelle, die jeder Eingabe eine zufällige, aber feste Ausgabe zuordnet. PRP steht für <i>pseudorandom permutation</i>.</li>
+        <li><b>Verschlüsselungsverfahren (Substitution, ECB, CBC), Spiel RoR.</b> Im Random-Fall ignoriert das Orakel deine Nachricht und verschlüsselt stattdessen einen Zufallstext gleicher Länge. RoR steht für <i>Real-or-Random</i>.</li>
+      </ul>
+      <p>Außerdem unterscheiden sich die Spiele darin, was du darfst. Bei <b>CPA</b> (<i>Chosen-Plaintext Attack</i>) darfst du Klartexte frei wählen und verschlüsseln lassen. Das ist realistisch: Im Web kann ein Angreifer per JavaScript Anfragen im Browser des Opfers auslösen, die verschlüsselt verschickt werden. Bei <b>CCA</b> (<i>Chosen-Ciphertext Attack</i>) darfst du zusätzlich Chiffrate entschlüsseln lassen. Das Level „Feistel · 3 Runden“ zeigt, wie viel das ausmacht.</p>
+
+      <h3>Manipulieren: Geheim ist nicht unverändert</h3>
+      <p>Verschlüsselung sorgt dafür, dass niemand den Inhalt einer Nachricht lesen kann. Sie sorgt nicht automatisch dafür, dass niemand ihn verändern kann. In diesen Leveln fängst du eine verschlüsselte Überweisung ab. Du kennst ihren Inhalt, aber nicht den Schlüssel. Gelingt es dir, das Chiffrat so zu ändern, dass der Empfänger einen anderen Betrag und einen anderen Namen liest, hat das Verfahren keine <b>Integrität</b>. Der Empfänger merkt davon nichts.</p>
+
+      <ol class="steps">
+        <li><span><b>Abfangen.</b> Du siehst das Chiffrat einer Überweisung, also den Startwert R bzw. C0 und den Block C1. Den Klartext m kennst du auch, nur den Schlüssel nicht.</span></li>
+        <li><span><b>Ziel.</b> Der Empfänger soll statt m die Nachricht m2 lesen.</span></li>
+        <li><span><b>Verändern.</b> Du änderst R bzw. C0, C1 oder beides und schickst das Ergebnis an den Empfänger.</span></li>
+        <li><span><b>Empfänger.</b> Er entschlüsselt, und du siehst im Protokoll, was er liest. Du darfst beliebig oft senden.</span></li>
+        <li><span><b>Gewonnen,</b> sobald er genau m2 liest.</span></li>
+      </ol>
+      <p>In der Wirklichkeit sieht ein Angreifer meist nicht, was der Empfänger liest. Das Labor zeigt es dir, damit du aus jedem Versuch etwas lernst.</p>
+
+      <h3>Fälschen: MACs</h3>
+      <p>Ein MAC (<i>Message Authentication Code</i>) hängt an eine Nachricht m einen kurzen Prüfwert t, den Tag. Nur wer den Schlüssel kennt, kann gültige Tags berechnen. Der Empfänger prüft den Tag und weiß dann, dass die Nachricht vom Schlüsselinhaber stammt und unverändert ist.</p>
+      <p>Im Spiel darfst du dir für beliebige Nachrichten Tags geben lassen. Das heißt <i>Chosen-Message Attack</i> (CMA). Danach reichst du eine Fälschung ein: eine <b>neue</b> Nachricht mit einem gültigen Tag. Einen Tag, den du schon bekommen hast, einfach zurückzugeben, zählt nicht.</p>
+
+      <ol class="steps">
+        <li><span><b>Schlüssel.</b> Das Spiel zieht einen geheimen Schlüssel K.</span></li>
+        <li><span><b>Anfragen.</b> Du schickst bis zu 6 Nachrichten an das Orakel und bekommst jeweils den Tag zurück.</span></li>
+        <li><span><b>Fälschung.</b> Du reichst ein Paar (m*, t*) ein. Eine Nachricht, die du schon angefragt hast, wird nicht angenommen.</span></li>
+        <li><span><b>Gewonnen,</b> wenn t* der richtige Tag für m* ist. Ist er falsch, ist dieser Versuch verloren, und du startest neu mit einem neuen Schlüssel.</span></li>
+      </ol>
+
+      <h3>Finden: Hashfunktionen</h3>
+      <p>Eine Hashfunktion H bildet beliebig lange Nachrichten auf einen kurzen Wert ab, den Hashwert. Sie hat keinen Schlüssel, jeder kann sie berechnen. Zwei Eigenschaften werden in den Leveln getestet:</p>
+      <ul>
+        <li><b>Kollisionsresistenz (CR):</b> Es soll schwer sein, zwei verschiedene Nachrichten mit demselben Hashwert zu finden. Sonst könnte jemand ein harmloses Dokument signieren lassen und die Signatur auf ein anderes übertragen.</li>
+        <li><b>Urbildresistenz (PRE):</b> Zu einem gegebenen Hashwert y soll es schwer sein, irgendeine Nachricht m mit H(m) = y zu finden. Darauf beruht zum Beispiel, dass gespeicherte Passwort-Hashes nicht einfach zurückgerechnet werden können.</li>
+      </ul>
+
+      <ol class="steps">
+        <li><span><b>Ausprobieren.</b> Mit dem Hash-Rechner wertest du H beliebig oft aus. Das ist erlaubt, denn H ist öffentlich.</span></li>
+        <li><span><b>Kollision.</b> Gib zwei verschiedene Nachrichten m1 und m2 mit gleichem Hashwert ein.</span></li>
+        <li><span><b>Urbild.</b> Das Spiel wählt eine geheime Nachricht x und zeigt dir nur y = H(x). Gib irgendeine Nachricht m mit H(m) = y ein. Sie muss nicht x sein.</span></li>
+        <li><span><b>Gewonnen,</b> wenn beide Aufgaben gelöst sind. Ein einziges Urbild genügt, denn schon eines zeigt, dass H nicht urbildresistent ist.</span></li>
+      </ol>
+
+      <h3>Nonce-Missbrauch: Wenn „einmal“ zweimal passiert</h3>
+      <p>Viele moderne Verfahren brauchen neben dem Schlüssel eine <b>Nonce</b> (<i>number used once</i>): eine Zahl, die für jede Nachricht nur einmal verwendet werden darf. Geheim sein muss sie nicht. In der Theorie ist das einfach, in der Praxis erstaunlich schwer. Ein gespeicherter Zähler wird durch ein Backup zurückgesetzt, oder eine virtuelle Maschine wird samt Zustand geklont, und schon wiederholt sich eine Nonce.</p>
+      <p>Im Kapitel „Nonce-Missbrauch“ darfst du Nonces absichtlich wiederholen. In Level 15 unterscheidest du wieder Real von Random, in Level 16 fälschst du Chiffrat und Tag eines authentifizierten Verschlüsselungsverfahrens.</p>
+
+      <h3>Werkzeuge</h3>
+      <ul>
+        <li><b>Werte anklicken.</b> Ein Klick auf einen Wert im Spiel setzt ihn in das zuletzt gewählte Feld ein. Nachrichtenfelder hängen den Wert als weiteren Block an, Einzelfelder wie ein Tag, R oder C1 werden ersetzt.</li>
+        <li><b>XOR-Rechner.</b> Er berechnet A ⊕ B. Mit <b>Ergebnis → A</b> rechnest du weiter: Das Ergebnis wandert nach A, und B ist frei für den nächsten Operanden. So bekommst du a ⊕ b ⊕ c in zwei Schritten: erst a ⊕ b, dann Ergebnis → A, dann c nach B.</li>
+        <li><b>Ergebnis einsetzen.</b> In den meisten Leveln setzt <b>als Eingabe</b> das Ergebnis in das Spiel ein. In den Malleability-Leveln heißen die Knöpfe <b>R ersetzen</b> bzw. <b>C0 ersetzen</b> und <b>C1 ersetzen</b>. Welchen Teil des Chiffrats du ändern musst, ist Teil der Aufgabe.</li>
+        <li><b>ASCII → Hex.</b> Übersetzt Text in Bytes, etwa „Bob“ in <span class="mono">426F62</span>. Ein Klick auf das Ergebnis setzt es ein.</li>
+        <li><b>Tipps.</b> Zu jedem Level gibt es zwei Tipps. Die Lösung wird erst freigeschaltet, wenn du ein Real/Random-Level einmal bis zur Auswertung gespielt hast, ein anderes Level gelöst hast oder dreimal gescheitert bist.</li>
+      </ul>
+
+      <h3>Tipps zum Spielen</h3>
+      <ul>
+        <li>Fang mit einfachen Eingaben an, etwa <span class="mono">0000</span> oder <span class="mono">0001</span>, und ändere dann gezielt nur einen Teil der Eingabe.</li>
+        <li>Achte auf Wiederholungen. Gleiche Chiffratblöcke werden gelb markiert.</li>
+        <li>Rechne mit Differenzen. Oft kennst du einen Wert nicht, aber die Differenz zweier Werte.</li>
+        <li>Schreib den Pseudocode für deine Eingabe einmal von Hand durch. Oft siehst du dann, welcher Teil sich kontrollieren lässt.</li>
+        <li>Formuliere deinen Angriff als feste Regel und wende sie jedes Mal gleich an. Diese Regel ist dein Angreifer A.</li>
+      </ul>
+
+      <h3>Begriffe</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Begriff</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td>Orakel O</td><td>Blackbox, die deine Anfragen beantwortet. Du siehst nur Ein- und Ausgaben.</td></tr>
+          <tr><td>m, c</td><td>Klartext (message) und Chiffrat (ciphertext)</td></tr>
+          <tr><td>K</td><td>Geheimer Schlüssel, in jedem Spiel neu gezogen</td></tr>
+          <tr><td>b, b′</td><td>Geheimes Münzwurf-Bit und dein Tipp. Im Pseudocode heißt b′ <span class="mono">b_prime</span>.</td></tr>
+          <tr><td>Nonce N</td><td>Zahl, die pro Schlüssel nur einmal verwendet werden darf. Sie ist nicht geheim.</td></tr>
+          <tr><td>IV, R, C0</td><td>Startwert eines Betriebsmodus. Er wird mit dem Chiffrat verschickt und ist nicht geheim.</td></tr>
+          <tr><td>Tag t</td><td>Prüfwert eines MAC</td></tr>
+          <tr><td>Hashwert, y</td><td>Ausgabe einer Hashfunktion</td></tr>
+          <tr><td>Kollision</td><td>Zwei verschiedene Nachrichten mit gleichem Hashwert</td></tr>
+          <tr><td>Urbild</td><td>Eine Nachricht, die auf einen vorgegebenen Hashwert abgebildet wird</td></tr>
+          <tr><td>MAC, CMA</td><td>Message Authentication Code. CMA (Chosen-Message Attack): Der Angreifer darf sich Tags für selbst gewählte Nachrichten geben lassen.</td></tr>
+          <tr><td>Malleability</td><td>Formbarkeit: Ein Chiffrat lässt sich gezielt so verändern, dass sich der Klartext vorhersagbar ändert.</td></tr>
+          <tr><td>Permutation</td><td>Umkehrbare Abbildung, die verschiedene Eingaben auf verschiedene Ausgaben abbildet</td></tr>
+          <tr><td>⊕, <span class="mono">^</span></td><td>XOR, bitweise Addition ohne Übertrag. Es gilt a ⊕ a = 0 und a ⊕ 0 = a.</td></tr>
+          <tr><td>Hex, ASCII</td><td>Hex: Schreibweise zur Basis 16, ein Zeichen sind 4 Bit. ASCII: Zuordnung von Zeichen zu Bytes, etwa „Z“ = <span class="mono">5A</span>.</td></tr>
+        </tbody>
+      </table></div>
+      <div><button class="btn primary" data-goplay>Zum Spiel</button></div>
+    </article>
+
+    <!-- ================= Fortgeschrittene ================= -->
+    <article class="doc" id="learn-adv" hidden>
+      <h2>Spielbasierte Sicherheitsdefinitionen</h2>
+      <p class="lead">Alle Level folgen einem von zwei Mustern. In <i>Unterscheidungsspielen</i> soll A zwei Welten auseinanderhalten, der Vorteil ist eine Differenz zweier Wahrscheinlichkeiten. In <i>Suchspielen</i> soll A ein Objekt mit einer Eigenschaft ausgeben, der Vorteil ist die Erfolgswahrscheinlichkeit. Sicherheit heißt jeweils: Jeder ressourcenbeschränkte A hat nur einen kleinen Vorteil.</p>
+
+      <h3>Unterscheidungsspiele: PRP und RoR</h3>
+      <p>Sei E : 𝒦 × {0,1}ⁿ → {0,1}ⁿ eine Blockchiffre, Perm(n) die Menge aller Permutationen auf {0,1}ⁿ und Π = (KGen, ℰ, 𝒟) ein symmetrisches Verschlüsselungsverfahren. A<sup>O</sup> ⇒ 1 bedeutet, dass A mit Orakel O am Ende 1 ausgibt.</p>
+      <div class="mathline">
+        Adv<sup>prp-cpa</sup><sub>E</sub>(A) = Pr[ A<sup>E<sub>K</sub>(·)</sup> ⇒ 1 ] − Pr[ A<sup>π(·)</sup> ⇒ 1 ]<br>
+        Adv<sup>prp-cca</sup><sub>E</sub>(A) = Pr[ A<sup>E<sub>K</sub>(·), E<sub>K</sub><sup>−1</sup>(·)</sup> ⇒ 1 ] − Pr[ A<sup>π(·), π<sup>−1</sup>(·)</sup> ⇒ 1 ]<br>
+        Adv<sup>ror-cpa</sup><sub>Π</sub>(A) = Pr[ A<sup>ℰ<sub>K</sub>(·)</sup> ⇒ 1 ] − Pr[ A<sup>ℰ<sub>K</sub>($<sup>|·|</sup>)</sup> ⇒ 1 ]
+      </div>
+      <p>Dabei gilt K ←$ 𝒦 und π ←$ Perm(n). PRP-CCA heißt auch <i>starke</i> PRP (SPRP). Die Zufallspermutation π erzeugt das Labor per <i>Lazy Sampling</i>: Ein Funktionswert wird erst gezogen, wenn er zum ersten Mal gebraucht wird. Bei RoR-CPA wird in beiden Welten mit demselben Schlüssel verschlüsselt. Nur der Klartext wird in der Random-Welt durch einen gleich langen Zufallsstring ersetzt:</p>
+      <pre class="code" id="learn-exp"></pre>
+      <p>Viele Lehrbücher formulieren dasselbe als <i>Ratespiel</i>: A gewinnt, wenn b′ = b. Beide Lesarten hängen über eine Zeile zusammen:</p>
+      <div class="mathline">
+        Pr[b′ = b] = ½·Pr[b′=1 | b=1] + ½·Pr[b′=0 | b=0] = ½ + ½·( Pr[b′=1 | b=1] − Pr[b′=1 | b=0] ) = ½ + ½·Adv(A)
+      </div>
+      <p>Also gilt Adv(A) = 2·Pr[b′ = b] − 1. Eine Gewinnquote von 85 % entspricht einem Vorteil von 0,7.</p>
+
+      <h3>Suchspiele: SUF-CMA, CR und PRE</h3>
+      <div class="mathline">
+        Adv<sup>suf-cma</sup><sub>MAC</sub>(A) = Pr[ (m*, t*) ∉ Q ∧ MAC<sub>K</sub>(m*) = t* ],&nbsp; wobei (m*, t*) ← A<sup>MAC<sub>K</sub>(·)</sup><br>
+        Adv<sup>cr</sup><sub>H</sub>(A) = Pr[ m1 ≠ m2 ∧ H(m1) = H(m2) ],&nbsp; wobei (m1, m2) ← A<br>
+        Adv<sup>pre</sup><sub>H</sub>(A) = Pr[ H(m) = y ],&nbsp; wobei x ←$ M, y = H(x), m ← A(y)
+      </div>
+      <p>Q ist die Menge der Paare (m, t), die A vom Orakel erhalten hat. Bei <b>UF-CMA</b> muss nur die Nachricht m* neu sein, bei <b>SUF-CMA</b> nur das Paar (m*, t*). SUF verbietet damit auch, zu einer schon angefragten Nachricht einen zweiten gültigen Tag zu finden. Für deterministische MACs mit eindeutigem Tag fallen beide Begriffe zusammen. Deshalb lehnt das Labor bereits angefragte Nachrichten ab.</p>
+      <pre class="code" id="learn-exp-mac"></pre>
+      <p>Bei PRE ist die Verteilung von x Teil der Definition. Im Labor besteht x aus 1 bis 4 gleichverteilten Blöcken. Manche Lehrbücher wählen stattdessen direkt ein gleichverteiltes y. Das ist eine andere Definition, sobald H nicht gleichverteilt abbildet. Die dritte klassische Eigenschaft ist die <b>2nd-Preimage-Resistenz</b>: Zu gegebenem x ist ein m ≠ x mit H(m) = H(x) gesucht.</p>
+      <pre class="code" id="learn-exp-hash"></pre>
+
+      <h3>Kollisionsresistenz ohne Schlüssel</h3>
+      <p>Für eine feste Funktion H mit kürzerer Ausgabe als Eingabe gibt es immer Kollisionen. Also gibt es auch immer einen Angreifer, der eine davon fest einprogrammiert hat und Vorteil 1 erreicht. Formal ist eine schlüssellose Hashfunktion deshalb nie kollisionsresistent. Zwei Auswege sind üblich: Man betrachtet Familien H<sub>K</sub> mit öffentlichem, zufällig gewähltem Schlüssel K (Damgård), oder man formuliert Sicherheit als explizite Reduktion: „Wer mit dem Verfahren bricht, dem kann man eine Kollision in H ausrechnen“ (Rogaway, <i>human ignorance</i>). Die Level H1 bis H3 haben ohnehin keine Schwäche dieser subtilen Art. Ihre Kollisionen findet jeder in Sekunden.</p>
+      <p>Generische Angriffe geben die Messlatte vor: Eine Kollision findet man für einen n-Bit-Hashwert nach etwa 2<sup>n/2</sup> Versuchen (Geburtstagsparadoxon), ein Urbild nach etwa 2ⁿ. Bei H1 mit n = 8 sind das 16 bzw. 256 Versuche, also auch von Hand machbar. Darum braucht man in der Praxis n ≥ 256.</p>
+
+      <h3>Vertraulichkeit ist keine Integrität</h3>
+      <p>RoR-CPA-Sicherheit sagt nichts darüber aus, was beim Entschlüsseln eines veränderten Chiffrats herauskommt. Die Integrität von Chiffraten wird mit einem eigenen Suchspiel gemessen:</p>
+      <div class="mathline">Adv<sup>int-ctxt</sup><sub>Π</sub>(A) = Pr[ A<sup>ℰ<sub>K</sub>(·), 𝒟<sub>K</sub>(·)</sup> gibt ein c aus mit 𝒟<sub>K</sub>(c) ≠ ⊥, das nie Antwort von ℰ<sub>K</sub> war ]</div>
+      <p>Level 16 verwendet dieses Spiel in der Form mit den Prozeduren Initialize, Encrypt, Verify und Finalize.</p>
+      <p>Das Malleability-Spiel im Labor ist eine schärfere Variante. A muss nicht nur irgendein gültiges neues Chiffrat erzeugen, sondern eines, das zu einer vorgegebenen Nachricht entschlüsselt. Modi ohne Redundanz wie CTR oder CBC akzeptieren jedes Chiffrat passender Länge und sind darum nie INT-CTXT-sicher. Für CTR sieht das Spiel so aus:</p>
+      <pre class="code" id="learn-exp-mall"></pre>
+      <p>Bellare und Namprempre (2000) zeigen: IND-CPA zusammen mit INT-CTXT ergibt IND-CCA. Diese Kombination heißt <i>authentifizierte Verschlüsselung</i> (AE). Generisch sicher ist Encrypt-then-MAC: erst verschlüsseln, dann einen sicheren MAC über das Chiffrat bilden. In der Praxis verwendet man AE-Verfahren wie AES-GCM oder ChaCha20-Poly1305.</p>
+      <p>Von den drei generischen Kompositionen Encrypt-and-MAC (Varianten in SSH), MAC-then-Encrypt (TLS 1.0 und 1.1) und Encrypt-then-MAC (IPsec) ist nur Encrypt-then-MAC frei von Schwächen. Doch auch das kann an der Schlüsselverwaltung scheitern: Aktualisiert der Empfänger nur den MAC-Schlüssel, entschlüsselt er zu „authentischem“ Zufallsmüll.</p>
+
+      <h3>Nonce-respektierende und nonce-ignorierende Angreifer</h3>
+      <p>Nonce-basierte Verfahren sind nur gegen <i>nonce-respektierende</i> Angreifer sicher, die jede Nonce höchstens einmal verwenden. Ein <i>nonce-ignorierender</i> Angreifer darf Nonces wiederholen. Zwei generische Angriffsmuster zeigen, dass dann fast alle bis 2014 veröffentlichten On-line-AE-Verfahren Vertraulichkeit, Integrität oder beides verlieren: der <b>Repeated-Keystream-Angriff</b> gegen alle Verfahren mit CTR-Kern und der <b>Linear-Tag-Angriff</b> gegen Tags der Form T = F<sub>K</sub>(N) ⊕ G<sub>K</sub>(·). Die Level 15 und 16 setzen genau diese beiden Muster um.</p>
+      <p>Ganz ohne Folgen bleibt eine wiederholte Nonce nie. Ein deterministisches Verfahren verrät dann zumindest, ob zwei Nachrichten gleich sind. Ein On-line-Verfahren, dessen i-ter Chiffratblock nur von den ersten i Klartextblöcken abhängt, verrät zusätzlich den längsten gemeinsamen Präfix zweier Nachrichten. Ein On-line-Verfahren heißt deshalb <i>misuse-resistent</i>, wenn es darüber hinaus nichts preisgibt. Beispiele für Verfahren, die auch bei Nonce-Missbrauch die Integrität vollständig erhalten, sind COFFE und McOE.</p>
+
+      <h3>Wo das Labor vom Lehrbuch abweicht</h3>
+      <ul>
+        <li><b>Begrenzte Anfragen.</b> In der Theorie darf A beliebig viele Anfragen stellen, und der Vorteil wird als Funktion von q angegeben. Das Labor begrenzt q auf 4 bzw. 6, damit das Protokoll übersichtlich bleibt. Alle Angriffe kommen mit weniger aus.</li>
+        <li><b>Sichtbare Entschlüsselung.</b> Im Malleability-Spiel sieht A, was der Empfänger liest. Damit hat A faktisch ein Entschlüsselungsorakel wie in den Spielen INT-CTXT und IND-CCA. Für den Angriff ist es nicht nötig. Er gelingt auch blind beim ersten Versuch. Gibt ein echter Empfänger Klartext heraus, bevor er dessen Echtheit geprüft hat, spricht man von <i>Decryption Misuse</i>.</li>
+        <li><b>Mehrere Versuche.</b> Formal ist jedes Suchspiel ein einziges Experiment. Das Labor erlaubt Wiederholungen mit frischem Schlüssel und zählt Fehlversuche. Für den Vorteil zählt nur, ob ein fester Angriff zuverlässig gewinnt.</li>
+        <li><b>Kleine Parameter.</b> Blöcke, Tags und Hashwerte haben 16 Bit oder weniger. Generische Angriffe wie Raten oder Durchprobieren sind damit manchmal machbar. Die Level sind so gebaut, dass der strukturelle Angriff schneller ist.</li>
+      </ul>
+
+      <h3>Konkrete und asymptotische Sicherheit</h3>
+      <p>Im konkreten Ansatz nach Bellare und Rogaway zählt man Ressourcen: Laufzeit t, Anzahl Anfragen q und Gesamtlänge σ der Anfragen in Blöcken. Ein Verfahren heißt (t, q, ε)-sicher, wenn Adv(A) ≤ ε für jeden Angreifer mit höchstens diesen Ressourcen gilt. Im asymptotischen Ansatz hängt alles von einem Sicherheitsparameter λ ab. Sicher heißt dann: Für jeden PPT-Angreifer ist der Vorteil vernachlässigbar in λ.</p>
+      <p>Das Labor verwendet absichtlich winzige Parameter (2 bzw. 16 Bit Blockgröße, 8 bzw. 16 Bit Hash- und Taglänge). So werden Wahrscheinlichkeiten wie 2⁻⁸ direkt erfahrbar. Gleichzeitig zeigt es, warum reale Verfahren 128 Bit und mehr brauchen.</p>
+
+      <h3>Was sicher ist und warum</h3>
+      <ul>
+        <li><b>Feistel mit 3 Runden ist eine PRP</b> (Luby und Rackoff, 1988). Mit zufälligen Rundenfunktionen auf n/2 Bit ist der PRP-CPA-Vorteil jedes Angreifers höchstens etwa q²/2<sup>n/2</sup>. Eine starke PRP (CCA) ergibt sich erst mit 4 Runden.</li>
+        <li><b>CBC mit zufälligem IV ist RoR-CPA-sicher</b>, wenn E eine PRP ist (Bellare, Desai, Jokipii, Rogaway, 1997). Der Vorteil ist durch den PRP-Vorteil plus einen Term der Größenordnung σ²/2ⁿ beschränkt.</li>
+        <li><b>Deterministische Verfahren sind nie RoR-CPA-sicher.</b> Den Beweis kannst du in einer der Übungen selbst führen.</li>
+        <li><b>Eine PRF ist ein sicherer MAC</b> für Nachrichten fester Länge: Adv<sup>uf-cma</sup> ≤ Adv<sup>prf</sup> + 2<sup>−τ</sup> bei Taglänge τ. Für Nachrichten variabler Länge braucht es eine sorgfältige Konstruktion wie CMAC oder HMAC.</li>
+      </ul>
+
+      <h3>Geburtstagsschranke und PRP/PRF-Switching</h3>
+      <p>Eine zufällige Permutation und eine zufällige Funktion lassen sich nur durch Kollisionen unterscheiden. Für q Anfragen gilt</p>
+      <div class="mathline">| Pr[ A<sup>π</sup> ⇒ 1 ] − Pr[ A<sup>ρ</sup> ⇒ 1 ] | ≤ q(q−1) / 2<sup>n+1</sup></div>
+      <p>mit π ←$ Perm(n) und ρ ←$ Func(n, n). In Beweisen darf man deshalb eine PRP gegen eine PRF tauschen. Ab etwa 2<sup>n/2</sup> Blöcken werden Kollisionen wahrscheinlich, und auch sichere Modi verlieren ihre Garantie. Bei n = 64 (3DES, Blowfish) sind das rund 32 GB. Genau das nutzt der Sweet32-Angriff (2016).</p>
+
+      <h3>RoR und LoR</h3>
+      <p>Eine verbreitete Alternative ist Left-or-Right (LoR, oft IND-CPA genannt): Das Orakel erhält zwei gleich lange Nachrichten (m₀, m₁) und verschlüsselt m<sub>b</sub>. RoR und LoR sind bis auf einen Faktor 2 äquivalent: Adv<sup>lor</sup> ≤ 2·Adv<sup>ror</sup>, und jeder RoR-Angreifer ist ein LoR-Angreifer mit gleichem Vorteil. Für den Unterricht ist RoR handlicher, weil man pro Anfrage nur eine Nachricht wählt.</p>
+
+      <h3>Warum 10 Runden nur eine Schätzung liefern</h3>
+      <p>Pro Level fallen im Mittel 5 Runden auf jede Welt. Eine geschätzte Häufigkeit aus 5 Versuchen hat eine Standardabweichung von bis zu √(0,25/5) ≈ 0,22. Der angezeigte Vorteil schwankt deshalb um mehrere Zehntel. Ein Experiment kann einen guten Angriff bestätigen. Sicherheit beweist es nie. Dafür braucht man eine Reduktion.</p>
+
+      <h3>Und die Lösungen?</h3>
+      <p>Die Angriffe auf die einzelnen Level stehen bewusst nicht hier, nur die Verweise auf ihre Quellen. Zu jedem Level gibt es im Spiel zwei Tipps. Die Lösung wird freigeschaltet, sobald du ein Unterscheidungsspiel einmal bis zur Auswertung gespielt hast, ein Suchspiel gelöst hast oder dreimal gescheitert bist.</p>
+
+      <h3>Übungsideen</h3>
+      <ol>
+        <li>Schreibe deinen Angriff auf „Feistel · 2 Runden“ als Python-Funktion <span class="mono">A(O)</span> und berechne seinen Vorteil exakt.</li>
+        <li>Bestimme für E3 den bestmöglichen Vorteil mit einer, zwei, drei und vier Anfragen.</li>
+        <li>Beweise: Kein deterministisches Verfahren ist RoR-CPA-sicher. Wie groß ist der Vorteil mit einer Anfrage, wie groß mit zwei?</li>
+        <li>Wie viele Anfragen braucht ein Angreifer gegen CBC mit zufälligem IV bei n = 16, um mit Wahrscheinlichkeit ½ eine Kollision zu sehen? Was kann er damit anfangen?</li>
+        <li>Verallgemeinere den Malleability-Angriff auf CBC für Nachrichten aus mehreren Blöcken. Welche Blöcke kannst du gezielt ändern, und welchen Preis zahlst du dafür?</li>
+        <li>Wie wenige Orakelanfragen braucht ein Angriff auf MAC c? Welche Änderung an der Konstruktion würde ihn verhindern?</li>
+        <li>Zeige, dass Encrypt-then-MAC mit CBC und einem sicheren MAC die Angriffe aus dem Kapitel „Integrität von Chiffraten“ verhindert.</li>
+        <li>Finde für H1 zu x = <span class="mono">1234 5678</span> eine zweite Nachricht m ≠ x mit H1(m) = H1(x), also ein 2nd-Preimage. Warum folgt 2nd-Preimage-Resistenz aus Kollisionsresistenz?</li>
+      </ol>
+
+      <h3>Literatur</h3>
+      <ul class="lit">
+        <li>M. Bellare, P. Rogaway: <a href="https://web.cs.ucdavis.edu/~rogaway/classes/227/spring05/book/main.pdf" target="_blank" rel="noopener"><i>Introduction to Modern Cryptography</i></a>. Vorlesungsskript (PDF).</li>
+        <li>J. Katz, Y. Lindell: <a href="https://www.routledge.com/Introduction-to-Modern-Cryptography-Revised-Third-Edition/Katz-Lindell/p/book/9781032496795" target="_blank" rel="noopener"><i>Introduction to Modern Cryptography</i></a>. 3. Aufl., CRC Press.</li>
+        <li>D. Boneh, V. Shoup: <a href="https://crypto.stanford.edu/~dabo/cryptobook/" target="_blank" rel="noopener"><i>A Graduate Course in Applied Cryptography</i></a>. Frei verfügbares Lehrbuch.</li>
+        <li>M. Bellare, A. Desai, E. Jokipii, P. Rogaway: <a href="https://cseweb.ucsd.edu/~mihir/papers/sym-enc.pdf" target="_blank" rel="noopener"><i>A Concrete Security Treatment of Symmetric Encryption</i></a>. FOCS 1997.</li>
+        <li>M. Bellare, C. Namprempre: <a href="https://eprint.iacr.org/2000/025" target="_blank" rel="noopener"><i>Authenticated Encryption: Relations among Notions and Analysis of the Generic Composition Paradigm</i></a>. ASIACRYPT 2000.</li>
+        <li>C. Forler: <a href="https://www.db-thueringen.de/servlets/MCRFileNodeServlet/dbt_derivate_00043056/dissertation_pdfa.pdf" target="_blank" rel="noopener"><i>Analysis, Design &amp; Applications of Cryptographic Building Blocks</i></a>. Dissertation, Bauhaus-Universität Weimar, 2015.</li>
+        <li>M. Luby, C. Rackoff: <a href="https://doi.org/10.1137/0217022" target="_blank" rel="noopener"><i>How to Construct Pseudorandom Permutations from Pseudorandom Functions</i></a>. SIAM J. Computing 17(2), 1988.</li>
+        <li>P. Rogaway: <a href="https://eprint.iacr.org/2006/281" target="_blank" rel="noopener"><i>Formalizing Human Ignorance: Collision-Resistant Hashing without the Keys</i></a>. VIETCRYPT 2006.</li>
+      </ul>
+      <div><button class="btn primary" data-goplay>Zum Spiel</button></div>
+    </article>
+  </div>
+  </div>
+
+  <footer>
+    <p>Prototyp für „Sicherheit Digitaler Systeme“. Blöcke sind bewusst klein (2, 16 bzw. 128 Bit), damit Werte lesbar bleiben. Alle Zufallswerte stammen aus <span class="mono">crypto.getRandomValues</span>. Der Fortschritt bleibt nur in diesem Browser.</p>
+    <p><b>Entstehung:</b> Konzept und Lehrmaterial von Prof. Dr. Christian Forler (BHT). Das Orakel-Labor wurde mit Claude Opus 5.5 (Anthropic) erstellt. Code und Texte sind KI-gestützt entstanden und können Fehler enthalten. Hinweise bitte an die Lehrperson.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+/* ---------- Zufall & Hilfsfunktionen ---------- */
+const rnd = n => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; };
+const rnd16 = () => rnd(65536);
+const randFn8 = () => crypto.getRandomValues(new Uint8Array(256));
+const hex = (x, d=4) => x.toString(16).toUpperCase().padStart(d, "0");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function lazyPerm16(){ const m=new Map(), used=new Set();
+  return x => { if(m.has(x)) return m.get(x); let y; do{ y=rnd16(); }while(used.has(y)); used.add(y); m.set(x,y); return y; }; }
+function feistel16(rounds){ const f = Array.from({length:rounds}, randFn8);
+  return x => { let L=x>>8, R=x&255; for(const fi of f){ const t=L^fi[R]; L=R; R=t; } return (L<<8)|R; }; }
+// wie P2.java: X = L ⊕ f1(R); Y = R ⊕ f2(X)
+function P2(){ const f1=randFn8(), f2=randFn8();
+  return x => { const L=x>>8, R=x&255; const X=L^f1[R]; const Y=R^f2[X]; return (X<<8)|Y; }; }
+// wie P3.java: S = L ⊕ f1(R); Y = R ⊕ f2(S); X = S ⊕ f3(Y)
+function P3pair(){ const f1=randFn8(), f2=randFn8(), f3=randFn8();
+  return { enc: x => { const L=x>>8, R=x&255; const S=L^f1[R]; const Y=R^f2[S]; const X=S^f3[Y]; return (X<<8)|Y; },
+           dec: c => { const X=c>>8, Y=c&255; const S=X^f3[Y]; const R=Y^f2[S]; const L=S^f1[R]; return (L<<8)|R; } }; }
+function lazyPermPair16(){ const fw=new Map(), bw=new Map();
+  const fresh = m => { let y; do{ y=rnd16(); }while(m.has(y)); return y; };
+  return { enc: x => { if(!fw.has(x)){ const y=fresh(bw); fw.set(x,y); bw.set(y,x); } return fw.get(x); },
+           dec: y => { if(!bw.has(y)){ const x=fresh(fw); fw.set(x,y); bw.set(y,x); } return bw.get(y); } }; }
+function P3(){ const f1=randFn8(), f2=randFn8(), f3=randFn8();
+  return x => { const L=x>>8, R=x&255; const S=L^f1[R]; const Y=R^f2[S]; const X=S^f3[Y]; return (X<<8)|Y; }; }
+
+const E3T = [[2,0,1,3],[3,2,1,0],[0,1,2,3],[2,1,0,3],[0,1,2,3],[2,3,1,0],[0,2,3,1],[1,2,3,0]];
+function shuffleN(n){ const a=[...Array(n).keys()]; for(let i=n-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const randHex = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b=>hex(b,2)).join("");
+const xorHex = (a,b) => { let o=""; for(let i=0;i<a.length;i++) o+=(parseInt(a[i],16)^parseInt(b[i],16)).toString(16).toUpperCase(); return o; };
+const asciiHex = s => Array.from(s, c=>hex(c.charCodeAt(0)&255,2)).join("");
+const hexAscii = h => (h.match(/../g)||[]).map(x=>{ const c=parseInt(x,16); return c>=32&&c<127 ? String.fromCharCode(c) : "·"; }).join("");
+const grp = h => h.replace(/(.{4})(?=.)/g,"$1 ");
+const cleanHex = s => s.replace(/[\s|·.,_-]/g,"").toUpperCase();
+function lazyFn16(){ const m=new Map(); return x => { if(!m.has(x)) m.set(x, rnd16()); return m.get(x); }; }
+function lazyHexMap(){ const m=new Map(); const f = k => { if(!m.has(k)) m.set(k, randHex(16)); return m.get(k); }; f.set=(k,v)=>m.set(k,v); return f; }
+function parseHexN(s, nHex, what){
+  const t=cleanHex(s);
+  if(!t) return {err:`${what} fehlt.`};
+  if(!/^[0-9A-F]+$/.test(t)) return {err:"Nur Hex-Zeichen 0–9 und A–F erlaubt."};
+  if(t.length!==nHex) return {err:`${what} muss genau ${nHex} Hex-Zeichen lang sein (gerade ${t.length}).`};
+  return {v:t};
+}
+function parseText(s){
+  const t=s.toLowerCase();
+  if(!t.trim()) return {err:"Gib einen Text aus Kleinbuchstaben a–z ein."};
+  if(!/^[a-z ]+$/.test(t)) return {err:"Nur Buchstaben a–z und Leerzeichen erlaubt."};
+  if(t.length>16) return {err:"Höchstens 16 Zeichen."};
+  return {v:t};
+}
+function shuffle4(){ const a=[0,1,2,3]; for(let i=3;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function parseBlocks(s, maxBlocks){
+  const t = s.replace(/[\s|·.,_-]/g,"").toUpperCase();
+  if(!t) return {err:"Gib eine Nachricht in Hex ein, z. B. 0000 1234."};
+  if(!/^[0-9A-F]+$/.test(t)) return {err:"Nur Hex-Zeichen 0–9 und A–F erlaubt."};
+  if(t.length % 4) return {err:"Die Länge muss ein Vielfaches von 4 Hex-Zeichen sein (ein Block = 16 Bit)."};
+  const n = t.length/4;
+  if(n > maxBlocks) return {err:`Höchstens ${maxBlocks} Blöcke pro Nachricht.`};
+  const b=[]; for(let i=0;i<n;i++) b.push(parseInt(t.slice(4*i,4*i+4),16));
+  return {blocks:b};
+}
+
+/* ---------- Experimente (Darstellung) ---------- */
+const EXP_PRP = (name, bits) => `def exp_prp_cpa(A):
+    b = randint(0, 1)
+    K = keygen()
+    pi = random_permutation(${bits})   # auf {0,1}^${bits}
+
+    def O(m):
+        if b == 1:
+            return ${name}(K, m)         # Real
+        else:
+            return pi(m)              # Random
+
+    b_prime = A(O)
+    return b_prime`;
+const EXP_ROR = name => `def exp_ror_cpa(A):
+    b = randint(0, 1)
+    K = keygen()
+
+    def O(m):
+        if b == 1:
+            return ${name}(K, m)                        # Real
+        else:
+            r = [randint(0, 2**16 - 1) for _ in m]   # |r| = |m|
+            return ${name}(K, r)                        # Random
+
+    b_prime = A(O)
+    return b_prime`;
+const ADV = `Vorteil: <span class="mono">Adv(A) = Pr[b′=1 | b=1] − Pr[b′=1 | b=0]</span>, wobei b′ = <span class="mono">b_prime</span>. Rät A nur, ist der Vorteil 0.`;
+const EXP_ROR_TXT = name => `def exp_ror_cpa(A):
+    b = randint(0, 1)
+    K = keygen()
+
+    def O(m):
+        if b == 1:
+            return ${name}(K, m)                 # Real
+        else:
+            r = random_text(len(m))           # |r| = |m|
+            return ${name}(K, r)                 # Random
+
+    b_prime = A(O)
+    return b_prime`;
+const EXP_MAC = name => `def exp_suf_cma(A):
+    K = keygen()
+    Q = []          # angefragte Paare (m, t)
+
+    def O(m):
+        t = ${name}(K, m)
+        Q.append((m, t))
+        return t
+
+    m_star, t_star = A(O)
+    return (m_star, t_star) not in Q and ${name}(K, m_star) == t_star`;
+const EXP_HASH = name => `def exp_cr(A):
+    m1, m2 = A()    # kein Schlüssel
+    return m1 != m2 and ${name}(m1) == ${name}(m2)
+
+def exp_pre(A):
+    x = random_message()    # 1 bis 4 Blöcke, geheim
+    y = ${name}(x)
+    m = A(y)
+    return ${name}(m) == y`;
+const EXP_MALL = mode => `def exp_malleability(A):
+    K = keygen()
+    m  = b"Zahle Bob EUR100"
+    m2 = b"Zahle Eve EUR500"
+    c  = ${mode}_enc(K, m)
+    c_forged = A(c, m, m2)    # ohne K
+    return c_forged != c and ${mode}_dec(K, c_forged) == m2`;
+const WIN_MAC = `A gewinnt, wenn das Paar (m*, t*) neu ist und der Tag stimmt. Weil der MAC deterministisch ist, heißt das hier: m* wurde nicht angefragt.`;
+const WIN_HASH = `A gewinnt CR mit einer Kollision und PRE mit einem Urbild. Ein Schlüssel kommt nicht vor, der Vorteil ist hier einfach die Erfolgswahrscheinlichkeit.`;
+const WIN_MALL = `A gewinnt, wenn der Empfänger genau m2 liest. A sieht dabei weder den Schlüssel noch den Schlüsselstrom.`;
+
+/* ---------- Level ---------- */
+const LEVELS = [
+{ id:"sub", chapter:"conf", n:"01", title:"Substitution", sub:"monoalphabetisch über a–z", kind:"RoR-CPA", input:"text", maxQ:4, rounds:10, target:9, secure:false,
+  exp:EXP_ROR_TXT("Sub"),
+  code:`ALPHABET = "abcdefghijklmnopqrstuvwxyz"
+
+def keygen():
+    pi = list(ALPHABET)
+    shuffle(pi)                      # zufällige Permutation
+    return dict(zip(ALPHABET, pi))
+
+def Sub(K, m):                       # m: Text aus a-z
+    return "".join(K.get(ch, ch) for ch in m)`,
+  note:`<p>Eingabe: bis zu 16 Kleinbuchstaben a–z. Leerzeichen bleiben unverändert. In der Random-Welt wird ein zufälliger Text gleicher Länge verschlüsselt.</p>`,
+  setup(real){ return {perm:shuffleN(26), real}; },
+  query(o, text){
+    const m = o.real ? text : text.replace(/[a-z]/g, ()=>String.fromCharCode(97+rnd(26)));
+    const c = m.replace(/[a-z]/g, ch=>String.fromCharCode(97+o.perm[ch.charCodeAt(0)-97]));
+    return {inp:[{v:text, txt:1}], out:[{v:c, txt:1}]}; },
+  hints:[
+    "Was passiert mit einem Buchstaben, der zweimal in deiner Nachricht vorkommt?",
+    "Eine Substitution bildet gleiche Klartextbuchstaben immer auf gleiche Chiffratbuchstaben ab. Ein Zufallstext tut das nicht.",
+    "<b>Lösung</b>Frage m = „aa“. Real: beide Chiffratbuchstaben sind gleich. Random: Der Zufallstext hat nur mit Wahrscheinlichkeit 1/26 zwei gleiche Buchstaben. Vorteil 1 − 1/26 ≈ 0,96. Mit „aaaa“ steigt er auf 1 − 1/26³."
+  ]},
+{ id:"e3", n:"02", title:"E3", sub:"Spielzeug-Blockchiffre, 2 Bit", kind:"PRP-CPA", input:"e3", maxQ:4, rounds:10, target:8, secure:false,
+  exp:EXP_PRP("E3", 2),
+  code:`# öffentlich bekannt (Kerckhoffs)
+T = [[2, 0, 1, 3],   # K = 0
+     [3, 2, 1, 0],   # K = 1
+     [0, 1, 2, 3],   # K = 2
+     [2, 1, 0, 3],   # K = 3
+     [0, 1, 2, 3],   # K = 4
+     [2, 3, 1, 0],   # K = 5
+     [0, 2, 3, 1],   # K = 6
+     [1, 2, 3, 0]]   # K = 7
+
+def keygen():
+    return randint(0, 7)
+
+def E3(K, m):        # m in {0, 1, 2, 3}
+    return T[K][m]`,
+  note:`<p>In der Random-Welt antwortet eine zufällige Permutation auf {0,1,2,3}.</p>`,
+  setup(real){ if(real){ const k=rnd(8); return x=>E3T[k][x]; } const p=shuffle4(); return x=>p[x]; },
+  query(o, x){ return {inp:[{v:String(x)}], out:[{v:String(o(x))}]}; },
+  hints:[
+    "Schau dir in der Tabelle die Spalte für die Eingabe m = 3 an. Fällt dir etwas auf?",
+    "Für 7 von 8 Schlüsseln gilt E3<sub>K</sub>(3) ∈ {0, 3}. Eine zufällige Permutation trifft das nur mit Wahrscheinlichkeit 1/2. Mit einer Anfrage erreichst du so Vorteil 7/8 − 1/2 = 3/8.",
+    "<b>Lösung</b>Frage alle vier Eingaben ab und vergleiche die erhaltene Permutation mit den Zeilen der Tabelle. Nur 7 der 24 Permutationen kommen dort vor. Steht sie in der Tabelle: Real, sonst Random. Vorteil 1 − 7/24 = 17/24 ≈ 0,71."
+  ]},
+{ id:"p2", n:"03", title:"Feistel · 2 Runden", sub:"wie P2.java, 16 Bit", kind:"PRP-CPA", input:"hex16", maxQ:4, rounds:10, target:9, secure:false,
+  exp:EXP_PRP("P2", 16),
+  code:`def keygen():
+    f1 = random_function(8, 8)   # {0,1}^8 -> {0,1}^8
+    f2 = random_function(8, 8)
+    return (f1, f2)
+
+def P2(K, m):                    # m: 16 Bit
+    f1, f2 = K
+    L, R = m >> 8, m & 0xFF      # je 8 Bit
+    X = L ^ f1(R)
+    Y = R ^ f2(X)
+    return (X << 8) | Y`,
+  note:`<p>Eingabe als 4 Hex-Zeichen, z. B. <span class="mono">3A 7F</span> für L = 0x3A, R = 0x7F. <span class="mono">^</span> ist XOR.</p>`,
+  setup(real){ return real ? P2() : lazyPerm16(); },
+  query(o, x){ const y=o(x); return {inp:[{v:hex(x>>8,2)},{sep:1},{v:hex(x&255,2)}], out:[{v:hex(y>>8,2)},{sep:1},{v:hex(y&255,2)}]}; },
+  hints:[
+    "Ändere nur die linke Hälfte L und lass R gleich. Was passiert mit X?",
+    "Bei gleichem R ist auch f₁(R) gleich. Also gilt X₁ ⊕ X₂ = L₁ ⊕ L₂. Nutze den XOR-Rechner.",
+    "<b>Lösung</b>Frage (L, R) und (L ⊕ Δ, R) mit festem Δ ≠ 0. Gilt X₁ ⊕ X₂ = Δ: Real, sonst Random. Eine zufällige Permutation erfüllt das nur mit Wahrscheinlichkeit ≈ 1/256. Vorteil ≈ 1 − 2⁻⁸. Genau das macht P2Adversary.java."
+  ]},
+{ id:"p3cca", n:"04", title:"Feistel · 3 Runden", sub:"wie P3.java, mit Entschlüsselungsorakel", kind:"PRP-CCA", input:"cca", maxQ:4, rounds:10, target:9, secure:false,
+  exp:`def exp_prp_cca(A):
+    b = randint(0, 1)
+    K = keygen()
+    pi = random_permutation(16)
+
+    def O(m):                     # Verschlüsseln
+        if b == 1:
+            return P3(K, m)           # Real
+        else:
+            return pi(m)              # Random
+
+    def O_inv(c):                 # Entschlüsseln
+        if b == 1:
+            return P3_inv(K, c)       # Real
+        else:
+            return pi_inv(c)          # Random
+
+    b_prime = A(O, O_inv)
+    return b_prime`,
+  code:`def keygen():
+    f1 = random_function(8, 8)   # {0,1}^8 -> {0,1}^8
+    f2 = random_function(8, 8)
+    f3 = random_function(8, 8)
+    return (f1, f2, f3)
+
+def P3(K, m):                    # m: 16 Bit
+    f1, f2, f3 = K
+    L, R = m >> 8, m & 0xFF
+    S = L ^ f1(R)
+    Y = R ^ f2(S)
+    X = S ^ f3(Y)
+    return (X << 8) | Y
+
+def P3_inv(K, c):                # c: 16 Bit
+    f1, f2, f3 = K
+    X, Y = c >> 8, c & 0xFF
+    S = X ^ f3(Y)
+    R = Y ^ f2(S)
+    L = S ^ f1(R)
+    return (L << 8) | R`,
+  note:`<p>Wie P3.java: eine Runde mehr als „Feistel · 2 Runden“. Mit reinen Verschlüsselungsanfragen (CPA) ist diese Chiffre sicher (Luby-Rackoff). Hier darfst du zusätzlich Chiffrate entschlüsseln lassen. Im Protokoll steht vor jeder Anfrage, ob sie an <span class="mono">O</span> oder an <span class="mono">O_inv</span> ging.</p>`,
+  setup(real){ return real ? P3pair() : lazyPermPair16(); },
+  query(o, x, dir){ const y = dir==="dec" ? o.dec(x) : o.enc(x);
+    return {inp:[{tag: dir==="dec"?"O_inv":"O"},{v:hex(x>>8,2)},{sep:1},{v:hex(x&255,2)}], out:[{v:hex(y>>8,2)},{sep:1},{v:hex(y&255,2)}]}; },
+  hints:[
+    "Fang an wie bei „Feistel · 2 Runden“: zwei Verschlüsselungen mit gleichem R, also (L₁, R) und (L₂, R).",
+    "Für die inneren Werte gilt S₁ ⊕ S₂ = L₁ ⊕ L₂. Wähle eine Entschlüsselungsanfrage so, dass beim Rückwärtsrechnen wieder S₁ entsteht. Was weißt du dann über R′?",
+    "<b>Lösung</b>O(L₁‖R) → X₁‖Y₁, O(L₂‖R) → X₂‖Y₂, dann O_inv((X₂ ⊕ L₁ ⊕ L₂)‖Y₂) → L′‖R′. Beim Rückwärtsrechnen ergibt sich S′ = S₁ und damit R′ = Y₂ ⊕ f₂(S₁) = R ⊕ Y₁ ⊕ Y₂. Gilt das: Real, sonst Random. Eine zufällige Permutation erfüllt es nur mit Wahrscheinlichkeit ≈ 2⁻⁸. Vorteil ≈ 1 − 2⁻⁸ mit 3 Anfragen."
+  ]},
+{ id:"ecb", n:"05", title:"ECB-Modus", sub:"RoR-CPA, deterministisch", kind:"RoR-CPA", input:"msg", maxQ:4, maxBlocks:4, rounds:10, target:9, secure:false,
+  exp:EXP_ROR("ECB"),
+  code:`# E: sichere 16-Bit-Blockchiffre (4-Runden-Feistel)
+
+def keygen():
+    return E.keygen()
+
+def ECB(K, m):              # m = [m1, ..., mn], Blöcke à 16 Bit
+    return [E(K, mi) for mi in m]`,
+  note:`<p>Nachrichten: 1 bis 4 Blöcke zu je 4 Hex-Zeichen. Gleiche Chiffratblöcke werden gelb markiert.</p>`,
+  setup(real){ const E=feistel16(4); return {E, real}; },
+  query(o, blocks){ const m = o.real ? blocks : blocks.map(()=>rnd16());
+    return {inp:blocks.map(b=>({v:hex(b)})), out:m.map(b=>({v:hex(o.E(b)), blk:1}))}; },
+  hints:[
+    "Was verrät ein Chiffrat, wenn der Klartext zweimal denselben Block enthält?",
+    "ECB ist deterministisch: gleiche Klartextblöcke ergeben gleiche Chiffratblöcke.",
+    "<b>Lösung</b>Frage m = A‖A, z. B. <span class='mono'>0000 0000</span>. Real: C₁ = C₂. Random: der Zufallsklartext hat fast nie zwei gleiche Blöcke, also C₁ ≠ C₂ (bis auf Wahrscheinlichkeit 2⁻¹⁶). Vorteil ≈ 1. Ebenso klappt es, dieselbe Nachricht zweimal anzufragen."
+  ]},
+{ id:"cbcc", n:"06", title:"CBC · Zähler-IV", sub:"RoR-CPA, vorhersagbarer IV", kind:"RoR-CPA", input:"msg", maxQ:4, maxBlocks:4, rounds:10, target:9, secure:false,
+  exp:EXP_ROR("CBC"),
+  code:`# E: sichere 16-Bit-Blockchiffre (4-Runden-Feistel)
+
+def keygen():
+    global ctr
+    ctr = randint(0, 2**16 - 1)   # Startwert des Zählers
+    return E.keygen()
+
+def CBC(K, m):                    # m = [m1, ..., mn]
+    global ctr
+    IV, ctr = ctr, (ctr + 1) % 2**16
+    c = [IV]
+    for mi in m:
+        c.append(E(K, mi ^ c[-1]))
+    return c                      # [IV, c1, ..., cn]`,
+  note:`<p>Der IV wird grau dargestellt. Gleiche Chiffratblöcke werden gelb markiert.</p>`,
+  setup(real){ return {E:feistel16(4), real, iv:rnd16()}; },
+  query(o, blocks){ const m = o.real ? blocks : blocks.map(()=>rnd16());
+    const iv=o.iv; o.iv=(o.iv+1)&0xFFFF; let prev=iv; const out=[{v:hex(iv), iv:1}];
+    for(const b of m){ prev=o.E(b^prev); out.push({v:hex(prev), blk:1}); }
+    return {inp:blocks.map(b=>({v:hex(b)})), out}; },
+  hints:[
+    "Der IV gehört zum Chiffrat. Kannst du den IV der nächsten Anfrage vorhersagen?",
+    "C₁ = E<sub>K</sub>(m₁ ⊕ IV). Wähle die zweite Nachricht so, dass E<sub>K</sub> dieselbe Eingabe bekommt wie bei der ersten.",
+    "<b>Lösung</b>Anfrage 1: m = 0000, Antwort (IV, C). Anfrage 2: m′ = IV ⊕ (IV+1). Dann ist m′ ⊕ (IV+1) = IV = 0000 ⊕ IV, also C′ = C in der Real-Welt. In der Random-Welt ist das nur mit Wahrscheinlichkeit 2⁻¹⁶ so. Diese Idee steckt hinter dem BEAST-Angriff auf TLS 1.0."
+  ]},
+/* ---------- Kapitel: Integrität von Chiffraten ---------- */
+{ id:"ctr", chapter:"mall", n:"07", type:"mall", mode:"ctr", title:"CTR-Modus", sub:"Überweisung umschreiben", kind:"Malleability", goal:"Ziel: Fälschung", tools:["xor","ascii"],
+  exp:EXP_MALL("CTR"), win:WIN_MALL,
+  code:`# E: Blockchiffre mit 128-Bit-Blöcken (z. B. AES)
+
+def CTR_enc(K, m):               # m: genau ein Block, 16 Byte
+    R = random_bytes(16)
+    c1 = xor(m, E(K, R))         # Schlüsselstrom E(K, R)
+    return (R, c1)
+
+def CTR_dec(K, c):
+    R, c1 = c
+    return xor(c1, E(K, R))`,
+  note:`<p>Du hast eine verschlüsselte Überweisung abgefangen und kennst ihren Klartext. Der Empfänger entschlüsselt alles, was du ihm schickst, und du siehst, was er liest. Alle Werte sind Hex: 32 Zeichen = 16 Byte.</p>`,
+  hints:[
+    "Der Empfänger rechnet c1 ⊕ E(K, R). Was passiert mit dem Klartext, wenn du ein einzelnes Bit in c1 kippst?",
+    "Den Schlüsselstrom kennst du nicht und brauchst ihn auch nicht. Es reicht die Differenz Δ = m ⊕ m2. Der Werkzeugkasten rechnet ASCII in Hex um.",
+    "<b>Lösung</b>Lass R unverändert und sende c1′ = c1 ⊕ m ⊕ m2. Dann gilt c1′ ⊕ E(K, R) = m ⊕ m ⊕ m2 = m2. CTR hält den Inhalt geheim, schützt ihn aber nicht vor gezielten Änderungen."
+  ]},
+{ id:"cbcm", chapter:"mall", n:"08", type:"mall", mode:"cbc", title:"CBC-Modus", sub:"Überweisung umschreiben", kind:"Malleability", goal:"Ziel: Fälschung", tools:["xor","ascii"],
+  exp:EXP_MALL("CBC"), win:WIN_MALL,
+  code:`# E: Blockchiffre mit 128-Bit-Blöcken (z. B. AES)
+
+def CBC_enc(K, m):               # m: genau ein Block, 16 Byte
+    C0 = random_bytes(16)        # IV
+    C1 = E(K, xor(m, C0))
+    return (C0, C1)
+
+def CBC_dec(K, c):
+    C0, C1 = c
+    return xor(E_inv(K, C1), C0)`,
+  note:`<p>Dieselbe Überweisung, diesmal im CBC-Modus mit einem Block. Der Empfänger entschlüsselt alles, was du ihm schickst. Alle Werte sind Hex: 32 Zeichen = 16 Byte.</p>`,
+  hints:[
+    "Was passiert beim Entschlüsseln, wenn du C1 veränderst? Und was, wenn du nur C0 veränderst?",
+    "Solange C1 gleich bleibt, bleibt auch E_inv(K, C1) gleich. Der Klartext ist dieser Wert XOR C0.",
+    "<b>Lösung</b>Lass C1 unverändert und sende C0′ = C0 ⊕ m ⊕ m2. Dann gilt E_inv(K, C1) ⊕ C0′ = (m ⊕ C0) ⊕ C0 ⊕ m ⊕ m2 = m2. Bei längeren Nachrichten trifft eine Änderung an Cᵢ den Block mᵢ₊₁ gezielt und macht mᵢ unlesbar."
+  ]},
+
+/* ---------- Kapitel: MACs ---------- */
+{ id:"maca", chapter:"mac", n:"09", type:"mac", mac:"a", title:"MAC a", sub:"E(K, m₁ ⊕ … ⊕ mₗ)", kind:"SUF-CMA", goal:"Ziel: Fälschung", maxQ:6, tools:["xor"],
+  exp:EXP_MAC("MAC_a"), win:WIN_MAC,
+  code:`# E: PRF {0,1}^16 -> {0,1}^16 mit Schlüssel K
+
+def MAC_a(K, m):                 # m = [m1, ..., ml], Blöcke à 16 Bit
+    x = 0
+    for mi in m:
+        x ^= mi
+    return E(K, x)`,
+  note:`<p>Nachrichten: 1 bis 4 Blöcke zu je 4 Hex-Zeichen, Tags: 4 Hex-Zeichen. Du darfst bis zu 6 Tags anfragen und reichst dann ein Paar (m*, t*) ein.</p>`,
+  hints:[
+    "Der Tag hängt nur vom XOR aller Blöcke ab, nicht von ihrer Reihenfolge oder Anzahl.",
+    "Finde eine zweite Nachricht, deren Blöcke dasselbe XOR ergeben wie eine Nachricht, die du angefragt hast.",
+    "<b>Lösung</b>Frage m = A‖B mit A ≠ B an und erhalte t. Reiche B‖A mit demselben t ein, oder den einzelnen Block A ⊕ B. Eine Anfrage, Erfolgswahrscheinlichkeit 1."
+  ]},
+{ id:"macb", chapter:"mac", n:"10", type:"mac", mac:"b", title:"MAC b", sub:"E(K, m₁) ⊕ … ⊕ E(K, mₗ)", kind:"SUF-CMA", goal:"Ziel: Fälschung", maxQ:6, tools:["xor"],
+  exp:EXP_MAC("MAC_b"), win:WIN_MAC,
+  code:`# E: PRF {0,1}^16 -> {0,1}^16 mit Schlüssel K
+
+def MAC_b(K, m):                 # m = [m1, ..., ml], Blöcke à 16 Bit
+    t = 0
+    for mi in m:
+        t ^= E(K, mi)
+    return t`,
+  note:`<p>Jetzt geht jeder Block einzeln durch E. Nachrichten: 1 bis 4 Blöcke, Tags: 4 Hex-Zeichen, bis zu 6 Anfragen.</p>`,
+  hints:[
+    "XOR ist kommutativ, und es gilt a ⊕ a = 0.",
+    "Was ist der Tag einer Nachricht, in der derselbe Block zweimal vorkommt?",
+    "<b>Lösung</b>A‖A hat immer den Tag 0000, ganz ohne Anfrage. Alternativ: Tags t_A und t_B für A und B anfragen und A‖B mit t_A ⊕ t_B einreichen."
+  ]},
+{ id:"macc", chapter:"mac", n:"11", type:"mac", mac:"c", title:"MAC c", sub:"E(K, 1 ⊕ m₁) ⊕ … ⊕ E(K, ℓ ⊕ mₗ)", kind:"SUF-CMA", goal:"Ziel: Fälschung", maxQ:6, tools:["xor"],
+  exp:EXP_MAC("MAC_c"), win:WIN_MAC,
+  code:`# E: PRF {0,1}^16 -> {0,1}^16 mit Schlüssel K
+
+def MAC_c(K, m):                 # m = [m1, ..., ml], Blöcke à 16 Bit
+    t = 0
+    for i, mi in enumerate(m, start=1):
+        t ^= E(K, i ^ mi)        # Position i fließt ein
+    return t`,
+  note:`<p>Die Position i wird vor E mit dem Block verknüpft. Vertauschen von Blöcken hilft also nicht mehr. Nachrichten: 1 bis 4 Blöcke, bis zu 6 Anfragen.</p>`,
+  hints:[
+    "Welche Eingaben bekommt E bei einer Nachricht aus zwei Blöcken? Schreib sie für m = A‖B einmal hin.",
+    "E bekommt 1 ⊕ m₁ und 2 ⊕ m₂. Was passiert, wenn beide Eingaben gleich sind? Alternativ: Kombiniere die Tags mehrerer Anfragen per XOR.",
+    "<b>Lösung</b>Für m = A‖(A ⊕ 0003) gilt 1 ⊕ A = 2 ⊕ A ⊕ 3, also t = 0000 ohne jede Anfrage. Alternativ: Frage A‖B, A′‖B und A‖B′ an. Dann ist t₁ ⊕ t₂ ⊕ t₃ der Tag von A′‖B′."
+  ]},
+
+/* ---------- Kapitel: Hashfunktionen ---------- */
+{ id:"h1", chapter:"hash", n:"12", type:"hash", h:"h1", fn:"H1", title:"H1", sub:"(m₁ ⊕ … ⊕ mₗ) mod 256", kind:"CR · PRE", goal:"Ziel: CR + PRE", preN:1, tools:["xor"],
+  exp:EXP_HASH("H1"), win:WIN_HASH,
+  code:`def H1(m):                       # m = [m1, ..., ml], Blöcke à 16 Bit
+    s = 0
+    for mi in m:
+        s ^= mi
+    return s % 256               # 8-Bit-Hashwert`,
+  note:`<p>Es gibt keinen Schlüssel: Du kennst H1 vollständig und darfst es beliebig oft auswerten. Nachrichten: 1 bis 8 Blöcke zu je 4 Hex-Zeichen. Gesucht sind eine Kollision und ein Urbild zu einem zufälligen Hashwert.</p>`,
+  hints:[
+    "Kollision: XOR ist kommutativ. Und was macht mod 256 mit dem oberen Byte eines Blocks?",
+    "Urbild: Welchen Hashwert hat eine Nachricht, die nur aus einem einzigen Block besteht?",
+    "<b>Lösung</b>Kollision: A‖B und B‖A mit A ≠ B, oder 0000 und 0100, weil mod 256 das obere Byte ignoriert. Urbild zu y: der Block 00yy."
+  ]},
+{ id:"h2", chapter:"hash", n:"13", type:"hash", h:"h2", fn:"H2", title:"H2", sub:"(3 · (m₁ ⊕ … ⊕ mₗ) + 11) mod 256", kind:"CR · PRE", goal:"Ziel: CR + PRE", preN:1, tools:["xor"],
+  exp:EXP_HASH("H2"), win:WIN_HASH,
+  code:`def H2(m):                       # m = [m1, ..., ml], Blöcke à 16 Bit
+    s = 0
+    for mi in m:
+        s ^= mi
+    return (3 * (s % 256) + 11) % 256`,
+  note:`<p>Wie H1, aber das Ergebnis wird noch affin umgerechnet. Nachrichten: 1 bis 8 Blöcke. Gesucht sind eine Kollision und ein Urbild.</p>`,
+  hints:[
+    "Kollision: Die Abbildung s ↦ 3s + 11 kommt erst nach dem XOR. Hilft dir dein Angriff auf H1?",
+    "Urbild: 3 ist modulo 256 invertierbar. Löse 3s + 11 ≡ y (mod 256) nach s auf.",
+    "<b>Lösung</b>Kollision wie bei H1, etwa A‖B und B‖A. Urbild: s = 171 · (y − 11) mod 256, denn 3 · 171 = 513 ≡ 1 (mod 256). Der Block mit dem Wert s ist ein Urbild."
+  ]},
+{ id:"h3", chapter:"hash", n:"14", type:"hash", h:"h3", fn:"H3", title:"H3", sub:"m₁ ⊕ … ⊕ mₗ", kind:"CR · PRE", goal:"Ziel: CR + PRE", preN:1, tools:["xor"],
+  exp:EXP_HASH("H3"), win:WIN_HASH,
+  code:`def H3(m):                       # m = [m1, ..., ml], Blöcke à 16 Bit
+    s = 0
+    for mi in m:
+        s ^= mi
+    return s                     # 16-Bit-Hashwert`,
+  note:`<p>Kein mod 256 mehr: Der Hashwert ist so lang wie ein Block. Nachrichten: 1 bis 8 Blöcke. Gesucht sind eine Kollision und ein Urbild.</p>`,
+  hints:[
+    "Kollision: Ändert der längere Hashwert etwas an deinem Angriff auf H1?",
+    "Urbild: Gibt es eine Nachricht aus einem einzigen Block mit H3 = y?",
+    "<b>Lösung</b>Kollision: A‖B und B‖A, oder A und A‖0000. Urbild zu y: der Block y selbst. Ein langer Hashwert allein macht eine Funktion nicht sicher."
+  ]},
+/* ---------- Kapitel: Nonce-Missbrauch  ---------- */
+{ id:"nks", chapter:"nonce", n:"15", title:"CTR · Nonce doppelt", sub:"Nonce frei wählbar, auch wiederholt", kind:"IND-CPA", input:"nm", maxQ:4, rounds:10, target:9, secure:false,
+  exp:`def exp_ind_cpa(A):    # Nonces wiederholbar
+    b = randint(0, 1)
+    K = keygen()
+
+    def O(N, m):
+        if b == 1:
+            return CTR(K, N, m)       # Real
+        else:
+            return random_block()     # Random, gleich bei gleicher Anfrage
+
+    b_prime = A(O)
+    return b_prime`,
+  code:`# E: Blockchiffre mit 16-Bit-Blöcken
+
+def CTR(K, N, m):                # N: Nonce, m: ein Block
+    S = E(K, N)                  # Schlüsselstrom
+    return m ^ S`,
+  note:`<p>Eingabe: zwei Blöcke, zuerst die Nonce N, dann die Nachricht m, z. B. <span class="mono">0001 1234</span>. Nonces sind eigentlich zum einmaligen Gebrauch gedacht. Hier darfst du sie trotzdem wiederholen. In der Random-Welt antwortet ein Zufallsorakel $.</p>`,
+  setup(real){ return {E:lazyFn16(), real, R:new Map()}; },
+  query(o, [N, m]){
+    let c;
+    if(o.real) c = m ^ o.E(N);
+    else { const k=N+","+m; if(!o.R.has(k)) o.R.set(k, rnd16()); c = o.R.get(k); }
+    return {inp:[{tag:"N"},{v:hex(N)},{tag:"m"},{v:hex(m)}], out:[{v:hex(c), blk:1}]}; },
+  hints:[
+    "Was passiert mit dem Schlüsselstrom, wenn du dieselbe Nonce zweimal verwendest?",
+    "Bei gleicher Nonce verschwindet der Schlüsselstrom im XOR zweier Chiffrate. Vergleiche C ⊕ C′ mit m ⊕ m′.",
+    "<b>Lösung</b>Frage (N, m) und (N, m′) mit m ≠ m′. Gilt C ⊕ C′ = m ⊕ m′: Real, sonst Random. Vorteil 1 − 2⁻¹⁶. Dieses Muster heißt Repeated-Keystream-Angriff. Ihm erliegen alle Verfahren, die intern CTR verwenden, etwa GCM, CCM und EAX."
+  ]},
+{ id:"ltag", chapter:"nonce", n:"16", type:"ae", title:"Linear-Tag", sub:"Tag = F(N) ⊕ G(m), Nonce wiederholbar", kind:"INT-CTXT", goal:"Ziel: Fälschung", maxQ:6, tools:["xor"],
+  exp:`def exp_int_ctxt(A):   # Nonces wiederholbar
+    K = keygen()
+    Q = []      # Antworten des Orakels
+
+    def Enc(N, m):
+        C, T = AE_enc(K, N, m)
+        Q.append((N, C, T))
+        return (C, T)
+
+    N, C, T = A(Enc)
+    return (N, C, T) not in Q and AE_dec(K, N, C, T) != None`,
+  win:`A gewinnt, wenn der Empfänger ein Tripel (N*, C*, T*) akzeptiert, das nie vom Orakel kam. Das ist das Spiel INT-CTXT, hier mit einem Angreifer, der Nonces wiederholt.`,
+  code:`# E, F, G: PRFs {0,1}^16 -> {0,1}^16, K = (K1, K2, K3)
+
+def AE_enc(K, N, m):             # m: ein Block
+    C = m ^ E(K1, N)             # CTR-Verschlüsselung
+    T = F(K2, N) ^ G(K3, m)      # Tag: linear in F und G
+    return (C, T)
+
+def AE_dec(K, N, C, T):
+    m = C ^ E(K1, N)
+    if T != F(K2, N) ^ G(K3, m):
+        return None              # ⊥: abgelehnt
+    return m`,
+  note:`<p>Ein authentifiziertes Verschlüsselungsverfahren im Stil von Encrypt-then-MAC. Anfragen: zwei Blöcke, zuerst die Nonce N, dann m. Du darfst bis zu 6 Anfragen stellen und Nonces wiederholen. Dann reichst du ein Tripel (N*, C*, T*) ein.</p>`,
+  hints:[
+    "Der Tag ist das XOR eines Teils, der nur von N abhängt, und eines Teils, der nur von m abhängt. Was bleibt übrig, wenn du zwei Tags mit gleicher Nonce XORst?",
+    "Mit drei geschickt gewählten Anfragen bekommst du F(K2, N′) ⊕ G(K3, m) für eine Kombination aus Nonce und Nachricht, die du nie angefragt hast. Das passende Chiffrat liefert dir der Angriff aus Level 15.",
+    "<b>Lösung</b>Frage (N, m) → (C, T), (N′, m′) → (C′, T′) und (N, m′) → (C″, T″) mit N ≠ N′ und m ≠ m′. Dann ist T* = T ⊕ T′ ⊕ T″ = F(N′) ⊕ G(m) und C* = C′ ⊕ m′ ⊕ m. Reiche (N′, C*, T*) ein. Der Empfänger liest m. Das ist der Linear-Tag-Angriff, kombiniert mit dem Repeated-Keystream-Angriff. CHM, CWC, GCM und EAX sind auf diese Weise angreifbar."
+  ]}
+];
+
+/* ---------- Zustand ---------- */
+const store = { get(){ try{ return JSON.parse(localStorage.getItem("orakel-labor")||"{}"); }catch(e){ return {}; } },
+                set(v){ try{ localStorage.setItem("orakel-labor", JSON.stringify(v)); }catch(e){} } };
+let progress = store.get();
+let L, S; // aktuelles Level, Spielzustand
+let lastField = null, lastGin = null;
+
+function newLevel(lv){
+  L = lv; S = {hintsShown:0, fails:0};
+  if(L.type==="mall") initMall();
+  else if(L.type==="mac") initMac();
+  else if(L.type==="hash") initHash();
+  else if(L.type==="ae") initAe();
+  else { Object.assign(S, {round:0, results:[], finished:false}); newRound(); }
+  renderAll();
+}
+function newRound(){
+  S.b = rnd(2) === 1; S.oracle = L.setup(S.b); S.log = []; S.decided = null; S.err = "";
+}
+
+/* ---------- Rendering ---------- */
+const $ = id => document.getElementById(id);
+
+const CHAPTERS = [
+  ["conf","Vertraulichkeit","Real oder Random erkennen"],
+  ["mall","Integrität von Chiffraten","Chiffrate gezielt verändern"],
+  ["mac","MACs","Tags fälschen"],
+  ["hash","Hashfunktionen","Kollisionen und Urbilder finden"],
+  ["nonce","Nonce-Missbrauch","Wenn eine Nonce zweimal vorkommt"]];
+function lvlStatus(l){
+  const p = progress[l.id];
+  if(l.type) return p && p.done ? ["geschafft", true] : [l.goal, false];
+  if(!p || p.best===undefined) return [`Ziel: ${l.target}/${l.rounds}`, false];
+  return [p.best>=l.target ? `geschafft · best ${p.best}/${l.rounds}` : `best ${p.best}/${l.rounds}`, p.best>=l.target];
+}
+function renderLevels(){
+  $("levels").innerHTML = CHAPTERS.map(([id,t,sub]) => {
+    const ls = LEVELS.filter(l => (l.chapter||"conf")===id);
+    return `<section class="chap" style="--n:${ls.length}"><div class="chaphead"><h3>${t}</h3><span>${sub}</span></div>
+      <div class="chapgrid">${ls.map(l => { const [st,done]=lvlStatus(l);
+        return `<button class="lvl${l===L?" on":""}" data-id="${l.id}"><span class="n">Level ${l.n} · ${l.kind}</span><span class="t">${l.title}</span><span class="s${done?" done":""}">${st}</span></button>`; }).join("")}</div></section>`;
+  }).join("");
+}
+
+function fmtAdv(a){ return (a>=0?"+":"−")+Math.abs(a).toFixed(2); }
+function advantage(res){
+  const r=res.filter(x=>x.b), z=res.filter(x=>!x.b);
+  const p1 = r.length ? r.filter(x=>x.guess).length/r.length : 0;
+  const p0 = z.length ? z.filter(x=>x.guess).length/z.length : 0;
+  return {adv:p1-p0, p1, p0, nr:r.length, nz:z.length};
+}
+
+function valHTML(parts, hlSet){
+  return parts.map(p => p.txt ? `<span class="v plain txt">${esc(p.v)}</span>` : p.tag ? `<span class="dirtag mono">${p.tag}</span>` : p.sep ? `<span class="v sep">·</span>` :
+    `<span class="v${p.iv?" iv":""}${p.blk&&hlSet.has(p.v)?" hl":""}" data-v="${esc(p.v)}" title="${p.iv?"IV – ":""}klicken zum Einsetzen">${esc(p.v)}</span>`).join("");
+}
+
+function renderGame(){
+  if(L.type==="mall") return renderMall();
+  if(L.type==="mac") return renderMac();
+  if(L.type==="hash") return renderHash();
+  if(L.type==="ae") return renderAe();
+  const g = $("game");
+  const correct = S.results.filter(r=>r.ok).length;
+  const dots = Array.from({length:L.rounds},(_,i)=>{ const r=S.results[i]; return `<span class="dot${r?(r.ok?" ok":" bad"):""}${i===S.round&&!S.finished?" cur":""}"></span>`; }).join("");
+  // Markierung gleicher Chiffratblöcke
+  const cnt = new Map(); for(const e of S.log) for(const p of e.out) if(p.blk) cnt.set(p.v,(cnt.get(p.v)||0)+1);
+  const hl = new Set([...cnt].filter(([,c])=>c>1).map(([v])=>v));
+  const used = S.log.length, left = L.maxQ - used;
+  const active = !S.finished && S.decided === null;
+
+  let input = "";
+  if(L.input==="e3"){
+    input = `<div class="e3btns">${[0,1,2,3].map(x=>`<button class="btn q3" data-x="${x}" ${!active||left<=0?"disabled":""}>${x}</button>`).join("")}</div>
+      <div class="help">Wähle eine Eingabe m ∈ {0,1,2,3}.</div>`;
+  } else {
+    const ph = L.input==="text" ? "z. B. hallo welt" : L.input==="nm" ? "N m, z. B. 0001 1234" : L.input==="hex16" ? "z. B. 3A7F  (L = 3A, R = 7F)" : L.input==="cca" ? "z. B. 3A7F  (4 Hex-Zeichen)" : "z. B. 0000 1234 (1–4 Blöcke)";
+    input = `<form class="inrow" id="qform"><input id="qin" class="gin" data-mode="append" placeholder="${ph}" autocomplete="off" spellcheck="false" ${!active||left<=0?"disabled":""}>
+      <button type="button" class="btn" id="qrand" ${!active||left<=0?"disabled":""}>Zufall</button>
+      ${L.input==="cca"
+        ? `<button class="btn primary" ${!active||left<=0?"disabled":""}>O(m)</button><button type="button" class="btn primary" id="qdec" ${!active||left<=0?"disabled":""}>O_inv(c)</button>`
+        : `<button class="btn primary" ${!active||left<=0?"disabled":""}>Anfragen</button>`}</form>
+      ${L.input==="cca"?`<div class="help"><span class="mono">O(m)</span> verschlüsselt, <span class="mono">O_inv(c)</span> entschlüsselt den eingegebenen Wert.</div>`:""}`;
+  }
+
+  const rows = S.log.length ? S.log.map((e,i)=>`<tr><td class="i mono">${i+1}</td><td>${valHTML(e.inp,new Set())}</td><td>${valHTML(e.out,hl)}</td></tr>`).join("")
+    : `<tr><td colspan="3" class="empty">Noch keine Anfragen in dieser Runde. Du hast ${L.maxQ} Anfragen.</td></tr>`;
+
+  let bottom = "";
+  if(S.finished){
+    const a = advantage(S.results); const won = L.secure ? null : correct >= L.target;
+    const msg = L.secure
+      ? `Dein gemessener Vorteil liegt bei ${fmtAdv(a.adv)}. Bei ${L.rounds} Runden schwankt reines Raten deutlich um 0. Hast du ein Muster gefunden, das zuverlässig trennt? Öffne die Auflösung bei den Tipps.`
+      : (won ? `Geschafft! Du unterscheidest ${L.title} zuverlässig vom Zufall. Kannst du deinen Angriff als Algorithmus A aufschreiben und seinen Vorteil exakt angeben?`
+             : `Noch nicht zuverlässig genug. Ziel sind ${L.target} von ${L.rounds}. Schau dir die Tipps an und versuch es noch einmal.`);
+    bottom = `<div class="summary"><h3>${L.secure?"Auswertung":(won?"Level geschafft":"Level nicht geschafft")}</h3>
+      <div class="grid">
+        <div class="k"><span class="label">Richtig</span><span class="big">${correct}/${L.rounds}</span></div>
+        <div class="k"><span class="label">Pr[b′=1 | b=1]</span><span class="big">${a.nr?a.p1.toFixed(2):"–"}</span></div>
+        <div class="k"><span class="label">Pr[b′=1 | b=0]</span><span class="big">${a.nz?a.p0.toFixed(2):"–"}</span></div>
+        <div class="k"><span class="label">Vorteil (geschätzt)</span><span class="big">${fmtAdv(a.adv)}</span></div>
+      </div><p>${msg}</p>
+      <div class="row"><button class="btn primary" id="again">Level neu starten</button>${!won&&!L.secure?`<button class="btn" id="showsol">Lösung ansehen</button>`:""}${LEVELS.indexOf(L)<LEVELS.length-1?`<button class="btn" id="next">Nächstes Level</button>`:""}</div></div>`;
+  } else if(S.decided !== null){
+    const ok = S.decided === S.b;
+    bottom = `<div class="feedback ${ok?"ok":"bad"}"><p>${ok?"Richtig.":"Falsch."} <span>Das Orakel war <b>${S.b?"Real":"Random"}</b> (b = ${S.b?1:0}).</span></p>
+      <button class="btn primary" id="nextround">${S.round+1<L.rounds?"Nächste Runde":"Auswertung"}</button></div>`;
+  } else {
+    bottom = `<div class="label">Deine Entscheidung b′</div><div class="decide">
+      <button class="dec real" data-g="1">Real<small>b′ = 1</small></button>
+      <button class="dec rand" data-g="0">Random<small>b′ = 0</small></button></div>`;
+  }
+
+  g.innerHTML = `
+    <div class="lvlhead"><div><span class="tag">Level ${L.n}</span><span class="tag">${L.kind}</span></div>
+      <h2>${L.title}</h2><div class="sub">${L.sub}</div></div>
+    <div class="statusbar">
+      <div class="item"><span class="label">Runde</span><span class="v">${Math.min(S.round+1,L.rounds)}/${L.rounds}</span></div>
+      <div class="item"><span class="label">Anfragen</span><span class="v">${used}/${L.maxQ}</span></div>
+      <div class="item"><span class="label">Richtig</span><span class="v">${correct}</span></div>
+      <div class="dots" aria-label="Rundenergebnisse">${dots}</div>
+    </div>
+    <div class="oracle"><div class="label">Anfrage an das Orakel O</div>${input}<div class="err" id="qerr">${esc(S.err||"")}</div></div>
+    <div class="logwrap"><table class="log"><thead><tr><th>#</th><th>${L.kind==="RoR-CPA"?"Nachricht m":(L.input==="cca"||L.input==="nm")?"Anfrage":"Eingabe m"}</th><th>Antwort</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${bottom}`;
+  bindGame();
+}
+
+function renderSide(){
+  $("exp").innerHTML = pyHL(L.exp);
+  $("advdef").innerHTML = L.win || ADV;
+  const tools = L.tools || (L.input==="e3" || L.input==="text" ? [] : ["xor"]);
+  $("xortool").hidden = !tools.includes("xor"); renderXorButtons(); $("asciitool").hidden = !tools.includes("ascii");
+  $("desc").innerHTML = `<pre class="code">${pyHL(L.code)}</pre>${L.note}`;
+  const pr = progress[L.id], unlocked = !!(pr && (pr.unlocked || pr.best!==undefined));
+  const maxH = unlocked ? L.hints.length : L.hints.length-1;
+  if(S.hintsShown > maxH) S.hintsShown = maxH;
+  $("hints").innerHTML = (S.hintsShown ? L.hints.slice(0,S.hintsShown).map((h,i)=>`<div class="hint${i===L.hints.length-1?" sol":""}">${h.startsWith("<b>")?h:`<b>Tipp ${i+1}</b>${h}`}</div>`).join("")
+    : `<div class="help">Zwei Tipps, danach die Lösung. Probier es erst selbst.</div>`)
+    + (!unlocked && S.hintsShown>=maxH ? `<div class="help">${L.type ? "Die Lösung wird nach drei Fehlversuchen freigeschaltet, oder sobald du das Level gelöst hast." : "Die Lösung wird freigeschaltet, sobald du dieses Level einmal bis zur Auswertung gespielt hast."}</div>` : "");
+  const hb=$("hintbtn"); hb.hidden = S.hintsShown>=maxH;
+  hb.textContent = S.hintsShown===L.hints.length-1 ? (L.secure?"Auflösung zeigen":"Lösung zeigen") : `Tipp ${S.hintsShown+1} anzeigen`;
+  // Schnellwerte für den XOR-Rechner
+  $("pm").innerHTML = !tools.includes("xor") || L.type==="mall" ? "" : ["0000","0001","FFFF","2A00"].map(v=>`<button class="btn" data-pm="${v}">${v}</button>`).join("");
+}
+// Minimales Syntax-Highlighting für den Python-Pseudocode
+function pyHL(src){
+  return src.split("\n").map(line => {
+    const i = line.indexOf("#");
+    const code = i >= 0 ? line.slice(0,i) : line, com = i >= 0 ? line.slice(i) : "";
+    const c = esc(code)
+      .replace(/\b(def|return|for|in|global|if|else|not|and)\b/g, '<span class="kw">$1</span>')
+      .replace(/\b(0x[0-9A-F]+|\d+)\b/g, '<span class="num">$1</span>');
+    return c + (com ? `<span class="cm">${esc(com)}</span>` : "");
+  }).join("\n");
+}
+function renderAll(){ renderLevels(); renderGame(); renderSide(); updXor(); }
+
+/* ---------- Gemeinsame Bausteine für Fälschen-, Finden- und Manipulieren-Spiele ---------- */
+const vspan = v => `<span class="v" data-v="${esc(v)}" title="klicken zum Einsetzen">${esc(grp(v))}</span>`;
+function headHTML(items){
+  return `<div class="lvlhead"><div><span class="tag">Level ${L.n}</span><span class="tag">${L.kind}</span></div>
+      <h2>${L.title}</h2><div class="sub">${L.sub}</div></div>
+    <div class="statusbar">${items.map(([k,v])=>`<div class="item"><span class="label">${k}</span><span class="v">${v}</span></div>`).join("")}</div>`;
+}
+function successHTML(text, again){
+  const nxt = LEVELS.indexOf(L) < LEVELS.length-1;
+  return `<div class="feedback ok"><p>Geschafft. <span>${text}</span></p>
+    <div class="row"><button class="btn" id="again">${again}</button>${nxt?`<button class="btn primary" id="next">Nächstes Level</button>`:""}</div></div>`;
+}
+function markDone(){ const p=progress[L.id]||{}; p.done=true; p.unlocked=true; progress[L.id]=p; store.set(progress); renderLevels(); renderSide(); }
+function noteFail(){
+  S.fails++;
+  if(S.fails>=3){ const p=progress[L.id]||{}; if(!p.unlocked){ p.unlocked=true; progress[L.id]=p; store.set(progress); renderSide(); } }
+}
+function setErr(msg){ S.err=msg; const e=$("qerr"); if(e) e.textContent=msg; }
+function bindCommon(){
+  const g=$("game");
+  g.querySelectorAll(".gin").forEach(el=>el.addEventListener("focus",()=>{ lastField=el; lastGin=el; }));
+  g.querySelectorAll(".v[data-v]").forEach(s=>s.onclick=()=>insertVal(s.dataset.v));
+  const ag=$("again"); if(ag) ag.onclick=()=>newLevel(L);
+  const nx=$("next"); if(nx) nx.onclick=()=>newLevel(LEVELS[LEVELS.indexOf(L)+1]);
+  updXor();
+}
+const inAttrs = (id, mode, ph, val, dis) =>
+  `id="${id}" class="gin" data-mode="${mode}" placeholder="${ph}" autocomplete="off" spellcheck="false" value="${esc(val||"")}" ${dis?"disabled":""}`;
+
+/* ---------- Manipulieren: CTR / CBC ---------- */
+const MSG = "Zahle Bob EUR100", MSG2 = "Zahle Eve EUR500";
+function initMall(){
+  S.m = asciiHex(MSG); S.mt = asciiHex(MSG2); S.log = []; S.won = false; S.err = "";
+  S.iv = randHex(16);
+  if(L.mode==="ctr"){ S.F = lazyHexMap(); S.c1 = xorHex(S.m, S.F(S.iv)); }
+  else { S.D = lazyHexMap(); S.c1 = randHex(16); S.D.set(S.c1, xorHex(S.m, S.iv)); }
+  S.fiv = grp(S.iv); S.fc1 = grp(S.c1);
+}
+function mallDec(iv, c1){ return L.mode==="ctr" ? xorHex(c1, S.F(iv)) : xorHex(S.D(c1), iv); }
+function renderMall(){
+  const ivN = L.mode==="ctr" ? "R" : "C0";
+  const cell = (v, orig) => v===orig ? `<span class="muted">unverändert</span>` : vspan(v);
+  const rows = S.log.length ? S.log.map((e,i)=>`<tr><td class="i mono">${i+1}</td><td>${cell(e.iv,S.iv)}</td><td>${cell(e.c1,S.c1)}</td>
+      <td><span class="plain${e.ok?" good":""}">„${esc(hexAscii(e.p))}“</span></td></tr>`).join("")
+    : `<tr><td colspan="4" class="empty">Noch nichts gesendet. Verändere das Chiffrat und schick es an den Empfänger.</td></tr>`;
+  $("game").innerHTML = headHTML([["Gesendet", S.log.length], ["Fehlversuche", S.fails]]) + `
+    <div class="oracle"><div class="label">Abgefangene Überweisung</div>
+      <div class="kv">
+        <span class="k">${ivN}</span><span>${vspan(S.iv)}</span>
+        <span class="k">C1</span><span>${vspan(S.c1)}</span>
+        <span class="k">m</span><span><span class="plain">„${MSG}“</span> ${vspan(S.m)}</span>
+        <span class="k">Ziel m2</span><span><span class="plain">„${MSG2}“</span> ${vspan(S.mt)}</span>
+      </div></div>
+    <form class="oracle" id="mform"><div class="label">Manipuliertes Chiffrat an den Empfänger</div>
+      <div class="fgrid">
+        <label class="k" for="fiv">${ivN}</label><input ${inAttrs("fiv","replace","32 Hex-Zeichen",S.fiv,S.won)}>
+        <label class="k" for="fc1">C1</label><input ${inAttrs("fc1","replace","32 Hex-Zeichen",S.fc1,S.won)}>
+      </div>
+      <div class="row"><button class="btn primary" ${S.won?"disabled":""}>An Empfänger senden</button>
+        <button type="button" class="btn" id="mreset" ${S.won?"disabled":""}>Original einsetzen</button></div>
+      <div class="err" id="qerr">${esc(S.err||"")}</div></form>
+    <div class="logwrap"><table class="log"><thead><tr><th>#</th><th>${ivN}</th><th>C1</th><th>Empfänger liest</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${S.won ? successHTML(`Der Empfänger liest „${MSG2}“, obwohl du den Schlüssel nie gesehen hast.`, "Neue Überweisung") : ""}`;
+  bindCommon();
+  $("mform").onsubmit = e => { e.preventDefault();
+    S.fiv=$("fiv").value; S.fc1=$("fc1").value;
+    const a=parseHexN(S.fiv,32,ivN), b=parseHexN(S.fc1,32,"C1");
+    if(a.err) return setErr(a.err);
+    if(b.err) return setErr(b.err);
+    if(a.v===S.iv && b.v===S.c1) return setErr("Das ist das unveränderte Original. Verändere das Chiffrat.");
+    S.err=""; const p=mallDec(a.v,b.v), ok = p===S.mt;
+    S.log.push({iv:a.v, c1:b.v, p, ok});
+    if(ok){ S.won=true; markDone(); } else noteFail();
+    renderMall(); };
+  const r=$("mreset"); if(r) r.onclick=()=>{ $("fiv").value=grp(S.iv); $("fc1").value=grp(S.c1); };
+}
+
+/* ---------- Fälschen: MACs (SUF-CMA) ---------- */
+function initMac(){ S.E=lazyFn16(); S.Q=new Set(); S.log=[]; S.state="play"; S.err=""; S.reason=""; S.attempt=(S.attempt||0)+1; S.qv=""; S.fmv=""; S.ftv=""; }
+function macTag(m){
+  if(L.mac==="a"){ let x=0; for(const b of m) x^=b; return S.E(x); }
+  if(L.mac==="b"){ let t=0; for(const b of m) t^=S.E(b); return t; }
+  let t=0; m.forEach((b,i)=>{ t^=S.E((i+1)^b); }); return t;
+}
+function renderMac(){
+  const left = L.maxQ - S.log.length, play = S.state==="play", qdis = !play || left<=0;
+  const rows = S.log.length ? S.log.map((e,i)=>`<tr><td class="i mono">${i+1}</td><td>${e.m.map(b=>vspan(hex(b))).join("")}</td><td>${vspan(hex(e.t))}</td></tr>`).join("")
+    : `<tr><td colspan="3" class="empty">Noch keine Anfragen. Du hast ${L.maxQ} Anfragen.</td></tr>`;
+  let bottom = "";
+  if(S.state==="won") bottom = successHTML("Dein Tag ist gültig, und diese Nachricht hast du nie angefragt.", "Nochmal mit neuem Schlüssel");
+  else if(S.state==="lost") bottom = `<div class="feedback bad"><p>Fälschung ungültig. <span>${S.reason}</span></p><button class="btn primary" id="retry">Neuer Versuch mit neuem Schlüssel</button></div>`;
+  $("game").innerHTML = headHTML([["Versuch", S.attempt], ["Anfragen", `${S.log.length}/${L.maxQ}`], ["Fehlversuche", S.fails]]) + `
+    <form class="oracle" id="qform"><div class="label">Tag anfragen: O(m)</div>
+      <div class="inrow"><input ${inAttrs("qin","append","z. B. 0000 1234 (1–4 Blöcke)",S.qv,qdis)}>
+        <button type="button" class="btn" id="qrand" ${qdis?"disabled":""}>Zufall</button>
+        <button class="btn primary" ${qdis?"disabled":""}>Tag anfragen</button></div></form>
+    <div class="logwrap"><table class="log"><thead><tr><th>#</th><th>Nachricht m</th><th>Tag t</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <form class="oracle" id="fform"><div class="label">Deine Fälschung (m*, t*)</div>
+      <div class="fgrid">
+        <label class="k" for="fm">m*</label><input ${inAttrs("fm","append","1–4 Blöcke",S.fmv,!play)}>
+        <label class="k" for="ft">t*</label><input ${inAttrs("ft","replace","4 Hex-Zeichen",S.ftv,!play)}>
+      </div>
+      <div class="row"><button class="btn primary" ${!play?"disabled":""}>Fälschung einreichen</button></div></form>
+    <div class="err" id="qerr">${esc(S.err||"")}</div>
+    ${bottom}`;
+  bindCommon();
+  $("qform").onsubmit = e => { e.preventDefault();
+    S.qv=$("qin").value; const r=parseBlocks(S.qv,4); if(r.err) return setErr(r.err);
+    S.err=""; const t=macTag(r.blocks); S.Q.add(r.blocks.join(",")); S.log.push({m:r.blocks, t});
+    renderMac(); const q=$("qin"); if(q && !q.disabled) q.focus(); };
+  $("qrand").onclick = () => { const n=1+rnd(2); $("qin").value=Array.from({length:n},()=>hex(rnd16())).join(" "); $("qin").focus(); };
+  $("fform").onsubmit = e => { e.preventDefault();
+    S.fmv=$("fm").value; S.ftv=$("ft").value;
+    const r=parseBlocks(S.fmv,4); if(r.err) return setErr("m*: "+r.err);
+    const t=parseHexN(S.ftv,4,"Der Tag t*"); if(t.err) return setErr(t.err);
+    if(S.Q.has(r.blocks.join(","))) return setErr("Diese Nachricht hast du schon angefragt. Eine Fälschung braucht eine neue Nachricht.");
+    S.err="";
+    if(macTag(r.blocks)===parseInt(t.v,16)){ S.state="won"; markDone(); }
+    else { S.state="lost"; S.reason="Der Tag passt nicht zur Nachricht."; noteFail(); }
+    renderMac(); };
+  const rt=$("retry"); if(rt) rt.onclick=()=>{ initMac(); renderMac(); };
+}
+
+/* ---------- Finden: Hashfunktionen (CR, PRE) ---------- */
+function hashF(m){ let x=0; for(const b of m) x^=b;
+  if(L.h==="h1") return x & 0xFF;
+  if(L.h==="h2") return (3*(x & 0xFF) + 11) & 0xFF;
+  return x; }
+const hd = () => L.h==="h3" ? 4 : 2;
+function newPre(){ const n=1+rnd(4); S.y = hashF(Array.from({length:n},()=>rnd16())); }
+function initHash(){ S.calc=[]; S.calcN=0; S.cr=null; S.solved=0; S.err=""; S.done=false; S.hv=""; S.c1v=""; S.c2v=""; S.p1v=""; newPre(); }
+function renderHash(){
+  const fn=L.fn, crDone=!!S.cr, preDone=S.solved>=L.preN;
+  const rows = S.calc.length ? S.calc.map((e,i)=>`<tr><td class="i mono">${S.calcN-S.calc.length+i+1}</td><td>${e.m.map(b=>vspan(hex(b))).join("")}</td><td>${vspan(hex(e.h,hd()))}</td></tr>`).join("")
+    : `<tr><td colspan="3" class="empty">Probier ${fn} an ein paar Nachrichten aus. Der Rechner ist unbegrenzt.</td></tr>`;
+  $("game").innerHTML = headHTML([["Kollision", crDone?"gefunden":"offen"], ["Urbild", preDone?"gefunden":"offen"], ["Fehlversuche", S.fails]]) + `
+    <form class="oracle" id="hform"><div class="label">Hash-Rechner: ${fn}(m)</div>
+      <div class="inrow"><input ${inAttrs("hin","append","z. B. 0000 1234 (1–8 Blöcke)",S.hv,false)}>
+        <button class="btn primary">Berechnen</button></div></form>
+    <div class="logwrap"><table class="log"><thead><tr><th>#</th><th>Nachricht m</th><th>${fn}(m)</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="tasks">
+      <form class="task${crDone?" solved":""}" id="crform">
+        <div class="taskhead"><span class="label">Aufgabe 1 · Kollision</span><span class="badge">${crDone?"gelöst":"offen"}</span></div>
+        <p class="help">Finde zwei verschiedene Nachrichten m1 ≠ m2 mit ${fn}(m1) = ${fn}(m2).</p>
+        ${crDone ? `<p class="mono">${S.cr[0].map(b=>hex(b)).join(" ")} und ${S.cr[1].map(b=>hex(b)).join(" ")} → ${hex(hashF(S.cr[0]),hd())}</p>` : `
+        <div class="fgrid"><label class="k" for="c1">m1</label><input ${inAttrs("c1","append","1–8 Blöcke",S.c1v,false)}>
+          <label class="k" for="c2">m2</label><input ${inAttrs("c2","append","1–8 Blöcke",S.c2v,false)}></div>
+        <div class="row"><button class="btn primary">Kollision prüfen</button></div>`}
+      </form>
+      <form class="task${preDone?" solved":""}" id="preform">
+        <div class="taskhead"><span class="label">Aufgabe 2 · Urbild</span><span class="badge">${preDone?"gelöst":"offen"}</span></div>
+        ${preDone ? `<p class="help">Urbild gefunden.</p>` : `
+        <p class="help">Finde eine Nachricht m mit ${fn}(m) = y.</p>
+        <div class="fgrid"><span class="k">y</span><span>${vspan(hex(S.y,hd()))}</span>
+          <label class="k" for="p1">m</label><input ${inAttrs("p1","append","1–8 Blöcke",S.p1v,false)}></div>
+        <div class="row"><button class="btn primary">Urbild prüfen</button></div>`}
+      </form>
+    </div>
+    <div class="err" id="qerr">${esc(S.err||"")}</div>
+    ${crDone && preDone ? successHTML(`Kollision und Urbild gefunden. ${fn} ist weder kollisions- noch urbildresistent.`, "Nochmal spielen") : ""}`;
+  bindCommon();
+  const finish = () => { if(S.cr && S.solved>=L.preN && !S.done){ S.done=true; markDone(); } renderHash(); };
+  $("hform").onsubmit = e => { e.preventDefault();
+    S.hv=$("hin").value; const r=parseBlocks(S.hv,8); if(r.err) return setErr(r.err);
+    S.err=""; S.calc.push({m:r.blocks, h:hashF(r.blocks)}); S.calcN++; if(S.calc.length>8) S.calc.shift();
+    renderHash(); $("hin").focus(); };
+  const cf=$("crform"); if(!crDone) cf.onsubmit = e => { e.preventDefault();
+    S.c1v=$("c1").value; S.c2v=$("c2").value;
+    const a=parseBlocks(S.c1v,8); if(a.err) return setErr("m1: "+a.err);
+    const b=parseBlocks(S.c2v,8); if(b.err) return setErr("m2: "+b.err);
+    if(a.blocks.join(",")===b.blocks.join(",")) return setErr("m1 und m2 müssen verschieden sein.");
+    const ha=hashF(a.blocks), hb=hashF(b.blocks);
+    if(ha===hb){ S.cr=[a.blocks,b.blocks]; S.err=""; }
+    else { noteFail(); S.err=`Keine Kollision: ${fn}(m1) = ${hex(ha,hd())}, ${fn}(m2) = ${hex(hb,hd())}.`; }
+    finish(); };
+  const pf=$("preform"); if(!preDone) pf.onsubmit = e => { e.preventDefault();
+    S.p1v=$("p1").value; const a=parseBlocks(S.p1v,8); if(a.err) return setErr("m: "+a.err);
+    const h=hashF(a.blocks);
+    if(h===S.y){ S.solved++; S.err=""; S.p1v=""; if(S.solved<L.preN) newPre(); }
+    else { noteFail(); S.err=`Kein Urbild: ${fn}(m) = ${hex(h,hd())}, gesucht ist y = ${hex(S.y,hd())}.`; }
+    finish(); };
+}
+
+/* ---------- Fälschen: authentifizierte Verschlüsselung (INT-CTXT) ---------- */
+function initAe(){ S.E=lazyFn16(); S.F=lazyFn16(); S.G=lazyFn16(); S.Q=new Set(); S.log=[]; S.state="play"; S.err=""; S.reason=""; S.attempt=(S.attempt||0)+1; S.qv=""; S.fnv=""; S.fcv=""; S.ftv=""; }
+function aeEnc(N, m){ return {C: m ^ S.E(N), T: S.F(N) ^ S.G(m)}; }
+function aeDec(N, C, T){ const m = C ^ S.E(N); return T === (S.F(N) ^ S.G(m)) ? m : null; }
+function renderAe(){
+  const left = L.maxQ - S.log.length, play = S.state==="play", qdis = !play || left<=0;
+  const rows = S.log.length ? S.log.map((e,i)=>`<tr><td class="i mono">${i+1}</td><td>${vspan(hex(e.N))}</td><td>${vspan(hex(e.m))}</td><td>${vspan(hex(e.C))}</td><td>${vspan(hex(e.T))}</td></tr>`).join("")
+    : `<tr><td colspan="5" class="empty">Noch keine Anfragen. Du hast ${L.maxQ} Anfragen.</td></tr>`;
+  let bottom = "";
+  if(S.state==="won") bottom = successHTML(`Der Empfänger akzeptiert dein Tripel und liest m = ${hex(S.forgedM)}. Vom Orakel kam es nie.`, "Nochmal mit neuem Schlüssel");
+  else if(S.state==="lost") bottom = `<div class="feedback bad"><p>Fälschung ungültig. <span>${S.reason}</span></p><button class="btn primary" id="retry">Neuer Versuch mit neuem Schlüssel</button></div>`;
+  $("game").innerHTML = headHTML([["Versuch", S.attempt], ["Anfragen", `${S.log.length}/${L.maxQ}`], ["Fehlversuche", S.fails]]) + `
+    <form class="oracle" id="qform"><div class="label">Verschlüsseln lassen: Enc(N, m)</div>
+      <div class="inrow"><input ${inAttrs("qin","append","N m, z. B. 0001 1234",S.qv,qdis)}>
+        <button type="button" class="btn" id="qrand" ${qdis?"disabled":""}>Zufall</button>
+        <button class="btn primary" ${qdis?"disabled":""}>Verschlüsseln</button></div></form>
+    <div class="logwrap"><table class="log"><thead><tr><th>#</th><th>Nonce N</th><th>m</th><th>C</th><th>Tag T</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <form class="oracle" id="fform"><div class="label">Deine Fälschung (N*, C*, T*)</div>
+      <div class="fgrid">
+        <label class="k" for="fn">N*</label><input ${inAttrs("fn","replace","4 Hex-Zeichen",S.fnv,!play)}>
+        <label class="k" for="fc">C*</label><input ${inAttrs("fc","replace","4 Hex-Zeichen",S.fcv,!play)}>
+        <label class="k" for="ft">T*</label><input ${inAttrs("ft","replace","4 Hex-Zeichen",S.ftv,!play)}>
+      </div>
+      <div class="row"><button class="btn primary" ${!play?"disabled":""}>An Empfänger senden</button></div></form>
+    <div class="err" id="qerr">${esc(S.err||"")}</div>
+    ${bottom}`;
+  bindCommon();
+  $("qform").onsubmit = e => { e.preventDefault();
+    S.qv=$("qin").value; const r=parseBlocks(S.qv,2);
+    if(r.err || r.blocks.length!==2) return setErr(r.err || "Gib genau zwei Blöcke ein: Nonce N und Nachricht m.");
+    const [N,m]=r.blocks, {C,T}=aeEnc(N,m);
+    S.err=""; S.Q.add(`${N},${C},${T}`); S.log.push({N,m,C,T});
+    renderAe(); const q=$("qin"); if(q && !q.disabled) q.focus(); };
+  $("qrand").onclick = () => { $("qin").value = hex(rnd16())+" "+hex(rnd16()); $("qin").focus(); };
+  $("fform").onsubmit = e => { e.preventDefault();
+    S.fnv=$("fn").value; S.fcv=$("fc").value; S.ftv=$("ft").value;
+    const n=parseHexN(S.fnv,4,"N*"); if(n.err) return setErr(n.err);
+    const c=parseHexN(S.fcv,4,"C*"); if(c.err) return setErr(c.err);
+    const t=parseHexN(S.ftv,4,"T*"); if(t.err) return setErr(t.err);
+    const N=parseInt(n.v,16), C=parseInt(c.v,16), T=parseInt(t.v,16);
+    if(S.Q.has(`${N},${C},${T}`)) return setErr("Dieses Tripel kam vom Orakel. Eine Fälschung muss neu sein.");
+    S.err=""; const m=aeDec(N,C,T);
+    if(m!==null){ S.state="won"; S.forgedM=m; markDone(); }
+    else { S.state="lost"; S.reason="Der Empfänger lehnt ab (⊥): Der Tag passt nicht zu Nonce und Chiffrat."; noteFail(); }
+    renderAe(); };
+  const rt=$("retry"); if(rt) rt.onclick=()=>{ initAe(); renderAe(); };
+}
+
+/* ---------- Interaktion ---------- */
+function doQuery(x, dir){
+  if(S.log.length >= L.maxQ){ S.err = "Keine Anfragen mehr in dieser Runde. Entscheide dich."; return renderGame(); }
+  S.err = ""; S.log.push(L.query(S.oracle, x, dir)); renderGame();
+  const qi=$("qin"); if(qi && !qi.disabled){ qi.focus(); }
+}
+function bindGame(){
+  document.querySelectorAll(".q3").forEach(b=>b.onclick=()=>doQuery(+b.dataset.x));
+  const f=$("qform");
+  if(f){ const qi=$("qin");
+    qi.addEventListener("focus",()=>{ lastField=qi; lastGin=qi; });
+    const single = L.input==="hex16" || L.input==="cca";
+    const send = dir => {
+      let arg;
+      if(L.input==="text"){ const r=parseText(qi.value); if(r.err){ S.err=r.err; $("qerr").textContent=r.err; return; } arg=r.v; }
+      else if(L.input==="nm"){ const r=parseBlocks(qi.value,2); const m=r.err || (r.blocks.length!==2 ? "Gib genau zwei Blöcke ein: Nonce N und Nachricht m." : "");
+        if(m){ S.err=m; $("qerr").textContent=m; return; } arg=r.blocks; }
+      else { const r = parseBlocks(qi.value, single?1:L.maxBlocks);
+        if(r.err){ S.err=r.err; $("qerr").textContent=r.err; return; } arg = single?r.blocks[0]:r.blocks; }
+      const keep = qi.value; doQuery(arg, dir); const q2=$("qin"); if(q2) q2.value=keep; };
+    f.onsubmit = e => { e.preventDefault(); send("enc"); };
+    const qd=$("qdec"); if(qd) qd.onclick = () => send("dec");
+    $("qrand").onclick = () => {
+      if(L.input==="text"){ qi.value = Array.from({length:4+rnd(5)},()=>String.fromCharCode(97+rnd(26))).join(""); qi.focus(); return; }
+      const n = single?1:L.input==="nm"?2:1+rnd(2); qi.value = Array.from({length:n},()=>hex(rnd16())).join(" "); qi.focus(); };
+  }
+  document.querySelectorAll(".dec").forEach(b=>b.onclick=()=>{
+    const guess = b.dataset.g==="1"; S.decided = guess;
+    S.results.push({b:S.b, guess, ok:guess===S.b}); renderGame();
+  });
+  const nr=$("nextround"); if(nr) nr.onclick=()=>{ S.round++;
+    if(S.round>=L.rounds){ S.finished=true; saveProgress(); renderLevels(); renderSide(); } else newRound();
+    renderGame(); };
+  const ss=$("showsol"); if(ss) ss.onclick=()=>{ S.hintsShown=L.hints.length; renderSide(); $("hints").scrollIntoView({behavior:"smooth",block:"center"}); };
+  const ag=$("again"); if(ag) ag.onclick=()=>newLevel(L);
+  const nx=$("next"); if(nx) nx.onclick=()=>newLevel(LEVELS[LEVELS.indexOf(L)+1]);
+  document.querySelectorAll("#game .v[data-v]").forEach(s=>s.onclick=()=>insertVal(s.dataset.v));
+  updXor();
+}
+const usable = el => el && document.body.contains(el) && !el.disabled;
+function insertInto(t, v){
+  if(t.dataset.mode==="append") t.value = (t.value.trim() ? t.value.trim()+" " : "") + v; else t.value = v;
+  if(t.id==="xa" || t.id==="xb") updXor();
+  t.focus(); lastField = t; if(t.classList.contains("gin")) lastGin = t;
+}
+function insertVal(v){
+  const t = usable(lastField) ? lastField : [...document.querySelectorAll("#game .gin")].find(usable) || $("xa");
+  insertInto(t, v);
+}
+function saveProgress(){
+  const correct = S.results.filter(r=>r.ok).length, a=advantage(S.results).adv;
+  const p = progress[L.id] || {best:0, adv:a};
+  p.best = Math.max(p.best, correct); p.adv = a; progress[L.id]=p; store.set(progress);
+}
+let xorVal = null;
+function xorTarget(t){
+  if(t==="A") return $("xa");
+  if(t==="gin") return usable(lastGin) ? lastGin : [...document.querySelectorAll("#game .gin")].find(usable);
+  return $(t);
+}
+function updXor(){
+  const a=cleanHex($("xa").value), b=cleanHex($("xb").value), r=$("xr");
+  xorVal = null;
+  if(!a||!b) r.textContent="—";
+  else if(!/^[0-9A-F]+$/.test(a+b)) r.textContent="nur Hex";
+  else if(a.length!==b.length) r.textContent=`gleiche Länge nötig (${a.length} und ${b.length} Zeichen)`;
+  else { xorVal = xorHex(a,b); r.textContent = grp(xorVal); }
+  document.querySelectorAll("#xbtns button").forEach(btn => { btn.disabled = !xorVal || !usable(xorTarget(btn.dataset.xt)); });
+}
+function renderXorButtons(){
+  const btns = [["A","Ergebnis → A"]];
+  if(L.type==="mall") btns.push(["fiv", `${L.mode==="ctr"?"R":"C0"} ersetzen`], ["fc1","C1 ersetzen"]);
+  else if(L.type==="ae") btns.push(["fn","N* setzen"], ["fc","C* setzen"], ["ft","T* setzen"]);
+  else btns.push(["gin","als Eingabe"]);
+  $("xbtns").innerHTML = btns.map(([t,l])=>`<button class="btn" data-xt="${t}">${l}</button>`).join("");
+  updXor();
+}
+["xa","xb"].forEach(id=>{ const el=$(id); el.addEventListener("input",updXor); el.addEventListener("focus",()=>lastField=el); });
+$("xbtns").onclick=e=>{
+  const btn=e.target.closest("[data-xt]"); if(!btn || !xorVal) return;
+  const t=btn.dataset.xt, v=grp(xorVal);
+  if(t==="A"){ $("xa").value=v; $("xb").value=""; updXor(); $("xb").focus(); lastField=$("xb"); return; }
+  const el=xorTarget(t); if(!el) return;
+  if(t==="gin") insertInto(el, v); else { el.value=v; el.focus(); lastField=el; lastGin=el; }
+};
+function updAscii(){
+  const v=$("ain").value, o=$("aout");
+  if(!v){ o.innerHTML="—"; return; }
+  if(/[^\x20-\x7e]/.test(v)){ o.textContent="nur ASCII-Zeichen"; return; }
+  const h=asciiHex(v); o.innerHTML=`<span class="v" data-v="${h}" title="klicken zum Einsetzen">${grp(h)}</span>`;
+  o.querySelector(".v").onclick=()=>insertVal(h);
+}
+$("ain").addEventListener("input", updAscii);
+$("pm").onclick=e=>{ const b=e.target.closest("[data-pm]"); if(b) insertVal(b.dataset.pm); };
+$("levels").onclick=e=>{ const b=e.target.closest(".lvl"); if(b) newLevel(LEVELS.find(l=>l.id===b.dataset.id)); };
+$("hintbtn").onclick=()=>{ S.hintsShown=Math.min(S.hintsShown+1,L.hints.length); renderSide(); };
+
+/* ---------- Darstellung: Hell / Dunkel / Auto ---------- */
+function applyTheme(t){
+  if(t==="light" || t==="dark") document.documentElement.setAttribute("data-theme", t);
+  else document.documentElement.removeAttribute("data-theme");
+  document.querySelectorAll("[data-theme-set]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.themeSet===t)));
+}
+let themePref="auto"; try{ themePref=localStorage.getItem("orakel-labor-theme")||"auto"; }catch(e){}
+applyTheme(themePref);
+document.querySelectorAll("[data-theme-set]").forEach(b=>b.onclick=()=>{
+  const t=b.dataset.themeSet; applyTheme(t);
+  try{ localStorage.setItem("orakel-labor-theme", t); }catch(e){}
+});
+
+/* ---------- Tabs ---------- */
+function showTab(which){
+  const learn = which==="learn";
+  $("tab-play").hidden = learn; $("tab-learn").hidden = !learn;
+  $("t-play").setAttribute("aria-selected", String(!learn));
+  $("t-learn").setAttribute("aria-selected", String(learn));
+}
+function showLevel(which){
+  const adv = which==="adv";
+  $("learn-basic").hidden = adv; $("learn-adv").hidden = !adv;
+  $("seg-basic").setAttribute("aria-pressed", String(!adv));
+  $("seg-adv").setAttribute("aria-pressed", String(adv));
+  try{ localStorage.setItem("orakel-labor-learn", which); }catch(e){}
+}
+$("t-play").onclick=()=>showTab("play");
+$("t-learn").onclick=()=>showTab("learn");
+$("golearn").onclick=()=>{ showTab("learn"); window.scrollTo(0,0); };
+$("seg-basic").onclick=()=>showLevel("basic");
+$("seg-adv").onclick=()=>showLevel("adv");
+document.querySelectorAll("[data-goplay]").forEach(b=>b.onclick=()=>{ showTab("play"); window.scrollTo(0,0); });
+let lv="basic"; try{ lv=localStorage.getItem("orakel-labor-learn")||"basic"; }catch(e){}
+showLevel(lv);
+$("learn-exp").innerHTML = pyHL(EXP_ROR("Enc"));
+$("learn-exp-mac").innerHTML = pyHL(EXP_MAC("MAC"));
+$("learn-exp-hash").innerHTML = pyHL(EXP_HASH("H"));
+$("learn-exp-mall").innerHTML = pyHL(EXP_MALL("CTR"));
+if(location.hash==="#erklaerung") showTab("learn");
+
+newLevel(LEVELS[0]);
+})();
+</script>
+
+</body>
+</html>
