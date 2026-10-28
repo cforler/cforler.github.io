@@ -1,0 +1,1582 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#13171b">
+<style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Doom Kartenaufdecker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: toolbar, then the square-grid map fitted to the screen; editor adds a tool panel. Deliberately single dark theme (UAC terminal), like the Würfelbecher. */
+:root{
+  --bg:#13171b; --panel:#1c2228; --panel-2:#242b33; --line:#36404a;
+  --fg:#e8e4dc; --muted:#a3aab2; --accent:#f2a93b; --accent-ink:#1a1406;
+  --bad:#ff6b5b; --good:#7fd18b; --fog:#06080a;
+  --display:'Chakra Petch','Arial Narrow',system-ui,sans-serif;
+  --body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:12px 24px;
+  -webkit-tap-highlight-color:transparent}
+.wrap{max-width:1500px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--line);padding-bottom:8px}
+.eyebrow{font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+h1{margin:0;font-family:var(--display);font-weight:700;font-size:26px;line-height:1;letter-spacing:.02em;text-transform:uppercase;text-wrap:balance}
+h2{margin:0;font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.btn{font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:.05em;text-transform:uppercase;min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.btn.armed{background:var(--bad);color:#1a0705;border-color:var(--bad)}
+.btn.sm{min-height:36px;padding:0 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.chip:focus-visible,.tool:focus-visible,.pal:focus-visible,.area-row:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.grow{flex:1 1 auto}
+.title-line{font-family:var(--display);font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.04em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-label input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+/* list */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.card canvas{display:block;width:100%;height:auto;max-width:100%;background:var(--fog);border-bottom:1px solid var(--line)}
+.card .body{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.card .name{font-family:var(--display);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .meta{font-size:13px;color:var(--muted)}
+.empty{background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:24px 20px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;max-width:640px}
+.empty p{margin:0;color:var(--muted)}
+
+/* stage */
+.scroller{overflow:auto;max-width:100%;border-radius:6px;box-shadow:0 0 0 1px var(--line);background:var(--fog);-webkit-overflow-scrolling:touch}
+.scroller.fit{overflow:hidden;display:flex;justify-content:center;box-shadow:none;background:transparent}
+.scroller canvas{display:block}
+
+/* editor */
+.editor{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media (min-width:1000px){.editor{grid-template-columns:minmax(0,1fr) 340px;align-items:start}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel section{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.panel section:first-child{border-top:none;padding-top:0}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tool{min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+.tool[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.pal{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);cursor:pointer;font-size:11px;line-height:1.1;text-align:center;min-height:64px}
+.pal canvas{width:30px;height:30px}
+.pal[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.swatches{display:flex;gap:6px;flex-wrap:wrap}
+.sw{width:40px;height:40px;border-radius:8px;border:2px solid var(--line);cursor:pointer}
+.sw[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--accent)}
+.areas{display:flex;flex-direction:column;gap:6px;max-height:34vh;overflow:auto}
+.area-row{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);cursor:pointer;min-height:44px;text-align:left;color:var(--fg);font:inherit;width:100%}
+.area-row.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.swatch{width:16px;height:16px;border-radius:4px;flex:none}
+.area-row .nm{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
+.area-row .ct{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label,.lbl{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.field input[type=text],.field input[type=number],select{min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;padding:0 10px;width:100%}
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.check{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;font-size:15px}
+.check input{width:22px;height:22px;accent-color:var(--accent)}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
+
+/* play */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:46px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.04em;cursor:pointer;display:inline-flex;align-items:center;gap:8px;touch-action:manipulation}
+.chip .dot{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip.on .dot{background:var(--accent-ink)}
+.status{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--line);color:var(--fg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:20;max-width:calc(100% - 32px)}
+textarea{min-height:88px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:14px;padding:8px 10px;width:100%;resize:vertical}
+textarea:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.play-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+.play-grid.with-notes{grid-template-columns:minmax(0,1fr)}
+@media (min-width:1000px){.play-grid.with-notes{grid-template-columns:minmax(0,1fr) 360px}}
+.notes{max-height:78vh;overflow:auto}
+.note{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--line);padding-top:8px}
+.note:first-child{border-top:none;padding-top:0}
+.note h3{margin:0;font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.note.new h3{color:var(--accent)}
+.note p{margin:0;font-size:14px;line-height:1.45;white-space:pre-line;color:var(--fg)}
+.note p.dim{color:var(--muted)}
+.soundbar{border-top:1px solid var(--line);padding-top:10px}
+.soundbar .btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.secret{border-left:3px solid var(--accent);padding:4px 0 4px 10px;display:flex;flex-direction:column;gap:2px;margin-top:2px}
+.secret-lbl{font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.note .btn{align-self:flex-start;margin-top:2px}
+details.hidden-notes summary{cursor:pointer;font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);min-height:36px;display:flex;align-items:center}
+details.hidden-notes[open]{display:flex;flex-direction:column;gap:8px}
+.tip{position:fixed;z-index:30;pointer-events:none;max-width:280px;background:var(--panel-2);border:1px solid var(--accent);border-radius:8px;padding:8px 10px;font-size:13px;line-height:1.4;color:var(--fg);box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.tip b{display:block;font-family:var(--display);font-size:14px;letter-spacing:.03em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">UAC · Lageplan</div>
+      <h1>Doom Kartenaufdecker</h1>
+    </div>
+    <div class="bar" id="topActions">
+      <label class="btn file-label" for="fileImport">Importieren<input type="file" id="fileImport" accept=".json,application/json"></label>
+      <button class="btn primary" type="button" id="newScen">Neues Szenario</button>
+    </div>
+  </header>
+
+  <section id="viewList"><div id="listBox"></div></section>
+
+  <section id="viewEdit" hidden>
+    <div class="editor">
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <div class="bar">
+          <button class="btn" type="button" id="editBack">Fertig</button>
+          <span class="title-line grow" id="editTitle"></span>
+          <button class="btn sm" type="button" id="zoomOut" aria-label="Verkleinern">−</button>
+          <button class="btn sm" type="button" id="zoomIn" aria-label="Vergrößern">+</button>
+          <button class="btn" type="button" id="exportScen">Exportieren</button>
+          <button class="btn primary" type="button" id="editPlay">Spielen</button>
+        </div>
+        <div class="scroller" id="editScroller"></div>
+        <p class="hint" id="toolHint"></p>
+      </div>
+      <aside class="panel">
+        <section>
+          <h2>Werkzeug</h2>
+          <div class="tools" id="tools"></div>
+        </section>
+        <section id="secArea">
+          <h2>Gebiete</h2>
+          <div class="areas" id="areaList"></div>
+          <button class="btn sm" type="button" id="addArea">+ Gebiet</button>
+          <div id="areaEdit" style="display:flex;flex-direction:column;gap:8px">
+            <div class="field"><label for="areaName">Name des Gebiets</label><input type="text" id="areaName" autocomplete="off"></div>
+            <label class="check" for="areaStart"><input type="checkbox" id="areaStart"> Beim Start sichtbar</label>
+            <div class="field"><label for="areaNote">Text beim Aufdecken (sehen alle)</label><textarea id="areaNote" rows="4" placeholder="Was die Marines sehen, wenn das Gebiet aufgeht"></textarea></div>
+            <p class="hint">Geheimes, das erst beim Auslösen erscheinen soll, gehört als Symbol-Notiz an eine Begegnung oder einen Schlüssel (Werkzeug „Symbol-Notiz“).</p>
+            <button class="btn sm danger" type="button" id="delArea">Gebiet löschen</button>
+          </div>
+        </section>
+        <section id="secToken" hidden>
+          <h2>Symbol</h2>
+          <div class="palette" id="palette"></div>
+          <div class="lbl">Farbe</div>
+          <div class="swatches" id="tokColors"></div>
+          <div class="row2">
+            <div class="field"><label for="tokW">Breite</label><input type="number" id="tokW" min="1" max="6" value="1"></div>
+            <div class="field"><label for="tokH">Höhe</label><input type="number" id="tokH" min="1" max="6" value="1"></div>
+          </div>
+          <div class="field"><label for="tokLabel">Beschriftung (optional)</label><input type="text" id="tokLabel" maxlength="6" autocomplete="off" placeholder="z. B. BFG"></div>
+        </section>
+        <section id="secNote" hidden>
+          <h2>Symbol-Notiz</h2>
+          <p class="hint" id="noteTarget">Tippe auf der Karte auf ein Symbol, zum Beispiel eine Begegnung oder einen Schlüssel.</p>
+          <div class="field" id="noteField" hidden><label for="tokNote">Erscheint, wenn das Symbol im Spiel angetippt wird</label><textarea id="tokNote" rows="5" placeholder="z. B. Der Marine findet den roten Schlüssel."></textarea></div>
+        </section>
+        <section id="secDoor" hidden>
+          <h2>Tür</h2>
+          <div class="swatches" id="doorKinds"></div>
+          <p class="hint">Tippe nahe an die Kante zwischen zwei Feldern. Nochmal tippen entfernt die Tür.</p>
+        </section>
+        <section>
+          <h2>Szenario</h2>
+          <div class="field"><label for="scenName">Name</label><input type="text" id="scenName" autocomplete="off"></div>
+          <div class="field"><label for="scenNote">Spielleiter-Notiz zum Szenario</label><textarea id="scenNote" rows="3" placeholder="Ziel, Siegbedingungen, Sonderregeln"></textarea></div>
+          <div class="row2">
+            <div class="field"><label for="gridCols">Spalten</label><input type="number" id="gridCols" min="4" max="80"></div>
+            <div class="field"><label for="gridRows">Zeilen</label><input type="number" id="gridRows" min="4" max="80"></div>
+          </div>
+        </section>
+        <section>
+          <h2>Foto-Vorlage</h2>
+          <div class="bar">
+            <label class="btn sm file-label" for="bgFile">Foto wählen<input type="file" id="bgFile" accept="image/*"></label>
+            <button class="btn sm" type="button" id="bgRotate">Drehen ↻</button>
+            <button class="btn sm danger" type="button" id="bgRemove">Entfernen</button>
+          </div>
+          <div id="bgControls" style="display:flex;flex-direction:column;gap:6px">
+            <div class="field"><label for="bgOpacity">Deckkraft</label><input type="range" id="bgOpacity" min="0" max="1" step="0.05"></div>
+            <div class="field"><label for="bgSize">Größe (Breite in Feldern)</label><input type="range" id="bgSize" min="4" max="120" step="0.05"></div>
+            <div class="field"><label for="bgX">Links / rechts</label><input type="range" id="bgX" min="-40" max="40" step="0.05"></div>
+            <div class="field"><label for="bgY">Hoch / runter</label><input type="range" id="bgY" min="-40" max="40" step="0.05"></div>
+          </div>
+          <p class="hint">Die Vorlage hilft beim Abzeichnen. Schiebe sie so, dass ihre Felder auf dem Raster liegen.</p>
+        </section>
+      </aside>
+    </div>
+  </section>
+
+  <section id="viewPlay" hidden>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="bar">
+        <button class="btn" type="button" id="playBack">Zurück</button>
+        <span class="title-line grow" id="playTitle"></span>
+        <span class="status" id="playStatus"></span>
+        <label class="check" for="showPhoto" id="showPhotoWrap"><input type="checkbox" id="showPhoto"> Foto</label>
+        <button class="btn" type="button" id="notesToggle" aria-expanded="false" aria-controls="notesPanel">Notizen</button>
+        <button class="btn" type="button" id="fullscreen">Vollbild</button>
+        <button class="btn danger" type="button" id="resetPlay">Neu starten</button>
+      </div>
+      <div class="play-grid">
+        <div class="scroller fit" id="playScroller"></div>
+        <aside class="panel notes" id="notesPanel" hidden></aside>
+      </div>
+      <div class="chips" id="playChips" aria-label="Gebiete aufdecken"></div>
+      <div class="bar soundbar" id="soundBar" aria-label="Atmosphäre">
+        <button class="btn sm" type="button" id="ambToggle" aria-pressed="false">Atmosphäre an</button>
+        <button class="btn sm" type="button" data-sfx="siren">Sirene</button>
+        <button class="btn sm" type="button" data-sfx="power">Stromausfall</button>
+        <button class="btn sm" type="button" data-sfx="growl">Brüllen</button>
+        <button class="btn sm" type="button" data-sfx="clang">Metall</button>
+        <label class="lbl" for="voiceSel" style="margin-left:auto">Stimme</label>
+        <select id="voiceSel" style="width:auto;min-height:36px">
+          <option value="funk">Funkspruch</option>
+          <option value="computer">Bordcomputer</option>
+          <option value="daemon">Dämon</option>
+          <option value="normal">Normal</option>
+        </select>
+      </div>
+      <p class="hint">Tür antippen: öffnet sie und deckt das Gebiet dahinter auf. Symbol antippen: als erledigt markieren (Monster tot, Gegenstand genommen).</p>
+    </div>
+  </section>
+
+  <footer>Szenarien bleiben nur in diesem Browser auf diesem Gerät gespeichert. „Exportieren“ macht daraus eine Datei, die sich auf einem anderen Gerät importieren lässt.</footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(id){ return document.getElementById(id); };
+  function el(tag, cls, text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  var toastTimer;
+  function toast(msg){ var t=document.querySelector('.toast'); if(!t){ t=el('div','toast'); t.setAttribute('role','status'); document.body.appendChild(t); }
+    t.textContent=msg; t.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.hidden=true; },2600); }
+  function twoTap(btn, armedText, fn){
+    var orig=btn.textContent, t=null;
+    btn.addEventListener('click',function(){
+      if(btn.classList.contains('armed')){ clearTimeout(t); btn.classList.remove('armed'); btn.textContent=orig; fn(); return; }
+      btn.classList.add('armed'); btn.textContent=armedText;
+      t=setTimeout(function(){ btn.classList.remove('armed'); btn.textContent=orig; },3000);
+    });
+  }
+
+  // ---------- palette definitions ----------
+  var AREA_COLORS=['#9aa3ad','#7d8590','#c860d0','#7a6cf0','#6fb8f0','#58b86a','#e6c94a','#f0a050','#f07068','#4fd6c8','#d0d070','#ff8ab6'];
+  var COL={red:'#c8382c',green:'#3a9a4e',blue:'#2f6fc0',white:'#dde1e6',yellow:'#e9b729',purple:'#8a5fd0'};
+  var TYPES=[
+    {t:'zombie',n:'Zombie',g:'monster',ab:'Z',w:1,h:1},
+    {t:'imp',n:'Imp',g:'monster',ab:'I',w:1,h:1},
+    {t:'trite',n:'Trite',g:'monster',ab:'T',w:1,h:1},
+    {t:'demon',n:'Demon',g:'monster',ab:'D',w:2,h:1},
+    {t:'mancubus',n:'Mancubus',g:'monster',ab:'M',w:2,h:2},
+    {t:'hellknight',n:'Hell Knight',g:'monster',ab:'HK',w:2,h:2},
+    {t:'archvile',n:'Archvile',g:'monster',ab:'A',w:1,h:1},
+    {t:'cyberdemon',n:'Cyberdemon',g:'monster',ab:'CD',w:2,h:2},
+    {t:'marine',n:'Marine',g:'marine',ab:'M',w:1,h:1},
+    {t:'weapon',n:'Waffe',g:'item',w:1,h:1},
+    {t:'ammo',n:'Munition',g:'item',w:1,h:1},
+    {t:'health',n:'Gesundheit',g:'item',w:1,h:1},
+    {t:'armor',n:'Rüstung',g:'item',w:1,h:1},
+    {t:'berserk',n:'Berserker',g:'item',w:1,h:1},
+    {t:'adrenaline',n:'Adrenalin',g:'item',w:1,h:1},
+    {t:'key',n:'Schlüssel',g:'key',w:1,h:1},
+    {t:'encounter',n:'Begegnung',g:'feature',w:1,h:1},
+    {t:'x',n:'Platzhalter',g:'feature',w:1,h:1},
+    {t:'duct',n:'Schacht',g:'feature',w:1,h:1},
+    {t:'teleporter',n:'Teleporter',g:'feature',w:1,h:1},
+    {t:'block',n:'Hindernis',g:'feature',w:1,h:1},
+    {t:'slime',n:'Säure',g:'feature',w:1,h:1},
+    {t:'barrel',n:'Fass',g:'feature',w:1,h:1}
+  ];
+  var TYPE={}; TYPES.forEach(function(x){ TYPE[x.t]=x; });
+  function colorChoices(g){ if(g==='monster') return ['white','red','green','blue']; if(g==='marine') return ['red','green','blue']; if(g==='key') return ['red','blue','yellow']; return null; }
+
+  // ---------- built-in example: Knietief in Leichen (layout transcribed from the scenario map; no photo inside) ----------
+  function buildExample(){
+    var OX=24, OY=1, s={id:'beispiel-knietief', name:'I: Knietief in Leichen', cols:34, rows:28, areas:[], cells:{}, tokens:[], doors:[],
+      bg:null, bgHint:{x:-1.05, y:-4.27, cw:36.29}, play:null, updated:Date.now(), example:true};
+    var names=['Start','Gebiet 1','Gebiet 2','Gebiet 3','Gebiet 4','Gebiet 5','Gebiet 6','Gebiet 7','Gebiet 8'];
+    names.forEach(function(n,i){ s.areas.push({id:'a'+i, name:n, start:i===0}); });
+    function R(a,c0,r0,c1,r1){ for(var c=c0;c<=c1;c++) for(var r=r0;r<=r1;r++) s.cells[(c+OX)+','+(r+OY)]='a'+a; }
+    R(0,-17,22,-14,25); R(0,-16,21,-15,21); R(0,-16,26,-15,26); R(0,-13,23,-11,24); R(0,-10,22,-7,25); R(0,-9,26,-8,26); R(0,-6,23,-6,24);
+    R(1,-24,13,-21,15); R(1,-24,16,-22,22); R(1,-24,23,-18,24);
+    R(2,-20,11,-11,15);
+    R(3,-10,12,-8,15); R(3,-7,13,-1,14); R(3,-9,16,-8,21);
+    R(4,1,9,2,11); R(4,0,12,3,15); R(4,4,13,4,14); R(4,1,16,2,16);
+    R(5,-9,6,-8,11);
+    R(6,-13,3,-1,4); R(6,-10,5,-8,5);
+    R(7,-18,2,-17,2); R(7,-18,3,-14,5); R(7,-19,6,-14,7); R(7,-15,8,-14,8);
+    R(8,0,0,9,8); R(8,2,-1,3,-1); R(8,5,-1,6,-1); R(8,8,9,9,9);
+    function D(c,r,side,kind,col,len){ for(var i=0;i<(len||1);i++){ var cc=c+(side==='w'?0:i), rr=r+(side==='w'?i:0); s.doors.push({c:cc+OX, r:rr+OY, side:side, kind:kind||'door', col:col||null}); } }
+    D(-17,23,'w','door',null,2);   // Gebiet 1 – Start
+    D(-20,13,'w','door',null,2);   // Gebiet 1 – Gebiet 2
+    D(-10,12,'w','door',null,3);   // Gebiet 2 – Gebiet 3
+    D(-9,22,'n','door',null,2);    // Start – Gebiet 3
+    D(-9,12,'n','door',null,2);    // Gebiet 3 – Gebiet 5
+    D(0,13,'w','door',null,2);     // Gebiet 3 – Gebiet 4
+    D(-9,6,'n','door',null,2);     // Gebiet 5 – Gebiet 6
+    D(-13,3,'w','door',null,2);    // Gebiet 6 – Gebiet 7
+    D(0,3,'w','door',null,2);      // Gebiet 6 – Gebiet 8
+    D(1,9,'n','sec','blue',2);     // Gebiet 4 – Gebiet 8 (blaue Sicherheitstür)
+    D(10,4,'w','sec','red',2);     // Ausgang (rote Sicherheitstür)
+    function T(t,c,r,col,w,h,label){ var d=TYPE[t]; s.tokens.push({id:'t'+s.tokens.length, t:t, c:c+OX, r:r+OY, col:col||null, w:w||d.w, h:h||d.h, label:label||''}); }
+    // Start
+    T('marine',-10,23,'green'); T('marine',-11,24,'blue'); T('marine',-10,24,'red');
+    T('weapon',-17,22); T('ammo',-16,21); T('weapon',-15,21); T('duct',-14,22); T('ammo',-16,26); T('weapon',-15,26);
+    // Gebiet 1
+    T('imp',-22,14,'white'); T('health',-21,14); T('ammo',-22,15); T('zombie',-23,19,'green'); T('zombie',-20,23,'white'); T('zombie',-22,24,'blue'); T('zombie',-19,24,'red');
+    // Gebiet 2
+    T('zombie',-20,11,'red'); T('ammo',-19,11); T('health',-14,11); T('weapon',-12,11); T('zombie',-11,11,'green');
+    T('block',-18,12,null,1,3); T('demon',-17,13,'white',1,2); T('encounter',-16,13,null,2,1); T('demon',-14,12,'white',1,2); T('block',-13,12,null,1,3); T('duct',-12,13);
+    T('armor',-17,15); T('ammo',-12,15); T('zombie',-11,15,'blue');
+    // Gebiet 3
+    T('ammo',-9,15); T('demon',-7,13,'white',1,2); T('imp',-5,13,'white'); T('ammo',-4,14); T('zombie',-3,14,'green'); T('health',-2,13); T('zombie',-9,17,'blue'); T('zombie',-8,20,'red');
+    // Gebiet 4
+    [[1,9],[2,10],[1,11],[0,12],[2,12],[1,13],[3,13],[0,14],[2,14],[4,14],[1,15],[3,15],[2,16]].forEach(function(p){ T('x',p[0],p[1]); });
+    T('health',1,10); T('health',1,12); T('block',0,13); T('key',2,13,'blue'); T('weapon',4,13); T('duct',1,14); T('armor',3,14); T('block',2,15); T('ammo',1,16);
+    // Gebiet 5
+    T('encounter',-9,7,null,2,1); T('zombie',-9,8,'green'); T('zombie',-8,8,'blue'); T('demon',-9,9,'white',1,2); T('block',-8,9,null,1,2); T('zombie',-9,11,'red'); T('zombie',-8,11,'white');
+    // Gebiet 6
+    T('demon',-13,4,'white',2,1); T('health',-12,3); T('zombie',-11,3,'green'); T('ammo',-10,3); T('imp',-9,3,'blue'); T('imp',-8,3,'blue');
+    T('ammo',-6,3); T('zombie',-5,4,'red'); T('ammo',-4,4); T('demon',-3,3,'white',2,1); T('ammo',-8,5);
+    // Gebiet 7
+    T('encounter',-18,2,null,2,1);
+    T('health',-18,4); T('trite',-17,4,'white'); T('trite',-15,4,'red'); T('duct',-16,5); T('ammo',-19,6); T('trite',-17,6,'blue');
+    T('weapon',-17,7); T('trite',-16,7,'green'); T('mancubus',-15,6,'white'); T('ammo',-15,8);
+    // Gebiet 8
+    T('weapon',3,-1); T('health',5,-1); T('ammo',0,0); T('hellknight',5,1,'green'); T('imp',8,2,'blue'); T('zombie',2,3,'blue');
+    T('mancubus',5,4,'blue'); T('hellknight',8,4,'red'); T('demon',0,5,'green',1,2); T('duct',7,6); T('imp',8,7,'red'); T('hellknight',5,7,'white'); T('health',8,9);
+    // Spielleiter-Notizen (Spielmechanik in eigenen Worten, keine Vorlesetexte)
+    s.note='Ziel: Den roten Sicherheitsschlüssel finden und durch die rote Sicherheitstür im Osten von Gebiet 8 entkommen.\nDer Eindringling gewinnt mit 6 Frags. Jedes Mal, wenn er die letzte Karte seines Stapels zieht, bekommt er einen Frag.';
+    applyExampleTexts(s);
+    return s;
+  }
+  // Texte für das Beispiel: „Text beim Aufdecken“ sehen alle, Symbol-Notizen erst beim Antippen des Symbols.
+  var EXAMPLE_REV=5;
+  function applyExampleTexts(s){
+    var OX=24, OY=1;
+    var N=['Ihr seid gerade erst auf der Marsstation angekommen, als die Sirenen losheulen. Aus den Lautsprechern dröhnt eine Stimme:\n„ALARM! ALARM! Schwerwiegende Fehlfunktion des Dimensionstorgenerators. Alarmstufe Rot. Notevakuierung eingeleitet. Verlassen Sie unverzüglich die Station!“\nDann wird es schlagartig dunkel. Sekunden später flackert die Notbeleuchtung auf und taucht alles in ein blutiges Rot. Aus der Ferne dringen Schreie und Kampflärm zu euch, und sie kommen näher.\nDie Shuttlebucht liegt im Nordosten, doch der Weg dorthin ist nur mit einem roten Sicherheitsschlüssel frei. Im Westen hat Bob, der Wachmann, seinen Posten. Wenn jemand weiß, wo der Schlüssel steckt, dann er.\nWas kann an einer „kleinen Fehlfunktion“ so schlimm sein, dass die Union Aerospace Corporation ihre eigene Forschungsstation aufgibt? Dann fällt es euch ein: Eine Notevakuierung endet normalerweise mit der Sprengung der Station.\nAlso nichts wie los!',
+      'Im Halbdunkel taumelt eine Gestalt in UAC-Uniform auf euch zu. Was immer sie einmal war, ein Mensch ist es nicht mehr.',
+      'Hier liegt ein bereits toter Wissenschaftler, an dem sich gerade zwei Höllenhunde gütlich tun. Vom Öffnen der Tür aufgeschreckt, knurren sie die Marines böse an.',
+      'Ein langer Korridor, still bis auf das Summen der Notbeleuchtung. Weiter hinten lösen sich Schatten aus den Wänden.',
+      'Ein verwüstetes Büro, umgestürzte Schränke, Spinnweben an der Decke. Auf dem Boden schimmert eine blaue Schlüsselkarte. Von oben hört man ein leises Zirpen.',
+      'Der Korridor ist voller Kreaturen. Zwischen ihnen liegt ein schwer verletzter Wissenschaftler und ruft um Hilfe.\nAm Ende jeder Spielrunde 1 Verletzungsmarker auf die Begegnung legen. Beim 3. Marker stirbt er: Begegnung und Marker entfernen.',
+      'Flackerndes Notlicht und Funkenregen. Auf dem Boden halten Kreaturen ein grausiges Festmahl.',
+      'Ein aufgedunsenes Monstrum füllt eine Ecke des Raums, kleine Spinnenwesen huschen über den Boden. In einer Nische im Norden sitzt ein stahlgepanzertes Sicherheitsfach.',
+      'Die Ostwand wird von einer riesigen Stahltür beherrscht. Eine Anzeige daneben: „Verriegelung aktiv. Zugang nur mit rotem Sicherheitsschlüssel.“ Und der Raum ist voller Kreaturen.'];
+    s.areas.forEach(function(a,i){ if(N[i]!=null) a.note=N[i]; });
+    function TN(t,c,r,note){ s.tokens.forEach(function(k){ if(k.t===t && k.c===c+OX && k.r===r+OY){ k.note=note; if(t==='encounter') k.label=''; } }); }
+    TN('encounter',-16,13,'Ein Marine beendet seine Bewegung auf der Begegnung: Beim Toten findet er den roten Sicherheitsschlüssel und nimmt ihn an sich. Begegnung entfernen.');
+    TN('key',2,13,'Der Marine hebt den blauen Schlüssel auf. 1 grünen Würfel werfen (Reichweite zählt):\n1: Der Schlüssel funktioniert, der Marine behält ihn.\n2: Hinterhalt! Pro Marine 3 Trites auf beliebige X-Felder setzen. Blauen Schlüssel aus dem Spiel nehmen.\n3: Der Schlüssel ist beschädigt. Aus dem Spiel nehmen.');
+    TN('encounter',-9,7,'Ein Marine beendet seinen Zug auf der Begegnung, solange der Wissenschaftler noch lebt: Mit letzter Kraft verrät er die Kombination für das Fach in Gebiet 7. Begegnung und Marker entfernen.\n(Ist er schon tot, gibt es nichts mehr zu erfahren.)');
+    var fach='Nur wenn die Marines die Kombination aus Gebiet 5 haben: Der Marine öffnet das Fach und erhält eine BFG und 2 Energiezellen. Begegnung entfernen.\nOhne Kombination bleibt das Fach zu: Markierung wieder aufheben.';
+    // Fach in Gebiet 7: eine Begegnung über zwei Felder (ältere Kopien hatten zwei einzelne)
+    s.tokens=s.tokens.filter(function(k){ return !(k.t==='encounter' && k.c===-17+OX && k.r===2+OY); });
+    s.tokens.forEach(function(k){ if(k.t==='encounter' && k.c===-18+OX && k.r===2+OY){ k.w=2; k.h=1; } });
+    TN('encounter',-18,2,fach);
+    s.note='Ziel: Den roten Sicherheitsschlüssel finden und durch die rote Sicherheitstür im Osten des Sektors entkommen.\nDer Eindringling gewinnt mit 6 Frags. Jedes Mal, wenn er die letzte Karte seines Stapels zieht, bekommt er einen Frag.';
+    s.exampleRev=EXAMPLE_REV;
+  }
+
+  // ---------- Kampagnen-Szenarien II–V ----------
+  var SCEN=[];
+  // ===== II: Die Gestade der Hölle =====
+  SCEN.push({key:'gestade', rev:1, name:'II: Die Gestade der Hölle', cols:41, rows:31, OX:8, OY:3,
+    bgHint:{x:-0.1, y:-2.44, cw:40.2},
+    note:'Ziel: Durch Sektor 4 nach Sektor 3 gelangen. Der Weg führt durch zwei Sicherheitstüren, der Ausgang ist die rote Sicherheitstür im Osten von Gebiet 7.\nDer Eindringling gewinnt mit 6 Frags. Jedes Mal, wenn er die letzte Karte seines Stapels zieht, bekommt er einen Frag.',
+    areas:['Start','Gebiet 1','Gebiet 2','Gebiet 3','Gebiet 4','Gebiet 5','Gebiet 6','Gebiet 7','Stahlkammer'],
+    texts:[
+      'Ihr steht in einem Raum voller blutiger Überreste von Marines, die vor euch versucht haben, diesen Weg zu gehen. Ganz in der Nähe ächzt und stöhnt es.\nAuf eurem PDA ist ein Bericht des Sicherheitszentrums eingegangen: Er beschreibt die Eindringlinge und die Waffen, die auf der Station zu finden sind.',
+      'Am anderen Ende des Raums hockt eine Kreatur mit dem Rücken zu euch und kaut auf etwas herum. Ringsum taumeln weitere Gestalten heran und strecken ihre Klauen nach euch aus.',
+      'Die Notbeleuchtung ist hier ausgefallen, es ist fast stockdunkel. Ihr kramt eure Taschenlampen hervor, doch der Lichtkegel reicht nicht weit.\nSonderregel: Marines sehen in diesem Gebiet nur 4 Felder weit, auch für ihre Sichtlinie. Eindringlinge stört die Dunkelheit nicht.',
+      'Trübes Dämmerlicht. Am anderen Ende schlurfen Zombies ziellos umher. Einer hebt witternd den Kopf, dann dreht sich die ganze Meute zu euch um.',
+      'Eine riesige Kantine: Sitzbänke, umgestürzte Tabletts, verdorbenes Essen, und dazwischen die Überreste dutzender UAC-Angestellter. Hier wurde ganze Arbeit geleistet. Unter einem Tisch in der Nordostecke bewegt sich etwas. Ein Überlebender? Oder noch einer von ihnen?',
+      'Eine zähe grüne Flüssigkeit tropft aus einem Riss in der Decke und bildet eine Pfütze, viel zu breit, um darüber zu springen. Auf der anderen Seite warten schon die nächsten Kreaturen.',
+      'Überall kleben die verräterischen Netze von Trites, rund um einen Versorgungsschacht. Mitten im Gespinst baumelt eine Sicherheitskarte. Mehrere Gänge führen von hier in verschiedene Richtungen.',
+      'Aus aufgerissenen Wandverkleidungen sprühen Funken. Ein paar Meter weiter beugen sich Zombies über ihre grausige Mahlzeit, weiter hinten wuseln Imps. Aus einem geborstenen Rohr zischt Dampf, und im Nebel zeichnen sich undeutlich große Schemen ab.',
+      'Mit einem lauten hydraulischen Zischen gleitet im westlichen Teil des Sektors eine schwere Tür auf. Das Display der Fernbedienung springt auf Grün: „Stahlkammer offen“.'
+    ],
+    build:function(R,D,T){
+      // Start
+      R(0,-1,0,11,3); R(0,3,4,4,4); R(0,9,-1,10,-1); R(0,9,4,10,4); R(0,12,1,12,2);
+      // Gebiet 1
+      R(1,-5,0,-2,3); R(1,-6,1,-6,2); R(1,-4,-1,-3,-1); R(1,-4,4,-3,4);
+      // Gebiet 2
+      R(2,3,5,4,5); R(2,3,6,9,8); R(2,3,9,6,11); R(2,7,9,13,10); R(2,6,11,7,14); R(2,0,12,6,13); R(2,3,14,6,14);
+      // Gebiet 3
+      R(3,-5,6,-2,7); R(3,-5,8,-4,11); R(3,-6,12,-1,16); R(3,-7,15,-7,16); R(3,-5,17,-1,19); R(3,-3,20,-1,22);
+      // Gebiet 4
+      R(4,14,3,15,4); R(4,16,1,17,5); R(4,19,-2,20,5); R(4,14,6,23,14); R(4,24,10,30,12); R(4,15,15,17,16); R(4,10,17,17,19);
+      // Gebiet 5
+      R(5,0,17,9,19); R(5,0,20,2,24);
+      // Gebiet 6
+      R(6,22,15,30,16); R(6,22,17,27,20); R(6,29,17,30,20); R(6,18,18,21,20); R(6,25,21,27,23); R(6,28,22,29,24);
+      // Gebiet 7
+      R(7,11,22,21,27); R(7,22,24,22,26); R(7,4,24,10,26);
+      // Stahlkammer (Zusatzteil, per Knopf aufdecken)
+      R(8,-1,6,2,7);
+      // Türen
+      D(-1,1,'w','door',null,2);    // Gebiet 1 – Start
+      D(3,5,'n','door',null,2);     // Start – Gebiet 2
+      D(0,12,'w','door',null,2);    // Gebiet 3 – Gebiet 2
+      D(14,9,'w','door',null,2);    // Gebiet 2 – Gebiet 4
+      D(22,15,'n','door',null,2);   // Gebiet 4 – Gebiet 6
+      D(10,17,'w','sec','yellow',3);// Gebiet 4 – Gebiet 5 (gelbe Sicherheitstür)
+      D(23,24,'w','sec','red',3);   // Ausgang (rote Sicherheitstür)
+      // Start
+      T('weapon',0,0); T('marine',2,0,'green'); T('marine',3,0,'red'); T('marine',4,0,'blue'); T('weapon',6,0);
+      T('zombie',-1,1,'green'); T('berserk',0,3); T('weapon',6,3);
+      T('zombie',9,-1,'blue'); T('demon',9,1,'white',2,1); T('ammo',12,1); T('armor',12,2); T('zombie',9,4,'red');
+      // Gebiet 1
+      T('imp',-4,-1,'red'); T('ammo',-3,-1); T('zombie',-2,0,'blue'); T('encounter',-6,1,null,1,2,'',
+        'Die Reste eines armen Teufels. In seiner Hand ein blutiger Zettel mit dem Zahlencode 69105. Die Marines haben jetzt den Code. Begegnung entfernen.\nHaben sie auch schon die Fernbedienung aus Gebiet 4 und ist Gebiet 3 aufgedeckt: die Stahlkammer aufdecken.');
+      T('demon',-5,1,'green',2,1); T('duct',-3,1); T('demon',-5,2,'red',2,1); T('zombie',-2,3,'blue'); T('imp',-4,4,'green'); T('ammo',-3,4);
+      // Gebiet 2
+      T('block',5,6,null,2,1); T('duct',7,6); T('health',9,6); T('zombie',6,7,'red'); T('imp',9,7,'green'); T('ammo',4,8);
+      T('zombie',3,9,'blue'); T('demon',8,9,'white',2,1); T('ammo',11,9); T('imp',4,10,'green'); T('imp',6,10,'blue'); T('zombie',10,10,'green'); T('imp',12,10,'blue');
+      T('duct',5,11); T('imp',4,12,'red'); T('imp',6,12,'red'); T('weapon',1,13); T('weapon',6,14); T('ammo',7,14);
+      // Gebiet 3
+      T('weapon',-2,6); T('ammo',-5,7); T('demon',-4,7,'green',1,2); T('zombie',-5,10,'blue');
+      T('zombie',-5,12,'red'); T('demon',-4,13,'blue',2,1); T('zombie',-5,14,'white'); T('duct',-3,14);
+      T('weapon',-7,15); T('demon',-4,15,'red',2,1); T('health',-7,16); T('zombie',-5,16,'green'); T('ammo',-4,18); T('health',-2,21);
+      // Gebiet 4
+      T('ammo',16,1); T('health',14,3); T('ammo',19,-1); T('weapon',20,-1); T('key',19,0,'yellow'); T('ammo',20,4);
+      T('hellknight',19,7,'red'); T('encounter',22,7,null,1,1,'',
+        'Unter dem Tisch liegt ein UAC-Wissenschaftler, der bis eben noch zu den Überlebenden gehörte. Er umklammert ein kleines Gerät mit Zahlentasten, auf dem roten Display steht: „Stahlkammer geschlossen“. Die Marines haben jetzt die Fernbedienung. Begegnung entfernen.\nHaben sie auch schon den Code aus Gebiet 1 und ist Gebiet 3 aufgedeckt: die Stahlkammer aufdecken.');
+      T('block',15,9,null,1,2); T('health',18,9); T('duct',20,9); T('imp',21,9,'blue'); T('ammo',18,10); T('imp',20,10,'red');
+      T('mancubus',17,12,'blue'); T('hellknight',21,12,'green');
+      T('health',28,10); T('ammo',30,10); T('weapon',30,11);
+      // Gebiet 5
+      T('hellknight',1,17,'white'); T('imp',3,17,'blue'); T('imp',3,18,'blue'); T('hellknight',5,17,'white'); T('slime',8,17,null,1,2);
+      T('health',1,20); T('health',2,20); T('mancubus',1,21,'red'); T('zombie',1,23,'white'); T('zombie',2,23,'red');
+      T('teleporter',1,24,null,1,1,'',
+        'Einblenden, sobald ein Marine Sichtlinie zu diesem Feld hat.\nUm die Ecke, hinter einer zerstörten Sicherheitstür, summt eine Plattform. Plakette: „Teleportationsforschungsstation 8“. Wer hindurchgeht, landet beim Teleporter am Westende von Gebiet 7.', true);
+      // Gebiet 6
+      T('ammo',18,19); T('imp',19,19,'red'); T('health',18,20);
+      T('trite',23,17,'blue'); T('imp',26,17,'red'); T('duct',24,18); T('trite',23,19,'green'); T('trite',26,19,'white');
+      T('hellknight',29,17,'blue'); T('trite',30,20,'white'); T('key',25,21,'red'); T('ammo',29,22); T('imp',28,23,'green'); T('weapon',29,23);
+      // Gebiet 7
+      T('teleporter',4,25); T('imp',6,24,'green'); T('zombie',7,24,'white'); T('imp',6,25,'red'); T('imp',7,25,'blue');
+      [22,23,24,25,26].forEach(function(r){ T('x',12,r); });
+      T('zombie',11,23,'white'); T('imp',11,24,'blue'); T('imp',11,25,'green'); T('imp',11,26,'red');
+      T('slime',14,22,null,2,1); T('slime',14,26,null,2,1);
+      T('hellknight',16,23,'white',2,2,'',
+        'Einblenden, sobald ein Marine eines der roten X-Felder betritt (zusammen mit dem Cyberdemon).', true);
+      T('cyberdemon',19,25,'white',2,2,'',
+        'Einblenden, sobald ein Marine eines der roten X-Felder betritt.\nAus dem Dampf tretend steht ihr in einem großen Raum voller grüner Pfützen. Am anderen Ende ragt ein Ungetüm auf, größer noch als der Hell Knight vor euch: der Cyberdemon aus dem Sicherheitsbericht. Hinter ihm liegt euer Fluchtweg, die Sicherheitstür nach Sektor 3.', true);
+      // Stahlkammer
+      T('ammo',-1,7); T('demon',0,6,'green',1,2); T('weapon',1,6); T('weapon',2,6); T('imp',2,7,'blue');
+    }
+  });
+  // ===== III: Inferno =====
+  SCEN.push({key:'inferno', rev:1, name:'III: Inferno', cols:31, rows:28, OX:11, OY:15,
+    bgHint:{x:-0.96, y:-3.83, cw:31.8},
+    note:'Ziel: Die drei Forschungsassistenten finden und zum Kontrollraum des Dimensionsportals bringen.\nSonderregel Wissenschaftler: Vor dem Ziehen der Handkarten bildet der Eindringling drei verdeckte Stapel zu je 7 Karten (zählen nicht zum Handlimit). Sie stehen für die Gesundheit der drei Assistenten. Am Ende jeder Spielrunde wirft er die oberste Karte des ersten Stapels ab. Ist der Stapel leer, bevor der erste Assistent gefunden wurde, ist er tot und die Marines haben verloren. Wird er rechtzeitig gefunden, nimmt der Eindringling die übrigen Karten des Stapels auf die Hand. Danach geht es mit dem zweiten, dann dem dritten Stapel weiter.\nDer Eindringling gewinnt außerdem mit 6 Frags. Jedes Mal, wenn er die letzte Karte seines Stapels zieht, bekommt er einen Frag.',
+    areas:['Start','Gebiet 1','Gebiet 2','Gebiet 3','Gebiet 4','Gebiet 5','Gebiet 6'],
+    texts:[
+      'Kaum sind die Türen von Sektor 3 hinter euch zu, piept ein Terminal. Auf dem Bildschirm erscheint ein hagerer, verängstigter Mann im Laborkittel: Dr. Barnes, Assistent im Projekt Dimensionsportal. Er hat die beiden anderen Assistenten aus den Augen verloren. Wenn ihr alle drei zum Kontrollraum bringt, können sie das Portal vielleicht schließen. „Beeilt euch, bitte!“\nDann bricht die Verbindung ab, und aus den Schatten stolpern die ersten Kreaturen auf euch zu.',
+      'Die Stahlwände sind von Brandspuren übersät, dazwischen tiefe Kratzer wie von riesigen Klauen. Aus einem Versorgungsschacht quillt beißender Rauch. Trümmer haben den Gang halb verschüttet, ihr kommt gerade so durch, wenn ihr erst die Kreaturen davor erledigt.',
+      'Ein ganzes Nest von Kreaturen hat sich hier eingerichtet. Unter einem Schrotthaufen in der Nähe kauert Dr. Barnes. Noch haben ihn die Biester nicht entdeckt, aber das kann sich jeden Moment ändern.',
+      'Ein Feuer muss durch diesen Korridor gefegt sein. Alles ist mit schmieriger schwarzer Schmiere überzogen, Plastikteile sind zu bizarren Klumpen geschmolzen. Ein dumpfes Rumpeln, dann stürmen von Süden her Kreaturen auf euch zu.',
+      'Die Tür gleitet genau in dem Moment auf, als ein Eindringling eine ältere Frau im Laborkittel quer durch den Raum schleudert. Sie bleibt reglos liegen. Barnes schreit: „Dr. Peregrine!“, und alle Kreaturen im Raum drehen sich zu euch um.',
+      'Eine Seite des Raums ist mit Fleisch und Knochen besudelt. Barnes flüstert mit belegter Stimme: „Ich hoffe, das war nicht Dr. Harris.“ Auf der anderen Seite scharren Kreaturen um eine Teleporterplattform herum.',
+      'Der Korridor mündet in eine große Halle. An der Nordwand eine riesige versiegelte Kammer, im Osten ein Raum voller Elektronik. „Endlich, der Kontrollraum!“, ruft Barnes. Im selben Moment gellt ein Schrei aus dem Kontrollraum. „Harris, halt durch!“'
+    ],
+    build:function(R,D,T){
+      // Start
+      R(0,0,0,3,6); R(0,1,-1,2,-1); R(0,1,7,2,8); R(0,-2,3,-1,4);
+      // Gebiet 1
+      R(1,-11,-4,-11,-3); R(1,-10,-5,-7,-2); R(1,-9,-1,-7,-1); R(1,-9,-11,-8,-6); R(1,-9,-14,-7,-12); R(1,-6,-4,4,-3); R(1,1,-2,2,-2);
+      // Gebiet 2
+      R(2,-6,-14,-4,-12); R(2,-3,-15,6,-11); R(2,1,-10,2,-7);
+      // Gebiet 3
+      R(3,7,-15,11,-13); R(3,9,-12,11,-8);
+      // Gebiet 4
+      R(4,9,-7,14,-5); R(4,8,-4,14,-2); R(4,12,-1,14,-1);
+      // Gebiet 5
+      R(5,15,-9,17,-3);
+      // Gebiet 6
+      R(6,4,9,7,10); R(6,8,5,10,5); R(6,8,6,13,11); R(6,11,12,13,12); R(6,11,0,15,2); R(6,13,3,18,8); R(6,19,3,19,5); R(6,14,9,18,11);
+      // Türen
+      D(1,-1,'n','door',null,2);     // Start – Gebiet 1
+      D(-6,-14,'w','door',null,3);   // Gebiet 1 – Gebiet 2
+      D(7,-15,'w','door',null,3);    // Gebiet 2 – Gebiet 3
+      D(9,-7,'n','door',null,3);     // Gebiet 3 – Gebiet 4
+      D(15,-7,'w','door',null,3);    // Gebiet 4 – Gebiet 5
+      // Start
+      T('marine',2,2,'red'); T('marine',2,3,'green'); T('marine',2,4,'blue'); T('duct',3,3);
+      T('weapon',-2,3); T('weapon',-2,4); T('imp',-1,4,'blue'); T('zombie',0,6,'red');
+      T('zombie',1,7,'green'); T('imp',2,7,'blue'); T('weapon',1,8); T('health',2,8);
+      // Gebiet 1
+      T('imp',-10,-5,'green'); T('health',-11,-4); T('imp',-8,-4,'red'); T('weapon',-11,-3); T('ammo',-9,-3); T('imp',-7,-2,'blue');
+      T('imp',-9,-10,'blue'); T('imp',-8,-9,'red'); T('ammo',-8,-8); T('zombie',-7,-13,'green');
+      T('imp',-5,-3,'green'); T('duct',-3,-3); T('imp',-2,-3,'blue'); T('imp',-1,-3,'red'); T('block',0,-3,null,2,1); T('ammo',0,-4);
+      T('weapon',4,-4); T('armor',4,-3); T('imp',1,-2,'green');
+      // Gebiet 2
+      T('ammo',-6,-14); T('mancubus',-5,-14,'blue');
+      T('imp',-2,-14,'blue'); T('imp',0,-14,'red'); T('block',-1,-13); T('imp',0,-13,'blue'); T('imp',-2,-12,'green'); T('imp',0,-12,'green');
+      T('block',1,-15,null,1,2); T('block',1,-12,null,1,3);
+      T('encounter',2,-15,null,1,1,'',
+        'Endet ein Marine hier oder sind alle Eindringlinge im Raum tot: Dr. Barnes kriecht unter dem Schrott hervor. „Gott sei Dank! Wenn wir uns beeilen, finden wir vielleicht noch Dr. Peregrine und Dr. Harris.“ Begegnung entfernen.\nDer Eindringling nimmt die restlichen Karten des ersten Stapels auf die Hand (getrennt halten). Ab Ende dieser Runde wird vom zweiten Stapel abgeworfen.');
+      T('hellknight',4,-15,'green'); T('duct',3,-13); T('mancubus',5,-13,'red'); T('ammo',4,-11); T('health',6,-11);
+      T('zombie',1,-9,'red'); T('demon',2,-9,'blue',1,2); T('weapon',1,-7);
+      // Gebiet 3
+      T('zombie',9,-12,'blue'); T('zombie',10,-12,'blue'); T('demon',9,-11,'green',1,2); T('demon',10,-11,'red',1,2); T('duct',9,-9); T('health',10,-9);
+      // Gebiet 4
+      T('encounter',11,-7,null,2,1,'',
+        'Endet ein Marine hier oder sind alle Eindringlinge im Raum tot: Barnes fühlt Dr. Peregrines Puls. Sie lebt, ist aber bewusstlos. Notfalls kann man ihre Hand an den Sicherheitsscanner halten. Die Marines tragen sie mit. Begegnung entfernen.\nDer Eindringling nimmt die restlichen Karten des zweiten Stapels auf die Hand (getrennt halten). Ab Ende dieser Runde wird vom dritten Stapel abgeworfen.');
+      T('mancubus',9,-6,'blue'); T('mancubus',11,-6,'green'); T('duct',13,-5);
+      T('weapon',8,-4); T('ammo',9,-4); T('trite',12,-4,'red'); T('trite',13,-4,'red');
+      T('demon',8,-3,'red',2,1); T('health',10,-3); T('ammo',12,-2);
+      // Gebiet 5
+      T('health',16,-9); T('ammo',17,-9); T('imp',17,-8,'blue'); T('zombie',16,-7,'green'); T('demon',15,-6,'red',2,1); T('imp',17,-5,'green');
+      T('zombie',16,-4,'blue'); T('teleporter',17,-4,null,1,1,'1');
+      // Gebiet 6
+      T('teleporter',4,10,null,1,1,'1'); T('health',6,10);
+      T('imp',8,5,'blue'); T('imp',9,5,'red'); T('hellknight',8,6,'green'); T('ammo',10,6); T('slime',10,7,null,1,2); T('health',13,7); T('imp',11,8,'green');
+      T('imp',9,10,'blue'); T('duct',12,10);
+      T('hellknight',14,0,'red',2,2,'','Im Heft blass dargestellt: steht in der versiegelten Kammer an der Nordwand. Erst einsetzen, wenn das Heft es sagt.');
+      T('duct',16,3); T('imp',14,4,'blue'); T('ammo',16,7);
+      T('encounter',17,4,null,1,1,'',
+        'Erst auflösen, wenn alle Eindringlinge im Raum tot sind und ein Marine seinen Zug hier beendet hat: Harris presst die Hände auf eine Bauchwunde, nimmt aber seinen Platz ein. Barnes ebenso, Peregrines Hand kommt auf den dritten Scanner. Der letzte Hebel … und nichts passiert. Von der anderen Seite hält etwas das Portal offen.\nDie Maschine muss überladen werden. Peregrine kommt zu sich und übernimmt ihren Platz selbst, die Marines sollen verschwinden. Barnes öffnet die Tür nach Sektor 2 und die Kammer im Nachbarraum. Als ihr den Korridor entlangrennt, erschüttert eine gewaltige Explosion die Station.\nIhr seid wieder allein.');
+      T('cyberdemon',15,5,'white',2,2,'','Im Heft blass dargestellt: steht in der versiegelten Kammer. Erst einsetzen, wenn das Heft es sagt.');
+      T('hellknight',16,9,'blue');
+    }
+  });
+  // ===== IV: Im Namen des Fleisches =====
+  SCEN.push({key:'fleisch', rev:1, name:'IV: Im Namen des Fleisches', cols:46, rows:33, OX:1, OY:5,
+    bgHint:{x:-1.19, y:-3.63, cw:47.0},
+    note:'Ziel: Den roten Sicherheitsschlüssel finden und den Sektor durch die rote Sicherheitstür im Westen von Gebiet 9 verlassen.\nAbkürzung: Der Hochsicherheitsteleporter im Norden führt zum Waffenlager (Gebiet 5). Er braucht zwei Passwörter, die man in Gebiet 1 erfahren kann.\nViele Gebiete schließen sich gegenseitig aus, man sieht nie alle in einem Spiel.\nDer Eindringling gewinnt mit 6 Frags. Jedes Mal, wenn er die letzte Karte seines Stapels zieht, bekommt er einen Frag.',
+    areas:['Start','Gebiet 1','Gebiet 2','Gebiet 3','Gebiet 4','Gebiet 5','Gebiet 6','Gebiet 7','Gebiet 8','Gebiet 9'],
+    texts:[
+      'Kaum habt ihr nach der Flucht aus Sektor 3 durchgeatmet, schrillt ein Terminal. Auf dem PDA meldet sich Frank, ein Gefreiter, der euren Weg über die Sicherheitskameras verfolgt. Ihr seid die letzte Gruppe aus Sektor 5, aber wenn ihr euch beeilt, erreicht ihr vielleicht noch die Shuttles.\nIn diesem Sektor gibt es ein geheimes Waffenlager mit einem BFG-Prototyp. Hinein kommt man nur über einen Hochsicherheitsteleporter im Norden, und der braucht zwei Passwörter. Frank kennt sie nicht, aber vielleicht ein Überlebender. Und wenn ihr Sektor 2 erreicht, sollt ihr bitte am Sicherheitszentrum vorbeischauen: Er sitzt dort fest, nur mit einer Pistole.',
+      'Die Hydrokulturen sind verwüstet, Blätter und Erde liegen überall. Der schwere, erdige Geruch von Fäulnis hängt in der Luft, und darunter der Kupfergeruch von Blut, den ihr inzwischen nur zu gut kennt. Ganz in der Nähe schreien zwei Menschen. Es klingt nicht so, als hätten sie noch lange.\nAm Ende jeder Runde, in der beide Begegnungen noch liegen, 1 Verletzungsmarker neben den Kompass legen. Beim 3. Marker: Ein letzter Schrei, dann Stille. Beide Begegnungen und die Marker entfernen.',
+      'An einer Wand dieses großen, offenen Raums türmt sich zertrümmertes Mobiliar, die Dellen in der Wand zeigen, mit welcher Wucht es dorthin geschleudert wurde. Überall tummeln sich Kreaturen. Am Südende ist eine gelbe Sicherheitstür zu erkennen.',
+      'Ein großer Deckenventilator dreht sich träge und klackt alle paar Sekunden. Dazwischen tropft unablässig Blut aus seinem Gehäuse. Am Westende stehen zwei Teleporter, auf dem Schild am südlichen steht: „Nur für Sicherheitstransporte.“',
+      'Etwas Übermenschliches hat sich hier durch die Wand gewalzt und zerquetschte Rohre und Kabel hinterlassen, aus denen Funken sprühen. Der Durchbruch dahinter ist eingestürzt. In der Nähe ein Teleporter mit einem Schild: „Nur mit gelbem Zugangsschlüssel.“',
+      'Das Innere einer Hochsicherheitskammer, vollgestopft mit Medizin, Energiezellen, einem Sicherheitsschlüssel … und einem BFG.',
+      'Ein blutgetränkter Stiefel und ein paar Fetzen Uniform in euren Farben, mehr ist vom Posten dieses Sicherheitspunkts nicht übrig. Aus dem südlichen Teil knurrt und grummelt es.',
+      'Ein Lagerraum voller torkelnder Zombies in UAC-Uniformen. Mittendrin steht ein Fass mit der Aufschrift „Hochexplosiv!“.',
+      'Aus einem bis zur Unkenntlichkeit verkohlten Kadaver ragen insektenartige Gliedmaßen in unnatürlichen Winkeln. Daneben liegt ein Sicherheitsschlüssel auf dem Boden.',
+      'Ein Laderoboter, dem ein Spinnenbein am Gelenk abgerissen wurde, fegt mit kreischender Hydraulik durch den Raum. Dahinter stehen Monster, mitten im Weg nach Sektor 1 … darunter noch ein Cyberdemon!'
+    ],
+    build:function(R,D,T){
+      // Start
+      R(0,1,-4,3,-1); R(0,-1,0,4,9); R(0,1,10,2,13);
+      // Gebiet 1
+      R(1,5,4,8,7); R(1,7,0,15,3); R(1,9,4,15,10); R(1,7,8,8,10);
+      // Gebiet 2
+      R(2,16,3,21,8); R(2,22,1,25,9); R(2,17,2,19,2);
+      // Gebiet 3
+      R(3,13,-4,24,-3); R(3,22,-2,24,0);
+      // Gebiet 4
+      R(4,13,11,24,12); R(4,22,10,24,10);
+      // Gebiet 5 (Waffenlager)
+      R(5,27,2,32,3);
+      // Gebiet 6
+      R(6,34,0,35,5); R(6,32,5,33,7); R(6,34,6,37,8); R(6,34,9,39,12); R(6,40,8,40,9);
+      // Gebiet 7
+      R(7,37,13,39,15); R(7,37,16,43,18); R(7,36,19,42,21); R(7,40,22,42,22);
+      // Gebiet 8
+      R(8,25,10,27,10); R(8,25,11,33,13); R(8,18,14,31,16);
+      // Gebiet 9
+      R(9,28,17,30,18); R(9,27,19,32,22); R(9,21,24,30,26); R(9,29,23,30,23);
+      // Türen
+      D(9,4,'w','door',null,3);       // Start – Gebiet 1
+      D(16,3,'w','door',null,3);      // Gebiet 1 – Gebiet 2
+      D(22,0,'n','door',null,3);      // Gebiet 3 – Gebiet 2
+      D(22,10,'n','sec','yellow',3);  // Gebiet 2 – Gebiet 4 (gelbe Sicherheitstür)
+      D(34,11,'w','door',null,3);     // Gebiet 8 – Gebiet 6
+      D(37,13,'n','door',null,3);     // Gebiet 6 – Gebiet 7
+      D(28,17,'n','door',null,3);     // Gebiet 8 – Gebiet 9
+      D(21,24,'w','sec','red',3);     // Ausgang (rote Sicherheitstür)
+      // Start
+      T('armor',1,-4); T('health',2,-4); T('imp',1,-1,'red');
+      T('imp',0,0,'blue'); T('imp',4,0,'blue'); T('ammo',4,1); T('weapon',0,2); T('duct',2,2); T('weapon',4,2);
+      T('marine',0,4,'red'); T('marine',1,4,'green'); T('marine',2,4,'blue');
+      T('weapon',0,6); T('armor',4,6); T('ammo',4,8); T('imp',0,9,'red'); T('zombie',4,9,'green');
+      T('zombie',2,10,'blue'); T('health',1,13); T('ammo',2,13);
+      // Gebiet 1
+      T('imp',7,1,'green'); T('block',8,0,null,2,1); T('imp',10,0,'red'); T('ammo',11,1); T('block',12,1); T('mancubus',13,0,'blue',2,2); T('armor',14,2);
+      T('imp',7,8,'blue'); T('duct',9,9); T('imp',10,9,'red'); T('ammo',11,8); T('block',12,8); T('block',11,9,null,2,1); T('mancubus',13,8,'green',2,2);
+      T('encounter',10,-2,null,1,1,'',
+        'Nördliche Begegnung: Eine blutüberströmte Frau, jede Hilfe kommt zu spät. Als sie euch sieht, schreibt sie mühsam ein Wort in ihr eigenes Blut: PLUGH. Dann erschlafft sie. Erstes Passwort erhalten. Begegnung entfernen.\n(Nur, solange noch keine 3 Verletzungsmarker am Kompass liegen.)');
+      T('encounter',10,12,null,1,1,'',
+        'Südliche Begegnung: Ein Forscher in seinen letzten Zügen packt euch mit verzweifelter Kraft. „Ihr müsst sie aufhalten. Benutzt die Sicherheitsteleporter. Eins der Passwörter ist XYZZY. Schnell!“ Dann bleibt er reglos liegen. Zweites Passwort erhalten. Begegnung entfernen.\n(Nur, solange noch keine 3 Verletzungsmarker am Kompass liegen.)');
+      // Gebiet 2
+      T('zombie',17,2,'white'); T('imp',18,2,'green'); T('duct',19,3); T('weapon',22,1); T('armor',24,1);
+      T('hellknight',17,4,'blue',2,2); T('imp',24,4,'red'); T('zombie',22,5,'green'); T('armor',24,5); T('imp',22,6,'red'); T('zombie',24,6,'green');
+      T('ammo',22,7); T('imp',17,8,'red'); T('imp',18,8,'blue'); T('ammo',24,8);
+      // Gebiet 3
+      T('teleporter',13,-4,null,1,1,'S'); T('teleporter',13,-3,null,1,1,'',
+        'Südlicher Teleporter „Nur für Sicherheitstransporte“: Ohne beide Passwörter aus Gebiet 1 lässt er sich nicht benutzen. Dann den südlichen Teleporter entfernen.\nMit beiden Passwörtern: Er führt ins Waffenlager (Gebiet 5).');
+      T('imp',15,-4,'red'); T('imp',17,-4,'red'); T('imp',14,-3,'blue'); T('zombie',16,-3,'green'); T('imp',19,-4,'green'); T('imp',18,-3,'blue');
+      T('zombie',21,-4,'blue'); T('zombie',21,-3,'red'); T('weapon',23,-4); T('imp',23,-3,'green');
+      // Gebiet 4
+      T('block',13,11); T('teleporter',13,12,null,1,1,'G'); T('health',14,11); T('imp',15,11,'red'); T('imp',15,12,'blue'); T('ammo',17,12);
+      T('mancubus',19,11,'white',2,2); T('mancubus',22,11,'green',2,2);
+      // Gebiet 5
+      T('teleporter',27,2,null,1,1,'S'); T('health',28,2); T('ammo',29,2); T('health',30,2); T('key',31,2,'yellow');
+      T('ammo',27,3); T('block',29,3); T('ammo',30,3); T('weapon',31,3,null,1,1,'BFG');
+      // Gebiet 6
+      T('teleporter',34,0,null,1,1,'G'); T('mancubus',34,3,'red',2,2); T('armor',32,5); T('armor',32,6); T('demon',34,6,'blue',1,2);
+      T('zombie',37,8,'blue'); T('ammo',39,8);
+      T('encounter',35,10,null,1,1,'',
+        'Kommen die Marines durch den Teleporter aus Gebiet 4 hierher: An der Sicherheitstür im Osten von Gebiet 8 prangt „Absolut kein Zugang! Sicherheitsverriegelung Omega aktiv!“. Laut Handbuch ist sie unüberwindbar.\nDie Tür im Osten von Gebiet 8 wird zur blauen Sicherheitstür. Sie lässt sich in diesem Szenario nicht öffnen, auch nicht mit der Karte „Schrott“.');
+      T('imp',34,10,'green'); T('duct',37,10); T('health',38,10);
+      // Gebiet 7
+      T('block',37,13,null,1,2);
+      T('zombie',37,16,'blue'); T('zombie',39,16,'red'); T('zombie',41,16,'blue'); T('health',42,16);
+      T('zombie',38,17,'green'); T('barrel',39,17); T('zombie',40,17,'green'); T('armor',42,17);
+      T('zombie',37,18,'red'); T('zombie',39,18,'blue'); T('duct',40,18); T('zombie',41,18,'red');
+      T('armor',36,19); T('zombie',38,19,'green'); T('health',40,19);
+      T('zombie',36,20,'blue'); T('zombie',37,20,'red'); T('zombie',39,20,'green'); T('zombie',41,20,'blue'); T('health',40,21);
+      // Gebiet 8
+      T('ammo',25,10); T('ammo',26,10); T('zombie',25,11,'green'); T('duct',27,12); T('weapon',30,12);
+      T('demon',29,13,'blue',1,2); T('archvile',26,13,'white',2,2);
+      T('health',18,14); T('teleporter',18,15,null,1,1,'',
+        'Kommen die Marines durch den Teleporter aus Gebiet 4 hierher: Die Tür im Osten wird zur blauen Sicherheitstür (siehe Gebiet 6).');
+      T('zombie',21,15,'green'); T('demon',23,14,'red',2,1); T('key',26,15,'red'); T('zombie',29,15,'green');
+      // Gebiet 9
+      T('zombie',28,17,'green'); T('zombie',29,17,'red');
+      T('hellknight',29,19,'red',2,2); T('armor',26,20); T('health',26,21); T('zombie',28,21,'white'); T('imp',29,21,'blue'); T('imp',31,20,'blue'); T('health',31,21); T('armor',29,22);
+      T('cyberdemon',22,24,'white',2,2); T('hellknight',25,24,'blue',2,2); T('hellknight',28,24,'green',2,2);
+    }
+  });
+  // ===== V: …und dann kam die Hölle =====
+  SCEN.push({key:'hoelle', rev:1, name:'V: …und dann kam die Hölle', cols:50, rows:40, OX:22, OY:1,
+    bgHint:{x:-3.12, y:-7.43, cw:55.4},
+    note:'Ziel: Zu den Shuttledocks gelangen und die Basis verlassen. Auf dem Weg liegen zwei Sicherheitstüren.\nDie gelbe Sicherheitstür im Osten von Gebiet 2 führt zum Südende von Gebiet 3 (Gebiet 3 per Knopf aufdecken).\nDer Eindringling gewinnt mit 6 Frags. Jedes Mal, wenn er die letzte Karte seines Stapels zieht, bekommt er einen Frag.\nDas schwierigste Szenario der Kampagne, nur für erfahrene Marines.',
+    areas:['Start','Gebiet 1','Gebiet 2','Gebiet 3','Gebiet 4','Gebiet 5','Gebiet 6'],
+    texts:[
+      'Ihr stoßt die Tür zum Sicherheitszentrum auf. „Hey, hat hier jemand eine Sicherheitspatrouille zu den Shuttledocks bestellt?“ Keine Antwort. „Frank? Gefreiter Leandro?“\nZertrümmerte Monitore, Blutflecken, als hätte sie jemand mit bloßen Händen zerschlagen. Dann bemerkt ihr eine Blutlache, die unter einem Tisch im Süden des Raums hervorsickert.',
+      'Aus den Deckenlautsprechern kommt leises Rauschen, dazwischen knirschen und ächzen die Stützträger. Der Korridor ist teilweise eingestürzt, eine blassgrüne Flüssigkeit hat den Weg überflutet. Daneben stehen Kanister: „Extrem gefährlich! HÖCHSTE GEFAHR!“',
+      'Ein dumpfes Grollen lässt den Korridor erzittern, in der Ferne klirrt Metall. Rote Notbeleuchtung, und überall die Leichen von UAC-Angestellten und Marines, die in Panik zu den Shuttledocks rannten. Es riecht nach Angstschweiß und Schimmel.',
+      'Zerborstene Packkisten sind von einer Palette gestürzt, biologische Proben liegen verstreut. Vor und hinter euch im Korridor hört ihr angestrengtes Atmen und das Schlabbern feuchter Zungen an den Chemikalien. Am anderen Ende versperrt eine Sicherheitstür den Weg.',
+      'In der Ferne ächzt es, vielleicht nachgebende Stützpfeiler, vielleicht jemand, der noch lebt. Der Bereich ist vollgestopft mit Eindringlingen. Viel zu voll für einen Ort so weit weg vom geschlossenen Portal. Was geht hier vor?',
+      'Eine chemische Explosion hat die Wandverkleidungen weggerissen, aus blanken Leitungen sprühen Funken. Im flackernden Licht tauchen riesige Formen auf und verschwinden wieder, wie in einem Albtraum. Fast tröstlich, sich vorzustellen, dass ihr nur träumt.',
+      'Endlich, die Shuttledocks! Doch der Blick lässt eure Hoffnung zerbrechen: Die Shuttles sind nur noch Wracks, zerfetzt von den Klauen eines Cyberdemons. Und am anderen Ende des Hangars öffnet sich ein Portal wie das, das ihr in Sektor 3 geschlossen habt, mit Blick auf ein Albtraumreich. Die Dämonen können ihre eigenen Tore öffnen.\nEines bleibt noch zu tun: die Monster erledigen, die die Shuttles zerstört haben.'
+    ],
+    build:function(R,D,T){
+      // Start
+      R(0,0,-1,1,-1); R(0,0,0,4,4); R(0,5,0,5,1); R(0,-1,3,-1,4); R(0,3,5,4,7);
+      // Gebiet 1
+      R(1,3,8,5,20); R(1,-8,7,2,11); R(1,-9,10,-9,11);
+      // Gebiet 2
+      R(2,11,12,21,13); R(2,15,11,16,11); R(2,6,14,26,16); R(2,6,17,9,24); R(2,23,17,26,24); R(2,10,19,22,20); R(2,10,23,22,24);
+      // Gebiet 3
+      R(3,-12,23,-10,38); R(3,-10,24,-7,25); R(3,-13,34,-13,37);
+      // Gebiet 4
+      R(4,-6,22,-3,26); R(4,-2,24,0,25); R(4,1,22,5,26); R(4,-6,27,-4,29); R(4,1,27,4,29); R(4,-7,30,-3,35); R(4,-2,32,0,33); R(4,1,30,5,35);
+      // Gebiet 5
+      R(5,-18,14,-9,22); R(5,-19,17,-19,18); R(5,-8,18,-8,19); R(5,-11,13,-10,13); R(5,-15,23,-14,23);
+      // Gebiet 6 (Shuttledocks)
+      R(6,-16,5,-11,11); R(6,-22,8,-17,13);
+      // Türen
+      D(3,8,'n','door',null,2);        // Start – Gebiet 1
+      D(6,18,'w','door',null,3);       // Gebiet 1 – Gebiet 2
+      D(27,18,'w','sec','yellow',3);   // Gebiet 2 Ost (gelbe Sicherheitstür, führt zu Gebiet 3)
+      D(-6,24,'w','door',null,2);      // Gebiet 3 – Gebiet 4
+      D(-12,23,'n','sec','red',3);     // Gebiet 3 – Gebiet 5 (Sicherheitstür)
+      D(-18,14,'n','door',null,2);     // Gebiet 5 – Gebiet 6
+      // Start
+      T('weapon',1,1); T('weapon',3,1); T('armor',4,1);
+      T('marine',1,2,'red'); T('marine',2,2,'green'); T('marine',3,2,'blue');
+      T('armor',0,3); T('weapon',1,3); T('armor',3,3);
+      T('encounter',1,4,null,2,1,'',
+        'Unter dem Tisch liegt ein toter Marine neben seiner Pistole: Frank Leandro. In der blutigen Hand ein Zettel: „Tut mir leid, aber nach allem, was ich gesehen habe, kann ich nicht mehr. Viel Glück bei eurer Flucht.“ Ihr schließt ihm die Augen.\nDie Monitore zeigen, was er zuletzt gesehen hat: Die Shuttledocks und ihre Umgebung waren voller Kreaturen. Begegnung entfernen.');
+      T('zombie',3,6,'white'); T('zombie',4,6,'white');
+      // Gebiet 1
+      T('encounter',4,9,null,1,2,'',
+        'Ausgerechnet der Mann, der euch die Station zeigen sollte. Sein Gesicht ist zu einer Maske aus Grauen erstarrt. Als ihr ihm die Hände auf der Brust faltet, fällt ein Schlüssel aus seiner Hand. Der Marine erhält den gelben Sicherheitsschlüssel. Begegnung entfernen.');
+      T('slime',3,13,null,2,1); T('zombie',3,14,'green'); T('zombie',4,14,'red'); T('hellknight',3,17,'white'); T('armor',4,20);
+      T('demon',-7,8,'red',1,2); T('mancubus',-5,8,'green'); T('imp',-2,8,'blue'); T('imp',0,8,'blue'); T('duct',-1,9); T('imp',-2,10,'blue'); T('imp',0,10,'blue');
+      T('block',-7,10,null,1,2); T('demon',-6,10,'red',2,1); T('armor',-9,10); T('health',-9,11);
+      // Gebiet 2
+      T('health',15,11); T('armor',16,11); T('demon',13,13,'white',2,1); T('armor',19,13);
+      T('mancubus',7,14,'blue'); T('imp',11,14,'green'); T('duct',16,14); T('imp',17,14,'red'); T('zombie',14,15,'white'); T('hellknight',18,15,'white'); T('zombie',20,15,'white'); T('imp',24,15,'green');
+      T('mancubus',7,19,'green'); T('zombie',11,19,'white'); T('imp',14,19,'blue'); T('ammo',16,19); T('zombie',20,19,'green'); T('duct',13,20); T('imp',17,20,'red'); T('imp',24,20,'red'); T('slime',25,19,null,1,2);
+      T('hellknight',7,23,'red'); T('imp',11,23,'green'); T('imp',17,23,'white'); T('duct',18,23); T('armor',21,23); T('zombie',14,24,'white'); T('weapon',16,24); T('zombie',20,24,'green'); T('imp',24,24,'blue');
+      // Gebiet 3
+      T('demon',-12,24,'red',1,2); T('slime',-8,24,null,1,2); T('demon',-12,29,'green',1,2); T('demon',-12,33,'red',1,2); T('health',-11,37);
+      // Gebiet 4
+      T('weapon',-5,22); T('armor',-4,22); T('mancubus',-5,24,'blue'); T('imp',-1,25,'red'); T('armor',-3,26);
+      T('weapon',2,22); T('armor',3,22); T('mancubus',2,24,'green'); T('armor',5,24); T('imp',1,26,'blue');
+      T('zombie',-4,28,'white'); T('imp',3,28,'white');
+      T('armor',-3,30); T('mancubus',-5,31,'white'); T('weapon',-7,32); T('imp',-1,32,'white');
+      T('block',1,30); T('teleporter',2,30); T('block',1,31,null,1,2); T('hellknight',2,31,'red'); T('weapon',5,30); T('ammo',5,31); T('slime',2,34,null,2,1);
+      T('health',-5,34); T('armor',-4,34); T('health',2,35); T('weapon',3,35);
+      // Gebiet 5
+      T('health',-11,13); T('health',-10,13); T('hellknight',-16,14,'white'); T('mancubus',-13,15,'blue'); T('block',-15,16); T('duct',-9,16);
+      T('hellknight',-15,17,'white'); T('mancubus',-13,17,'green'); T('health',-19,17); T('health',-19,18); T('health',-8,18); T('health',-8,19);
+      T('hellknight',-13,19,'red'); T('block',-12,20); T('hellknight',-10,20,'white'); T('health',-15,23); T('health',-14,23);
+      // Gebiet 6
+      T('armor',-16,5); T('health',-15,5); T('duct',-16,7); T('mancubus',-12,6,'red'); T('health',-11,6); T('health',-11,7);
+      T('cyberdemon',-15,9,'blue',2,2,'',
+        'Erst auflösen, wenn alle Eindringlinge in diesem Gebiet tot sind: Der letzte Dämon fällt, doch das Portal bleibt offen. Ihr starrt auf die zerfetzten Shuttles, dreht euch zum Portal um und ladet nach. Wenn die Hölle Krieg will, soll sie ihn bekommen, auch wenn ihr dafür in ihre Tiefen hinabsteigen müsst.\nZeit, den Dämonen zu zeigen, aus welchem Stahl Marines gemacht sind!\nDie Kampagne ist geschafft.');
+      T('armor',-13,11); T('health',-12,11);
+      T('ammo',-21,8); T('health',-20,8); T('mancubus',-18,11,'green'); T('armor',-22,12); T('health',-22,13);
+    }
+  });
+
+  function buildCampaign(def){
+    var s={id:'kampagne-'+def.key+'-'+uid(), name:def.name, cols:def.cols, rows:def.rows, areas:[], cells:{}, tokens:[], doors:[],
+      bg:null, bgHint:def.bgHint, play:null, updated:Date.now(), campaign:def.key, campaignRev:def.rev, note:def.note};
+    def.areas.forEach(function(n,i){ s.areas.push({id:'a'+i, name:n, start:i===0, note:def.texts[i]||''}); });
+    var OX=def.OX, OY=def.OY;
+    function R(a,c0,r0,c1,r1){ for(var c=c0;c<=c1;c++) for(var r=r0;r<=r1;r++) s.cells[(c+OX)+','+(r+OY)]='a'+a; }
+    function D(c,r,side,kind,col,len){ for(var i=0;i<(len||1);i++){ var cc=c+(side==='w'?0:i), rr=r+(side==='w'?i:0);
+      s.doors.push({c:cc+OX, r:rr+OY, side:side, kind:kind||'door', col:col||null}); } }
+    function T(t,c,r,col,w,h,label,note){ var d=TYPE[t]; s.tokens.push({id:'t'+s.tokens.length, t:t, c:c+OX, r:r+OY, col:col||null, w:w||d.w, h:h||d.h, label:label||'', note:note||''}); }
+    def.build(R,D,T);
+    return s;
+  }
+  function addCampaign(def){ var s=buildCampaign(def); scenarios.push(s); return dbPut(s); }
+
+  // ---------- storage ----------
+  var mem={}, dbp=null;
+  function openDB(){
+    if(dbp) return dbp;
+    dbp=new Promise(function(res){
+      try{ var r=indexedDB.open('doom-kartenaufdecker-raster',1);
+        r.onupgradeneeded=function(){ r.result.createObjectStore('scen',{keyPath:'id'}); };
+        r.onsuccess=function(){ res(r.result); }; r.onerror=function(){ res(null); };
+      }catch(e){ res(null); }
+    });
+    return dbp;
+  }
+  function dbAll(){ return openDB().then(function(db){ if(!db) return [];
+    return new Promise(function(res){ try{ var q=db.transaction('scen').objectStore('scen').getAll(); q.onsuccess=function(){res(q.result||[]);}; q.onerror=function(){res([]);}; }catch(e){res([]);} }); }); }
+  function dbPut(s){ mem[s.id]=s; return openDB().then(function(db){ if(!db) return;
+    return new Promise(function(res){ try{ var tx=db.transaction('scen','readwrite'); tx.objectStore('scen').put(s); tx.oncomplete=res; tx.onerror=function(){ toast('Speichern fehlgeschlagen.'); res(); }; }catch(e){res();} }); }); }
+  function dbDel(id){ delete mem[id]; return openDB().then(function(db){ if(!db) return;
+    return new Promise(function(res){ try{ var tx=db.transaction('scen','readwrite'); tx.objectStore('scen').delete(id); tx.oncomplete=res; tx.onerror=res; }catch(e){res();} }); }); }
+  var saveTimer=null;
+  function touch(){ if(!cur) return; cur.updated=Date.now(); clearTimeout(saveTimer); saveTimer=setTimeout(function(){ if(cur) dbPut(cur); },300); }
+
+  // ---------- state ----------
+  var scenarios=[], cur=null, mode='list';
+  var canvas=null, ctx=null, cs=24, zoom=1, bgImg=null, bgURL=null;
+  var tool='paint', activeAreaId=null, tokType='zombie', tokColor='white', doorKind={kind:'door',col:null};
+  var anim={};
+
+  function areaById(id){ return cur && cur.areas.filter(function(a){return a.id===id;})[0]; }
+  function areaIndex(id){ for(var i=0;i<cur.areas.length;i++) if(cur.areas[i].id===id) return i; return 0; }
+  function cellArea(c,r){ return cur.cells[c+','+r]||null; }
+  function setView(m){
+    mode=m;
+    $('viewList').hidden=m!=='list'; $('viewEdit').hidden=m!=='edit'; $('viewPlay').hidden=m!=='play';
+    $('topActions').hidden=m!=='list';
+    if(m==='play') requestWake(); else releaseWake();
+  }
+
+  // ---------- drawing primitives ----------
+  function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function poly(cx,cy,rad,n,rot){ ctx.beginPath(); for(var i=0;i<n;i++){ var a=rot+i*2*Math.PI/n; var x=cx+rad*Math.cos(a), y=cy+rad*Math.sin(a); if(i) ctx.lineTo(x,y); else ctx.moveTo(x,y); } ctx.closePath(); }
+  function text(str,cx,cy,size,color){ ctx.fillStyle=color; ctx.font='700 '+Math.max(7,Math.round(size))+'px "Chakra Petch", system-ui, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(str,cx,cy+size*0.04); }
+  function drawToken(k, x, y, w, h, done){
+    var d=TYPE[k.t]||{g:'feature'}, s=Math.min(w,h), cx=x+w/2, cy=y+h/2, lw=Math.max(1,s*0.06);
+    ctx.save();
+    if(done) ctx.globalAlpha=0.35;
+    var c=COL[k.col]||null;
+    switch(d.g){
+      case 'monster': {
+        var pad=s*0.08; ctx.fillStyle=c||COL.white; ctx.strokeStyle='rgba(0,0,0,.65)'; ctx.lineWidth=lw;
+        if(Math.abs(w-h)<1){ ctx.beginPath(); ctx.arc(cx,cy,s/2-pad,0,Math.PI*2); }
+        else roundRect(x+pad,y+pad,w-2*pad,h-2*pad,s/2-pad);
+        ctx.fill(); ctx.stroke();
+        text(k.label||d.ab, cx, cy, s*(d.ab.length>1?0.36:0.5), k.col==='white'||!k.col?'#1b1f24':'#ffffff');
+        break; }
+      case 'marine': {
+        var p2=s*0.12; ctx.fillStyle=c||COL.red; ctx.strokeStyle='#ffffff'; ctx.lineWidth=lw*1.4;
+        roundRect(x+p2,y+p2,w-2*p2,h-2*p2,s*0.18); ctx.fill(); ctx.stroke();
+        text(k.label||'M', cx, cy, s*0.46, '#ffffff'); break; }
+      case 'key': {
+        ctx.fillStyle=c||COL.red; ctx.strokeStyle='rgba(0,0,0,.6)'; ctx.lineWidth=lw;
+        roundRect(x+s*0.18,y+s*0.12,w-s*0.36,h-s*0.24,s*0.1); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle=k.col==='yellow'?'#231a02':'#ffffff'; ctx.lineWidth=lw*1.3;
+        ctx.beginPath(); ctx.arc(cx,cy-s*0.12,s*0.11,0,Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx,cy-s*0.01); ctx.lineTo(cx,cy+s*0.24); ctx.moveTo(cx,cy+s*0.12); ctx.lineTo(cx+s*0.09,cy+s*0.12); ctx.moveTo(cx,cy+s*0.21); ctx.lineTo(cx+s*0.07,cy+s*0.21); ctx.stroke();
+        break; }
+      default: drawItem(k,d,x,y,w,h,s,cx,cy,lw);
+    }
+    if(done){ ctx.globalAlpha=0.9; ctx.strokeStyle='#ff6b5b'; ctx.lineWidth=Math.max(2,s*0.09);
+      ctx.beginPath(); ctx.moveTo(x+s*0.18,y+s*0.18); ctx.lineTo(x+w-s*0.18,y+h-s*0.18); ctx.moveTo(x+w-s*0.18,y+s*0.18); ctx.lineTo(x+s*0.18,y+h-s*0.18); ctx.stroke(); }
+    ctx.restore();
+  }
+  function drawItem(k,d,x,y,w,h,s,cx,cy,lw){
+    var r=s*0.4;
+    switch(k.t){
+      case 'weapon': poly(cx,cy,r,8,Math.PI/8); ctx.fillStyle='#2f8a3c'; ctx.fill(); ctx.strokeStyle='#0c2611'; ctx.lineWidth=lw; ctx.stroke();
+        if(k.label) text(k.label,cx,cy,s*0.3,'#ffffff');
+        else { ctx.fillStyle='#e8f5e9'; ctx.fillRect(cx-r*0.6,cy-r*0.16,r*1.2,r*0.3); ctx.fillRect(cx-r*0.6,cy-r*0.16,r*0.25,r*0.6); }
+        break;
+      case 'ammo': poly(cx,cy,r,6,0); ctx.fillStyle='#3a63b8'; ctx.fill(); ctx.strokeStyle='#0d1a33'; ctx.lineWidth=lw; ctx.stroke();
+        if(k.label) text(k.label,cx,cy,s*0.3,'#ffffff');
+        else { ctx.fillStyle='#e3ebff'; for(var i=-1;i<=1;i++){ ctx.fillRect(cx+i*r*0.36-r*0.1,cy-r*0.35,r*0.2,r*0.7); } }
+        break;
+      case 'health': ctx.fillStyle='#d23a30'; var a=r*0.38;
+        ctx.beginPath(); ctx.moveTo(cx-a,cy-r); ctx.lineTo(cx+a,cy-r); ctx.lineTo(cx+a,cy-a); ctx.lineTo(cx+r,cy-a); ctx.lineTo(cx+r,cy+a); ctx.lineTo(cx+a,cy+a); ctx.lineTo(cx+a,cy+r); ctx.lineTo(cx-a,cy+r); ctx.lineTo(cx-a,cy+a); ctx.lineTo(cx-r,cy+a); ctx.lineTo(cx-r,cy-a); ctx.lineTo(cx-a,cy-a); ctx.closePath();
+        ctx.fill(); ctx.strokeStyle='#ffffff'; ctx.lineWidth=lw; ctx.stroke(); break;
+      case 'armor': ctx.beginPath(); ctx.moveTo(cx,cy-r); ctx.lineTo(cx+r*0.85,cy-r*0.55); ctx.lineTo(cx+r*0.7,cy+r*0.4); ctx.lineTo(cx,cy+r); ctx.lineTo(cx-r*0.7,cy+r*0.4); ctx.lineTo(cx-r*0.85,cy-r*0.55); ctx.closePath();
+        ctx.fillStyle='#e9b729'; ctx.fill(); ctx.strokeStyle='#3a2a00'; ctx.lineWidth=lw; ctx.stroke(); break;
+      case 'berserk': poly(cx,cy,r,4,0); ctx.fillStyle='#7a1d1d'; ctx.fill(); ctx.strokeStyle='#ff8a7a'; ctx.lineWidth=lw; ctx.stroke(); text(k.label||'B',cx,cy,s*0.38,'#ffd0c8'); break;
+      case 'adrenaline': poly(cx,cy,r,4,0); ctx.fillStyle='#6b3fb0'; ctx.fill(); ctx.strokeStyle='#e2d2ff'; ctx.lineWidth=lw; ctx.stroke(); text(k.label||'A',cx,cy,s*0.38,'#ffffff'); break;
+      case 'encounter': roundRect(x+s*0.08,y+s*0.08,w-s*0.16,h-s*0.16,s*0.12); ctx.fillStyle='#2b2f35'; ctx.fill(); ctx.strokeStyle='#f2a93b'; ctx.lineWidth=lw*1.2; ctx.stroke();
+        text(k.label||'!',cx,cy,s*(k.label?0.3:0.55),'#f2a93b'); break;
+      case 'x': ctx.strokeStyle='#e0433a'; ctx.lineWidth=Math.max(2,s*0.11); ctx.lineCap='round'; var q=s*0.28;
+        ctx.beginPath(); ctx.moveTo(cx-q,cy-q); ctx.lineTo(cx+q,cy+q); ctx.moveTo(cx+q,cy-q); ctx.lineTo(cx-q,cy+q); ctx.stroke(); break;
+      case 'duct': ctx.fillStyle='#22336a'; ctx.fillRect(x+s*0.1,y+s*0.1,w-s*0.2,h-s*0.2); ctx.strokeStyle='#7f9cff'; ctx.lineWidth=Math.max(1,s*0.05);
+        for(var yy=y+s*0.2; yy<y+h-s*0.12; yy+=s*0.14){ ctx.beginPath(); ctx.moveTo(x+s*0.16,yy); ctx.lineTo(x+w-s*0.16,yy); ctx.stroke(); } break;
+      case 'teleporter': ctx.fillStyle='#1d1206'; ctx.fillRect(x+s*0.08,y+s*0.08,w-s*0.16,h-s*0.16);
+        var g=ctx.createRadialGradient(cx,cy,0,cx,cy,s*0.4); g.addColorStop(0,'#fff3c4'); g.addColorStop(0.45,'#ff9a3c'); g.addColorStop(1,'rgba(255,90,30,0)');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,s*0.4,0,Math.PI*2); ctx.fill(); if(k.label) text(k.label,cx,cy,s*0.28,'#1d1206'); break;
+      case 'block': ctx.fillStyle='#4a5058'; ctx.fillRect(x+s*0.06,y+s*0.06,w-s*0.12,h-s*0.12); ctx.strokeStyle='#22262b'; ctx.lineWidth=Math.max(1,s*0.05);
+        ctx.save(); ctx.beginPath(); ctx.rect(x+s*0.06,y+s*0.06,w-s*0.12,h-s*0.12); ctx.clip();
+        for(var t=-h; t<w; t+=s*0.22){ ctx.beginPath(); ctx.moveTo(x+t,y); ctx.lineTo(x+t+h,y+h); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x+t+h,y); ctx.lineTo(x+t,y+h); ctx.stroke(); }
+        ctx.restore(); ctx.strokeStyle='#8a929c'; ctx.strokeRect(x+s*0.06,y+s*0.06,w-s*0.12,h-s*0.12); break;
+      case 'slime': ctx.fillStyle='rgba(140,220,40,.75)'; ctx.beginPath(); ctx.ellipse(cx,cy,w/2-s*0.08,h/2-s*0.12,0,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#d8ff7a'; ctx.lineWidth=lw; ctx.stroke(); break;
+      case 'barrel': ctx.fillStyle='#8a5a20'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#f2c060'; ctx.lineWidth=lw*1.3; ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx,cy,r*0.55,0,Math.PI*2); ctx.stroke(); break;
+    }
+  }
+  function drawDoor(dr, open){
+    var x0,y0,x1,y1, th=Math.max(4,cs*0.22), inset=cs*0.06;
+    if(dr.side==='w'){ x0=dr.c*cs; x1=x0; y0=dr.r*cs+inset; y1=(dr.r+1)*cs-inset; } else { y0=dr.r*cs; y1=y0; x0=dr.c*cs+inset; x1=(dr.c+1)*cs-inset; }
+    ctx.save();
+    var base = dr.kind==='sec' ? (COL[dr.col]||COL.red) : '#e8ecef';
+    var rx=Math.min(x0,x1)-(dr.side==='w'?th/2:0), ry=Math.min(y0,y1)-(dr.side==='n'?th/2:0), rw=dr.side==='w'?th:(x1-x0), rh=dr.side==='n'?th:(y1-y0);
+    if(open){ ctx.globalAlpha=0.55; ctx.setLineDash([th*0.5,th*0.5]); ctx.strokeStyle=base; ctx.lineWidth=Math.max(2,th*0.3);
+      ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke(); ctx.restore(); return; }
+    ctx.fillStyle=base; ctx.fillRect(rx,ry,rw,rh);
+    ctx.save(); ctx.beginPath(); ctx.rect(rx,ry,rw,rh); ctx.clip();
+    ctx.strokeStyle= dr.kind==='sec' ? 'rgba(0,0,0,.55)' : '#2b3036'; ctx.lineWidth=Math.max(1.5,th*0.28);
+    for(var t=-th*2; t<Math.max(rw,rh)+th*2; t+=th*0.8){ ctx.beginPath(); if(dr.side==='w'){ ctx.moveTo(rx,ry+t); ctx.lineTo(rx+rw,ry+t+rw); } else { ctx.moveTo(rx+t,ry); ctx.lineTo(rx+t+rh,ry+rh); } ctx.stroke(); }
+    ctx.restore();
+    ctx.strokeStyle='rgba(0,0,0,.7)'; ctx.lineWidth=1; ctx.strokeRect(rx,ry,rw,rh);
+    ctx.restore();
+  }
+
+  // ---------- doors helpers ----------
+  function doorKey(d){ return d.c+','+d.r+','+d.side; }
+  function doorAreas(d){ var a=cellArea(d.c,d.r), b= d.side==='w' ? cellArea(d.c-1,d.r) : cellArea(d.c,d.r-1); return [a,b]; }
+  function findDoor(c,r,side){ for(var i=0;i<cur.doors.length;i++){ var d=cur.doors[i]; if(d.c===c&&d.r===r&&d.side===side) return i; } return -1; }
+  function nearestEdge(fx,fy){ // fx,fy in cell units
+    var c=Math.floor(fx), r=Math.floor(fy), dx=fx-c, dy=fy-r;
+    var opts=[{c:c,r:r,side:'w',d:dx},{c:c+1,r:r,side:'w',d:1-dx},{c:c,r:r,side:'n',d:dy},{c:c,r:r+1,side:'n',d:1-dy}];
+    opts.sort(function(a,b){return a.d-b.d;}); return opts[0];
+  }
+  function hasDoorBetween(c,r,side){ return findDoor(c,r,side)>=0; }
+  // all door pieces of the same kind that touch each other along one line open together
+  function doorGroup(i){
+    var start=cur.doors[i], out=[start], seen={}; seen[doorKey(start)]=1;
+    for(var q=0;q<out.length;q++){
+      var d=out[q], nb = d.side==='w' ? [[d.c,d.r-1],[d.c,d.r+1]] : [[d.c-1,d.r],[d.c+1,d.r]];
+      nb.forEach(function(n){ var j=findDoor(n[0],n[1],d.side); if(j<0) return; var o=cur.doors[j], k=doorKey(o);
+        if(seen[k] || o.kind!==start.kind || o.col!==start.col) return; seen[k]=1; out.push(o); });
+    }
+    return out;
+  }
+
+  // ---------- render ----------
+  function freshPlay(){ return {revealed:cur.areas.filter(function(a){return a.start;}).map(function(a){return a.id;}), open:[], done:[], unlocked:[]}; }
+  function playState(){ if(!cur.play) cur.play=freshPlay(); if(!cur.play.unlocked) cur.play.unlocked=[]; return cur.play; }
+  function isRevealedArea(id){ return playState().revealed.indexOf(id)>=0; }
+  function drawMap(target, opts){
+    // opts: {mode:'edit'|'play'|'thumb', cs}
+    var m=opts.mode, size=opts.cs, W=cur.cols*size, H=cur.rows*size;
+    var saveCtx=ctx, saveCs=cs; ctx=target; cs=size;
+    ctx.clearRect(0,0,W,H);
+    var ps=playState(), now=performance.now(), running=false;
+    var startIds=cur.areas.filter(function(a){return a.start;}).map(function(a){return a.id;});
+    function visible(c,r){ var a=cellArea(c,r); if(!a) return false; if(m==='edit') return true;
+      if(m==='thumb') return startIds.indexOf(a)>=0; return isRevealedArea(a)||!!anim[a]; }
+    // ground
+    ctx.fillStyle= m==='edit' ? '#0b0e11' : '#06080a'; ctx.fillRect(0,0,W,H);
+    if(m==='edit' && bgImg && cur.bg){
+      ctx.globalAlpha=cur.bg.opacity==null?0.6:cur.bg.opacity;
+      var bw=cur.bg.cw*size, bh=bw*bgImg.naturalHeight/bgImg.naturalWidth;
+      ctx.drawImage(bgImg, cur.bg.x*size, cur.bg.y*size, bw, bh); ctx.globalAlpha=1;
+    }
+    // floor
+    var showPhoto = m==='play' && $('showPhoto').checked && bgImg && cur.bg;
+    if(showPhoto){
+      ctx.save(); ctx.beginPath();
+      for(var k in cur.cells){ var p=k.split(','), c=+p[0], r=+p[1]; if(visible(c,r)) ctx.rect(c*size,r*size,size,size); }
+      ctx.clip(); var bw2=cur.bg.cw*size, bh2=bw2*bgImg.naturalHeight/bgImg.naturalWidth; ctx.drawImage(bgImg, cur.bg.x*size, cur.bg.y*size, bw2, bh2); ctx.restore();
+    }
+    for(var key in cur.cells){
+      var pp=key.split(','), cc=+pp[0], rr=+pp[1], aid=cur.cells[key];
+      if(!visible(cc,rr)) continue;
+      if(m==='edit'){ ctx.globalAlpha= aid===activeAreaId ? 0.55 : 0.32; ctx.fillStyle=AREA_COLORS[areaIndex(aid)%AREA_COLORS.length]; ctx.fillRect(cc*size,rr*size,size,size); ctx.globalAlpha=1; }
+      else if(!showPhoto){ ctx.fillStyle='#3b424a'; ctx.fillRect(cc*size,rr*size,size,size);
+        ctx.fillStyle='rgba(255,255,255,0.035)'; ctx.fillRect(cc*size+size*0.12,rr*size+size*0.12,size*0.76,size*0.76); }
+    }
+    // grid lines
+    ctx.lineWidth=1;
+    if(m==='edit'){
+      ctx.strokeStyle='rgba(255,255,255,0.14)'; ctx.beginPath();
+      for(var gx=0; gx<=cur.cols; gx++){ ctx.moveTo(gx*size+0.5,0); ctx.lineTo(gx*size+0.5,H); }
+      for(var gy=0; gy<=cur.rows; gy++){ ctx.moveTo(0,gy*size+0.5); ctx.lineTo(W,gy*size+0.5); }
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle='rgba(0,0,0,0.45)'; ctx.beginPath();
+      for(var k2 in cur.cells){ var q=k2.split(','), qc=+q[0], qr=+q[1]; if(!visible(qc,qr)) continue; ctx.rect(qc*size+0.5,qr*size+0.5,size-1,size-1); }
+      ctx.stroke();
+    }
+    // walls
+    ctx.strokeStyle= m==='edit' ? 'rgba(232,228,220,0.85)' : '#c9cfd6'; ctx.lineWidth=Math.max(1.5,size*0.07); ctx.lineCap='square';
+    ctx.beginPath();
+    for(var k3 in cur.cells){
+      var w3=k3.split(','), c3=+w3[0], r3=+w3[1], a3=cur.cells[k3];
+      if(!visible(c3,r3)) continue;
+      [[c3-1,r3,'w',c3,r3],[c3+1,r3,'w',c3+1,r3],[c3,r3-1,'n',c3,r3],[c3,r3+1,'n',c3,r3+1]].forEach(function(n){
+        var na=cellArea(n[0],n[1]); if(na===a3) return;
+        if(hasDoorBetween(n[3],n[4],n[2])) return;
+        if(n[2]==='w'){ ctx.moveTo(n[3]*size,n[4]*size); ctx.lineTo(n[3]*size,(n[4]+1)*size); }
+        else { ctx.moveTo(n[3]*size,n[4]*size); ctx.lineTo((n[3]+1)*size,n[4]*size); }
+      });
+    }
+    ctx.stroke();
+    // tokens
+    cur.tokens.forEach(function(t){
+      var vis=false; for(var i=0;i<t.w&&!vis;i++) for(var j=0;j<t.h&&!vis;j++) if(visible(t.c+i,t.r+j)) vis=true;
+      if(!vis && m==='edit'){ vis=true; }
+      if(!vis) return;
+      drawToken(t, t.c*size, t.r*size, t.w*size, t.h*size, m==='play' && ps.done.indexOf(t.id)>=0);
+      if(m==='edit' && t.note){ ctx.fillStyle='#f2a93b'; ctx.strokeStyle='#1a1406'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc((t.c+t.w)*size-size*0.14, t.r*size+size*0.14, Math.max(3,size*0.12),0,Math.PI*2); ctx.fill(); ctx.stroke(); }
+      if(m==='edit' && t===noteTok){ ctx.strokeStyle='#f2a93b'; ctx.lineWidth=Math.max(2,size*0.08); ctx.strokeRect(t.c*size+1,t.r*size+1,t.w*size-2,t.h*size-2); }
+    });
+    // doors
+    cur.doors.forEach(function(d){
+      var ar=doorAreas(d);
+      if(m==='play'){ var v=(ar[0]&&(isRevealedArea(ar[0])||anim[ar[0]]))||(ar[1]&&(isRevealedArea(ar[1])||anim[ar[1]])); if(!v) return; }
+      if(m==='thumb'){ if(!((ar[0]&&startIds.indexOf(ar[0])>=0)||(ar[1]&&startIds.indexOf(ar[1])>=0))) return; }
+      drawDoor(d, m==='play' && ps.open.indexOf(doorKey(d))>=0);
+    });
+    // reveal animation: fade fog over animating areas
+    if(m==='play'){
+      for(var id in anim){
+        var an=anim[id], pr=Math.min(1,(now-an.t0)/450), alpha=an.dir>0 ? 1-pr : pr;
+        if(pr<1) running=true; else delete anim[id];
+        if(alpha<=0) continue;
+        ctx.fillStyle='rgba(6,8,10,'+alpha.toFixed(3)+')';
+        for(var k4 in cur.cells){ if(cur.cells[k4]!==id) continue; var z=k4.split(','); ctx.fillRect(+z[0]*size-1,+z[1]*size-1,size+2,size+2); }
+      }
+    }
+    ctx=saveCtx; cs=saveCs;
+    return running;
+  }
+  function draw(){
+    if(!canvas || mode==='list') return;
+    var c2=canvas.getContext('2d'), dpr=Math.min(2,window.devicePixelRatio||1);
+    c2.setTransform(dpr,0,0,dpr,0,0);
+    var running=drawMap(c2,{mode:mode, cs:cs});
+    if(running) requestAnimationFrame(draw);
+  }
+
+  // ---------- layout ----------
+  function layout(){
+    if(!canvas || mode==='list') return;
+    var sc=canvas.parentNode, availW=sc.clientWidth || (document.body.clientWidth-32);
+    var top=sc.getBoundingClientRect().top, reserve= mode==='play' ? 140 : 40;
+    var availH=Math.max(260, window.innerHeight-top-reserve);
+    var fit=Math.max(6, Math.floor(Math.min(availW/cur.cols, availH/cur.rows)));
+    if(mode==='edit'){ cs=Math.max(10, Math.round(Math.max(fit, Math.min(availW/cur.cols, 40))*zoom)); sc.style.maxHeight=Math.max(320, availH)+'px'; }
+    else cs=fit;
+    var dpr=Math.min(2,window.devicePixelRatio||1), W=cur.cols*cs, H=cur.rows*cs;
+    canvas.width=Math.round(W*dpr); canvas.height=Math.round(H*dpr); canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    draw();
+  }
+  var rz; window.addEventListener('resize',function(){ clearTimeout(rz); rz=setTimeout(layout,80); });
+
+  function mountCanvas(scroller){
+    scroller.textContent=''; canvas=el('canvas'); canvas.setAttribute('role','img');
+    canvas.setAttribute('aria-label','Karte '+(cur.name||'')); scroller.appendChild(canvas);
+    bindPointer();
+  }
+  function loadBg(){
+    if(bgURL){ URL.revokeObjectURL(bgURL); bgURL=null; } bgImg=null;
+    if(!cur.bg || !cur.bg.blob) return Promise.resolve();
+    return new Promise(function(res){ bgURL=URL.createObjectURL(cur.bg.blob); var im=new Image(); im.onload=function(){ bgImg=im; res(); }; im.onerror=function(){ res(); }; im.src=bgURL; });
+  }
+
+  // ---------- pointer ----------
+  var painting=null;
+  function evCell(e){ var b=canvas.getBoundingClientRect(); return {fx:(e.clientX-b.left)/cs, fy:(e.clientY-b.top)/cs}; }
+  function tokenAt(c,r){ for(var i=cur.tokens.length-1;i>=0;i--){ var t=cur.tokens[i]; if(c>=t.c&&c<t.c+t.w&&r>=t.r&&r<t.r+t.h) return i; } return -1; }
+  function bindPointer(){
+    canvas.style.touchAction = (mode==='edit' && tool!=='pan') ? 'none' : 'manipulation';
+    canvas.onpointerdown=function(e){
+      var p=evCell(e), c=Math.floor(p.fx), r=Math.floor(p.fy);
+      if(c<0||r<0||c>=cur.cols||r>=cur.rows) return;
+      if(mode==='play'){ onPlayTap(p,c,r); return; }
+      if(tool==='pan') return;
+      e.preventDefault();
+      if(tool==='paint'||tool==='erase'){
+        if(tool==='paint' && !activeAreaId){ toast('Lege zuerst mit „+ Gebiet“ ein Gebiet an.'); return; }
+        painting={id:e.pointerId}; try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+        paintCell(c,r); return;
+      }
+      if(tool==='token'){ placeToken(c,r); return; }
+      if(tool==='note'){ var ni=tokenAt(c,r); noteTok= ni>=0 ? cur.tokens[ni] : null; renderNoteTarget(); draw(); if(noteTok) $('tokNote').focus(); return; }
+      if(tool==='door'){ var ed=nearestEdge(p.fx,p.fy); var i=findDoor(ed.c,ed.r,ed.side);
+        if(i>=0) cur.doors.splice(i,1); else cur.doors.push({c:ed.c,r:ed.r,side:ed.side,kind:doorKind.kind,col:doorKind.col});
+        touch(); draw(); return; }
+      if(tool==='delete'){
+        var ti=tokenAt(c,r); if(ti>=0){ cur.tokens.splice(ti,1); touch(); draw(); return; }
+        var e2=nearestEdge(p.fx,p.fy); if(e2.d<0.3){ var di=findDoor(e2.c,e2.r,e2.side); if(di>=0){ cur.doors.splice(di,1); touch(); draw(); } }
+      }
+    };
+    canvas.onpointermove=function(e){
+      var p=evCell(e), c=Math.floor(p.fx), r=Math.floor(p.fy);
+      if(painting && e.pointerId===painting.id){ hideTip(); if(c<0||r<0||c>=cur.cols||r>=cur.rows) return; paintCell(c,r); return; }
+      if(e.pointerType==='mouse') showTipAt(e,p,c,r);
+    };
+    canvas.onpointerleave=hideTip;
+    canvas.onpointerup=canvas.onpointercancel=function(){ if(painting){ painting=null; touch(); renderAreaList(); } };
+  }
+  // ---------- hover explanations ----------
+  var STATS={zombie:[3,2,2],imp:[4,2,1],trite:[5,1,1],demon:[4,3,2],mancubus:[2,3,3],hellknight:[3,4,3],archvile:[4,3,2],cyberdemon:[4,5,4]};
+  var ABIL={zombie:'Nur Nahkampf',imp:'Zielgenauigkeit',trite:'Nur Nahkampf, Anschleichen (nutzt Schächte)',demon:'Nur Nahkampf, Wachsamkeit. Belegt 2 Felder',
+    mancubus:'Todbringend, Durchschlagskraft',hellknight:'Nur Nahkampf, Abräumen, Zurückstoßen',archvile:'Zielgenauigkeit ×4, Zielen',cyberdemon:'Zielen'};
+  var COLNAME={white:'weiß',red:'rot',green:'grün',blue:'blau',yellow:'gelb'};
+  var INFO={
+    weapon:'Waffe. Ein Marine, der das Feld betritt, nimmt sie automatisch auf.',
+    ammo:'Munition. Kommt in den Munitionsbehälter des Marines.',
+    health:'Gesundheit. Abwerfen und bis zu 3 verlorene Verletzungsmarker zurücknehmen.',
+    armor:'Rüstung. Kommt in den Ausrüstungsbehälter des Marines.',
+    berserk:'Berserker. Der Marine greift nur noch mit der Faust an, tötet damit aber jeden Eindringling sofort. Wirkt zwei Spielzüge.',
+    adrenaline:'Adrenalin. Zu Beginn eines späteren Zugs abwerfen: +4 Bewegung in diesem Zug.',
+    encounter:'Begegnung. Endet ein Marine hier, antippen: Die Auflösung erscheint in den Spielleiter-Notizen.',
+    x:'Platzhalter. Was hier hinkommt, steht in der Gebietsbeschreibung.',
+    duct:'Versorgungsschacht. Nur Eindringlinge mit Anschleichen können sich von Schacht zu Schacht bewegen.',
+    teleporter:'Teleporter. Ein Marine kommt mit 1 Bewegungspunkt zu einem anderen Teleporter derselben Farbe. Landet er auf einem Eindringling, ist dieser tot.',
+    block:'Blockierendes Hindernis. Versperrt Sicht und Bewegung.',
+    slime:'Schädliches Hindernis. Wer das Feld betritt, erleidet 1 Verletzung (unabhängig von Rüstung), wer den ganzen Zug darauf bleibt, eine weitere.',
+    barrel:'Explosives Fass. Versperrt Sicht und Bewegung. Explodiert bei 1 Schaden und verletzt alle Figuren daneben.'
+  };
+  function tokenInfo(t){
+    var d=TYPE[t.t]; if(!d) return null;
+    if(d.g==='monster'){ var s=STATS[t.t];
+      var col= t.col==='white' ? 'Weiß: wird immer aufgestellt.' : ('Wird nur aufgestellt, wenn der '+COLNAME[t.col]+'e Marine mitspielt.');
+      return {h:d.n+(t.col&&t.col!=='white'?' ('+COLNAME[t.col]+')':''), b:'Bewegung '+s[0]+' · Rüstung '+s[1]+' · Wunden '+s[2]+'. '+ABIL[t.t]+'. '+col}; }
+    if(d.g==='marine') return {h:'Marine ('+COLNAME[t.col]+')', b:'Startfeld dieses Marines.'};
+    if(d.g==='key') return {h:'Schlüssel ('+COLNAME[t.col]+')', b:'Schließt alle '+COLNAME[t.col]+'en Sicherheitstüren für die Marines auf.'};
+    return {h:d.n+(t.label?(': '+t.label):''), b:INFO[t.t]||''};
+  }
+  function doorInfo(d){
+    if(d.kind==='sec') return {h:COLNAME[d.col]+'e Sicherheitstür', b:'Verschlossen, bis die Marines den '+COLNAME[d.col]+'en Schlüssel haben. Eindringlinge können sie nie öffnen.'};
+    return {h:'Tür', b:'Öffnen oder Schließen kostet 2 Bewegungspunkte von einem angrenzenden Feld.'};
+  }
+  var tipEl=null;
+  function hideTip(){ if(tipEl) tipEl.hidden=true; }
+  function showTipAt(e,p,c,r){
+    var info=null;
+    if(c>=0&&r>=0&&c<cur.cols&&r<cur.rows){
+      var a=cellArea(c,r), ok = mode==='edit' || (a && isRevealedArea(a));
+      var ed=nearestEdge(p.fx,p.fy);
+      if(ed.d<0.2){ var di=findDoor(ed.c,ed.r,ed.side);
+        if(di>=0){ var dr=cur.doors[di], ar=doorAreas(dr); if(mode==='edit' || (ar[0]&&isRevealedArea(ar[0])) || (ar[1]&&isRevealedArea(ar[1]))) info=doorInfo(dr); } }
+      if(!info && ok){ var ti=tokenAt(c,r); if(ti>=0) info=tokenInfo(cur.tokens[ti]);
+        if(info && mode==='play' && playState().done.indexOf(cur.tokens[ti].id)>=0) info.b+=' (erledigt)'; }
+    }
+    if(!info){ hideTip(); return; }
+    if(!tipEl){ tipEl=el('div','tip'); tipEl.setAttribute('role','tooltip'); document.body.appendChild(tipEl); }
+    tipEl.textContent=''; tipEl.appendChild(el('b',null,info.h)); tipEl.appendChild(document.createTextNode(info.b)); tipEl.hidden=false;
+    var x=e.clientX+16, y=e.clientY+16, w=tipEl.offsetWidth, h=tipEl.offsetHeight;
+    if(x+w>window.innerWidth-8) x=e.clientX-w-12; if(y+h>window.innerHeight-8) y=e.clientY-h-12;
+    tipEl.style.left=Math.max(8,x)+'px'; tipEl.style.top=Math.max(8,y)+'px';
+  }
+
+  function paintCell(c,r){
+    var k=c+','+r;
+    if(tool==='paint'){ if(cur.cells[k]===activeAreaId) return; cur.cells[k]=activeAreaId; }
+    else { if(!cur.cells[k]) return; delete cur.cells[k]; }
+    draw();
+  }
+  function placeToken(c,r){
+    var d=TYPE[tokType], w=Math.max(1,Math.min(6,+$('tokW').value||d.w)), h=Math.max(1,Math.min(6,+$('tokH').value||d.h));
+    if(c+w>cur.cols||r+h>cur.rows){ toast('Das Symbol passt hier nicht mehr aufs Raster.'); return; }
+    var choices=colorChoices(d.g);
+    cur.tokens.push({id:uid(), t:tokType, c:c, r:r, w:w, h:h, col: choices ? (choices.indexOf(tokColor)>=0?tokColor:choices[0]) : null, label:$('tokLabel').value.trim()});
+    touch(); draw();
+  }
+
+  // ---------- list ----------
+  function areaCellCount(id){ var n=0; for(var k in cur.cells) if(cur.cells[k]===id) n++; return n; }
+  function renderList(){
+    var box=$('listBox'); box.textContent='';
+    if(!scenarios.length){
+      var e=el('div','empty'); e.appendChild(el('h2',null,'Noch kein Szenario'));
+      e.appendChild(el('p',null,'Lege ein neues Szenario an, importiere eine Szenario-Datei oder lade das Beispiel „Knietief in Leichen“.'));
+      var b=el('button','btn primary','Kampagne laden (I–V)'); b.type='button'; b.addEventListener('click',function(){ addExample(); Promise.all(SCEN.map(addCampaign)).then(renderList); }); e.appendChild(b);
+      box.appendChild(e); return;
+    }
+    var grid=el('div','cards');
+    scenarios.slice().sort(function(a,b){ function k(x){ if(x.example) return 1; var i=SCEN.map(function(d){return d.key;}).indexOf(x.campaign); return i>=0?i+2:100; } return k(a)-k(b) || (b.updated||0)-(a.updated||0); }).forEach(function(s){
+      var card=el('div','card');
+      var cv=el('canvas'); var tcs=Math.max(4,Math.floor(300/Math.max(s.cols,s.rows))); cv.width=s.cols*tcs; cv.height=s.rows*tcs; card.appendChild(cv);
+      var keep=cur; cur=s; drawMap(cv.getContext('2d'),{mode:'thumb',cs:tcs}); cur=keep;
+      var body=el('div','body'); body.appendChild(el('div','name',s.name||'Ohne Namen'));
+      var rev=s.play?s.play.revealed.length:0;
+      body.appendChild(el('div','meta', s.areas.length+' Gebiete · '+s.tokens.length+' Symbole'+(rev?(' · '+rev+' aufgedeckt'):'')));
+      var bar=el('div','bar');
+      var p=el('button','btn primary','Neues Spiel'); p.type='button'; p.disabled=!s.areas.length;
+      p.addEventListener('click',function(){ cur=s; resetPlay(); openScenario(s,'play'); }); bar.appendChild(p);
+      var startIds=s.areas.filter(function(a){return a.start;}).map(function(a){return a.id;});
+      if(s.play && (s.play.revealed.some(function(id){return startIds.indexOf(id)<0;}) || s.play.done.length)){
+        var go=el('button','btn','Fortsetzen'); go.type='button'; go.addEventListener('click',function(){ openScenario(s,'play'); }); bar.appendChild(go); }
+      var ed=el('button','btn','Bearbeiten'); ed.type='button'; ed.addEventListener('click',function(){ openScenario(s,'edit'); }); bar.appendChild(ed);
+      var del=el('button','btn danger','Löschen'); del.type='button';
+      twoTap(del,'Wirklich?',function(){ dbDel(s.id).then(function(){ scenarios=scenarios.filter(function(x){return x.id!==s.id;}); renderList(); toast('Szenario gelöscht.'); }); });
+      bar.appendChild(del); body.appendChild(bar); card.appendChild(body); grid.appendChild(card);
+    });
+    box.appendChild(grid);
+    var missing=SCEN.filter(function(def){ return !scenarios.some(function(x){ return x.campaign===def.key; }); });
+    var hasEx=scenarios.some(function(s){return s.example;});
+    if(!hasEx || missing.length){
+      var bar2=el('div','bar'); bar2.style.marginTop='12px';
+      if(!hasEx){ var again=el('button','btn','Beispiel „Knietief in Leichen“ laden'); again.type='button'; again.addEventListener('click',addExample); bar2.appendChild(again); }
+      if(missing.length){ var mb=el('button','btn','Kampagne laden (II–V)'); mb.type='button';
+        mb.addEventListener('click',function(){ Promise.all(missing.map(addCampaign)).then(function(){ renderList(); toast(missing.length+' Szenarien geladen.'); }); }); bar2.appendChild(mb); }
+      box.appendChild(bar2);
+    }
+  }
+  function addExample(){ var s=buildExample(); s.id='beispiel-'+uid(); scenarios.push(s); dbPut(s).then(renderList); toast('Beispiel geladen.'); }
+  $('newScen').addEventListener('click',function(){
+    var s={id:uid(), name:'Neues Szenario', cols:30, rows:24, areas:[{id:uid(),name:'Start',start:true}], cells:{}, tokens:[], doors:[], bg:null, play:null, updated:Date.now()};
+    scenarios.push(s); dbPut(s).then(function(){ openScenario(s,'edit'); });
+  });
+
+  function openScenario(s,m){
+    cur=s; anim={}; zoom=1; activeAreaId=s.areas[0]?s.areas[0].id:null;
+    setView(m);
+    loadBg().then(function(){
+      mountCanvas(m==='edit'?$('editScroller'):$('playScroller'));
+      if(m==='edit') renderEditor(); else renderPlay();
+      layout();
+    });
+  }
+  function goList(){ if(cur) dbPut(cur); cur=null; canvas=null; setView('list'); renderList(); }
+
+  // ---------- editor ----------
+  var TOOLS=[['paint','Gebiet malen'],['erase','Radieren'],['token','Symbol'],['door','Tür'],['note','Symbol-Notiz'],['delete','Entfernen'],['pan','Verschieben']];
+  var noteTok=null;
+  var HINTS={paint:'Wähle rechts ein Gebiet und streiche über die Felder, die dazugehören.',erase:'Streiche über Felder, um sie aus allen Gebieten zu entfernen.',
+    token:'Wähle ein Symbol und tippe auf das Feld oben links, wo es liegen soll.',door:'Tippe nahe an eine Kante zwischen zwei Feldern, um dort eine Tür zu setzen oder zu entfernen.',
+    delete:'Tippe auf ein Symbol oder eine Tür, um es zu entfernen.',
+    note:'Tippe auf ein Symbol und schreibe rechts, was passiert, wenn es im Spiel angetippt wird. Symbole mit Notiz tragen einen kleinen Punkt.',pan:'Wische, um die Karte zu verschieben. Mit − und + änderst du die Größe.'};
+  function renderTools(){
+    var box=$('tools'); box.textContent='';
+    TOOLS.forEach(function(t){ var b=el('button','tool',t[1]); b.type='button'; b.setAttribute('aria-pressed',tool===t[0]?'true':'false');
+      b.addEventListener('click',function(){ tool=t[0]; renderTools(); }); box.appendChild(b); });
+    $('secArea').hidden = !(tool==='paint'||tool==='erase');
+    $('secToken').hidden = tool!=='token';
+    $('secDoor').hidden = tool!=='door';
+    $('secNote').hidden = tool!=='note';
+    if(tool!=='note') noteTok=null;
+    renderNoteTarget();
+    $('toolHint').textContent=HINTS[tool];
+    if(canvas) canvas.style.touchAction = (mode==='edit' && tool!=='pan') ? 'none' : 'manipulation';
+  }
+  function miniIcon(type, col){
+    var cv=document.createElement('canvas'), dpr=2; cv.width=30*dpr; cv.height=30*dpr;
+    var c2=cv.getContext('2d'); c2.scale(dpr,dpr); var saveCtx=ctx; ctx=c2;
+    drawToken({t:type,col:col,label:''},1,1,28,28,false); ctx=saveCtx; return cv;
+  }
+  function renderPalette(){
+    var box=$('palette'); box.textContent='';
+    TYPES.forEach(function(d){
+      var b=el('button','pal'); b.type='button'; b.setAttribute('aria-pressed',tokType===d.t?'true':'false'); b.setAttribute('aria-label',d.n);
+      var choices=colorChoices(d.g); b.appendChild(miniIcon(d.t, choices?(choices.indexOf(tokColor)>=0?tokColor:choices[0]):null)); b.appendChild(el('span',null,d.n));
+      b.addEventListener('click',function(){ tokType=d.t; $('tokW').value=d.w; $('tokH').value=d.h; var ch=colorChoices(d.g); if(ch && ch.indexOf(tokColor)<0) tokColor=ch[0]; renderPalette(); });
+      box.appendChild(b);
+    });
+    var cb=$('tokColors'); cb.textContent=''; var ch=colorChoices(TYPE[tokType].g);
+    cb.parentNode.querySelector('.lbl').hidden=!ch; cb.hidden=!ch;
+    (ch||[]).forEach(function(k){ var s=el('button','sw'); s.type='button'; s.style.background=COL[k]; s.setAttribute('aria-pressed',tokColor===k?'true':'false');
+      s.setAttribute('aria-label',{white:'Weiß (immer)',red:'Rot',green:'Grün',blue:'Blau',yellow:'Gelb'}[k]);
+      s.addEventListener('click',function(){ tokColor=k; renderPalette(); }); cb.appendChild(s); });
+  }
+  function renderDoorKinds(){
+    var box=$('doorKinds'); box.textContent='';
+    [{kind:'door',col:null,n:'Tür',bg:'#e8ecef'},{kind:'sec',col:'red',n:'Rote Sicherheitstür',bg:COL.red},{kind:'sec',col:'blue',n:'Blaue Sicherheitstür',bg:COL.blue},{kind:'sec',col:'yellow',n:'Gelbe Sicherheitstür',bg:COL.yellow}].forEach(function(k){
+      var s=el('button','sw'); s.type='button'; s.style.background='repeating-linear-gradient(45deg,'+k.bg+' 0 6px,#2b3036 6px 9px)'; s.setAttribute('aria-label',k.n);
+      s.setAttribute('aria-pressed',(doorKind.kind===k.kind&&doorKind.col===k.col)?'true':'false');
+      s.addEventListener('click',function(){ doorKind={kind:k.kind,col:k.col}; renderDoorKinds(); }); box.appendChild(s);
+    });
+  }
+  function renderAreaList(){
+    var box=$('areaList'); box.textContent='';
+    cur.areas.forEach(function(a,i){
+      var b=el('button','area-row'+(a.id===activeAreaId?' sel':'')); b.type='button';
+      var sw=el('span','swatch'); sw.style.background=AREA_COLORS[i%AREA_COLORS.length]; b.appendChild(sw);
+      b.appendChild(el('span','nm',a.name||('Gebiet '+i)));
+      b.appendChild(el('span','ct',(a.start?'Start · ':'')+areaCellCount(a.id)+' Felder'));
+      b.addEventListener('click',function(){ activeAreaId=a.id; if(tool!=='paint'){ tool='paint'; renderTools(); } renderAreaList(); draw(); });
+      box.appendChild(b);
+    });
+    var a=areaById(activeAreaId); $('areaEdit').hidden=!a;
+    if(a){ $('areaName').value=a.name||''; $('areaStart').checked=!!a.start; $('areaNote').value=a.note||''; }
+  }
+  function renderBgControls(){
+    var has=!!(cur.bg && bgImg); $('bgControls').hidden=!has; $('bgRotate').disabled=!has; $('bgRemove').disabled=!has;
+    if(has){ $('bgOpacity').value=cur.bg.opacity==null?0.6:cur.bg.opacity; $('bgSize').value=cur.bg.cw; $('bgX').value=cur.bg.x; $('bgY').value=cur.bg.y; }
+  }
+  function renderEditor(){
+    $('editTitle').textContent=cur.name||'Ohne Namen'; $('scenName').value=cur.name||''; $('scenNote').value=cur.note||'';
+    $('gridCols').value=cur.cols; $('gridRows').value=cur.rows;
+    renderTools(); renderPalette(); renderDoorKinds(); renderAreaList(); renderBgControls();
+  }
+  $('addArea').addEventListener('click',function(){ var n=cur.areas.length; var a={id:uid(), name: n===0?'Start':('Gebiet '+n), start:n===0}; cur.areas.push(a); activeAreaId=a.id; touch(); renderAreaList(); draw(); });
+  $('areaName').addEventListener('input',function(){ var a=areaById(activeAreaId); if(!a) return; a.name=this.value; touch(); renderAreaList(); });
+  $('areaStart').addEventListener('change',function(){ var a=areaById(activeAreaId); if(!a) return; a.start=this.checked; touch(); renderAreaList(); });
+  $('areaNote').addEventListener('input',function(){ var a=areaById(activeAreaId); if(!a) return; a.note=this.value; touch(); });  function renderNoteTarget(){
+    if(!cur) return;
+    var has=!!noteTok; $('noteField').hidden=!has;
+    if(has){ var d=TYPE[noteTok.t], A=areaById(cellArea(noteTok.c,noteTok.r));
+      $('noteTarget').textContent='Notiz für: '+d.n+(A?(' in '+A.name):'');
+      $('tokNote').value=noteTok.note||''; }
+    else $('noteTarget').textContent='Tippe auf der Karte auf ein Symbol, zum Beispiel eine Begegnung oder einen Schlüssel.';
+  }
+  $('tokNote').addEventListener('input',function(){ if(!noteTok) return; noteTok.note=this.value; touch(); draw(); });
+  $('scenNote').addEventListener('input',function(){ cur.note=this.value; touch(); });
+  twoTap($('delArea'),'Wirklich löschen?',function(){
+    var id=activeAreaId; cur.areas=cur.areas.filter(function(a){return a.id!==id;});
+    for(var k in cur.cells) if(cur.cells[k]===id) delete cur.cells[k];
+    if(cur.play) cur.play.revealed=cur.play.revealed.filter(function(x){return x!==id;});
+    activeAreaId=cur.areas[0]?cur.areas[0].id:null; touch(); renderAreaList(); draw();
+  });
+  $('scenName').addEventListener('input',function(){ cur.name=this.value; $('editTitle').textContent=cur.name||'Ohne Namen'; touch(); });
+  function resizeGrid(){
+    var c=Math.max(4,Math.min(80,+$('gridCols').value||cur.cols)), r=Math.max(4,Math.min(80,+$('gridRows').value||cur.rows));
+    cur.cols=c; cur.rows=r;
+    for(var k in cur.cells){ var p=k.split(','); if(+p[0]>=c||+p[1]>=r) delete cur.cells[k]; }
+    cur.tokens=cur.tokens.filter(function(t){ return t.c+t.w<=c && t.r+t.h<=r; });
+    cur.doors=cur.doors.filter(function(d){ return d.c<=c && d.r<=r; });
+    touch(); layout();
+  }
+  $('gridCols').addEventListener('change',resizeGrid); $('gridRows').addEventListener('change',resizeGrid);
+  $('zoomIn').addEventListener('click',function(){ zoom=Math.min(3,zoom*1.25); layout(); });
+  $('zoomOut').addEventListener('click',function(){ zoom=Math.max(0.4,zoom/1.25); layout(); });
+  // background template
+  function canvasToBlob(c){ return new Promise(function(res){ c.toBlob(function(b){ res(b); },'image/jpeg',0.86); }); }
+  function fileToImage(blob){ return new Promise(function(res,rej){ var u=URL.createObjectURL(blob), im=new Image(); im.onload=function(){ res({im:im,u:u}); }; im.onerror=function(){ URL.revokeObjectURL(u); rej(); }; im.src=u; }); }
+  $('bgFile').addEventListener('change',function(e){
+    var f=e.target.files&&e.target.files[0]; e.target.value=''; if(!f) return;
+    if(!/^image\//.test(f.type)){ toast('Bitte eine Bilddatei wählen (JPG oder PNG).'); return; }
+    fileToImage(f).then(function(r){
+      var s=Math.min(1,2400/Math.max(r.im.naturalWidth,r.im.naturalHeight)), c=document.createElement('canvas');
+      c.width=Math.round(r.im.naturalWidth*s); c.height=Math.round(r.im.naturalHeight*s); c.getContext('2d').drawImage(r.im,0,0,c.width,c.height); URL.revokeObjectURL(r.u);
+      return canvasToBlob(c);
+    }).then(function(b){
+      var hint=cur.bgHint||{x:0,y:0,cw:cur.cols};
+      cur.bg={blob:b, x:hint.x, y:hint.y, cw:hint.cw, opacity:0.6};
+      touch(); return loadBg();
+    }).then(function(){ renderBgControls(); draw(); toast(cur.bgHint?'Vorlage geladen und auf die Beispielkarte ausgerichtet. Mit den Reglern nachjustieren.':'Vorlage geladen. Mit den Reglern ausrichten.'); })
+      .catch(function(){ toast('Das Foto ließ sich nicht öffnen.'); });
+  });
+  $('bgRotate').addEventListener('click',function(){
+    if(!bgImg) return; var c=document.createElement('canvas'); c.width=bgImg.naturalHeight; c.height=bgImg.naturalWidth;
+    var x=c.getContext('2d'); x.translate(c.width,0); x.rotate(Math.PI/2); x.drawImage(bgImg,0,0);
+    canvasToBlob(c).then(function(b){ cur.bg.blob=b; touch(); return loadBg(); }).then(function(){ draw(); });
+  });
+  twoTap($('bgRemove'),'Wirklich?',function(){ cur.bg=null; loadBg(); touch(); renderBgControls(); draw(); });
+  [['bgOpacity','opacity'],['bgSize','cw'],['bgX','x'],['bgY','y']].forEach(function(p){
+    $(p[0]).addEventListener('input',function(){ if(!cur.bg) return; cur.bg[p[1]]=+this.value; touch(); draw(); });
+  });
+  $('editBack').addEventListener('click',goList);
+  $('editPlay').addEventListener('click',function(){ dbPut(cur).then(function(){ if(!cur.play) resetPlay(); openScenario(cur,'play'); }); });
+
+  // ---------- play ----------
+  function resetPlay(){ cur.play=freshPlay(); touch(); }
+  function reveal(id, on){
+    var ps=playState(), i=ps.revealed.indexOf(id), reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(on && i<0){ ps.revealed.push(id); if(!reduce) anim[id]={t0:performance.now(),dir:1}; return true; }
+    if(!on && i>=0){ ps.revealed.splice(i,1); if(!reduce) anim[id]={t0:performance.now(),dir:-1}; return true; }
+    return false;
+  }
+  function onPlayTap(p,c,r){
+    var ps=playState();
+    // doors first (taps near an edge)
+    var ed=nearestEdge(p.fx,p.fy);
+    if(ed.d<0.28){
+      var di=findDoor(ed.c,ed.r,ed.side);
+      if(di>=0){ var d=cur.doors[di], ar=doorAreas(d), vis=(ar[0]&&isRevealedArea(ar[0]))||(ar[1]&&isRevealedArea(ar[1]));
+        if(vis){ var group=doorGroup(di), opening=ps.open.indexOf(doorKey(d))<0, newlyRevealed=[];
+          group.forEach(function(g){
+            var k=doorKey(g), oi=ps.open.indexOf(k);
+            if(opening && oi<0) ps.open.push(k); if(!opening && oi>=0) ps.open.splice(oi,1);
+            if(opening) doorAreas(g).forEach(function(a){ if(a && reveal(a,true)) newlyRevealed.push(a); });
+          });
+          if(newlyRevealed.length) announceReveal(newlyRevealed);
+          touch(); renderPlay(); draw(); return; } }
+    }
+    var a=cellArea(c,r); if(!a || !isRevealedArea(a)) return;
+    var ti=tokenAt(c,r); if(ti<0) return;
+    var tk=cur.tokens[ti], id=tk.id, j=ps.done.indexOf(id);
+    if(j>=0){ ps.done.splice(j,1); var u=ps.unlocked.indexOf(id); if(u>=0){ ps.unlocked.splice(u,1); toast('Auflösung wieder verborgen.'); } }
+    else { ps.done.push(id);
+      if(tk.note && ps.unlocked.indexOf(id)<0){ ps.unlocked.push(id); var A=areaById(a);
+        toast('Auflösung für '+(A?A.name:'Gebiet')+' in den Spielleiter-Notizen.'); } }
+    touch(); renderNotes(); draw();
+  }
+  function announceReveal(ids){
+    var names=ids.map(function(id){ var A=areaById(id); return A?A.name:'Gebiet'; });
+    toast(names.join(', ')+' aufgedeckt.');
+  }
+  // ---------- Vorlesen (Sprachausgabe des Browsers) ----------
+  var synth=('speechSynthesis' in window)?window.speechSynthesis:null, speakingText=null, speakBtns=[];
+  function pickVoice(){
+    if(!synth) return null; var vs=[]; try{ vs=synth.getVoices()||[]; }catch(e){}
+    var de=vs.filter(function(v){ return /^de(-|_|$)/i.test(v.lang); });
+    return de.filter(function(v){ return /google|natural|neural|premium|enhanced/i.test(v.name); })[0] || de[0] || null;
+  }
+  if(synth){ try{ synth.getVoices(); synth.onvoiceschanged=function(){}; }catch(e){} }
+  function refreshSpeakBtns(){ speakBtns=speakBtns.filter(function(b){ return b.isConnected; });
+    speakBtns.forEach(function(b){ var on=b._text===speakingText; b.textContent=on?'■ Stopp':'▶ Vorlesen'; b.setAttribute('aria-pressed',on?'true':'false'); }); }
+  function speak(text){
+    if(!synth){ toast('Vorlesen wird von diesem Browser nicht unterstützt.'); return; }
+    if(speakingText===text){ synth.cancel(); speakingText=null; refreshSpeakBtns(); return; }
+    synth.cancel();
+    var u=new SpeechSynthesisUtterance(text.replace(/\n+/g,' ')); u.lang='de-DE'; var vp=VOICES[voiceMode]||VOICES.funk; u.rate=vp.rate; u.pitch=vp.pitch;
+    var v=pickVoice(); if(v) u.voice=v;
+    var radio = voiceMode!=='normal';
+    u.onend=u.onerror=function(){ duck(false); if(radio && ac) SFX.squelch(ac.currentTime+0.02); if(speakingText===text){ speakingText=null; refreshSpeakBtns(); } };
+    if(radio && audio()) SFX.squelch(ac.currentTime+0.01);
+    duck(true);
+    speakingText=text; refreshSpeakBtns();
+    try{ synth.speak(u); }catch(e){ speakingText=null; refreshSpeakBtns(); toast('Vorlesen hat nicht geklappt.'); }
+  }
+  function speakButton(text){
+    var b=el('button','btn sm speak','▶ Vorlesen'); b.type='button'; b._text=text; b.setAttribute('aria-pressed','false');
+    if(!synth){ b.hidden=true; }
+    b.addEventListener('click',function(){ speak(text); }); speakBtns.push(b);
+    if(speakingText===text){ b.textContent='■ Stopp'; b.setAttribute('aria-pressed','true'); }
+    return b;
+  }
+  // ---------- Atmosphäre (alles live erzeugt, keine Audiodateien) ----------
+  var VOICES={funk:{rate:0.95,pitch:0.7}, computer:{rate:0.85,pitch:0.4}, daemon:{rate:0.72,pitch:0.05}, normal:{rate:0.95,pitch:0.9}};
+  var voiceMode='funk'; try{ voiceMode=localStorage.getItem('doomVoice')||'funk'; }catch(e){}
+  if(!VOICES[voiceMode]) voiceMode='funk';
+  var ac=null, master=null, verb=null, amb=null, ambTimer=null;
+  function audio(){
+    if(!ac){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ac=new AC();
+      master=ac.createGain(); master.gain.value=0.9; master.connect(ac.destination);
+      verb=ac.createConvolver(); var len=ac.sampleRate*2.6, ir=ac.createBuffer(2,len,ac.sampleRate);
+      for(var ch=0;ch<2;ch++){ var d=ir.getChannelData(ch); for(var i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4); }
+      verb.buffer=ir; var vg=ac.createGain(); vg.gain.value=0.55; verb.connect(vg); vg.connect(master); }
+    if(ac.state==='suspended') ac.resume();
+    return ac;
+  }
+  function noiseBuf(sec){ var b=ac.createBuffer(1,ac.sampleRate*sec,ac.sampleRate), d=b.getChannelData(0); for(var i=0;i<d.length;i++) d[i]=Math.random()*2-1; return b; }
+  function env(g,t,a,peak,dec){ g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(peak,t+a); g.gain.exponentialRampToValueAtTime(0.0001,t+a+dec); }
+  function out(node,wet){ node.connect(master); if(wet){ var w=ac.createGain(); w.gain.value=wet; node.connect(w); w.connect(verb); } }
+  var SFX={
+    squelch:function(t){ var n=ac.createBufferSource(); n.buffer=noiseBuf(0.25); var f=ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1900; f.Q.value=0.8;
+      var g=ac.createGain(); env(g,t,0.005,0.35,0.16); n.connect(f); f.connect(g); out(g,0); n.start(t); n.stop(t+0.25);
+      var o=ac.createOscillator(); o.type='square'; o.frequency.value=1250; var g2=ac.createGain(); env(g2,t+0.17,0.005,0.08,0.07); o.connect(g2); out(g2,0); o.start(t+0.17); o.stop(t+0.3); },
+    siren:function(t){ var o=ac.createOscillator(); o.type='sawtooth'; var f=ac.createBiquadFilter(); f.type='lowpass'; f.frequency.value=1600; var g=ac.createGain();
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.16,t+0.1); g.gain.setValueAtTime(0.16,t+3.4); g.gain.exponentialRampToValueAtTime(0.0001,t+3.9);
+      for(var i=0;i<4;i++){ o.frequency.setValueAtTime(520,t+i*0.95); o.frequency.linearRampToValueAtTime(880,t+i*0.95+0.6); o.frequency.linearRampToValueAtTime(520,t+i*0.95+0.95); }
+      o.connect(f); f.connect(g); out(g,0.5); o.start(t); o.stop(t+4); },
+    power:function(t){ var o=ac.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(140,t); o.frequency.exponentialRampToValueAtTime(18,t+1.6);
+      var f=ac.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(1200,t); f.frequency.exponentialRampToValueAtTime(80,t+1.6);
+      var g=ac.createGain(); g.gain.setValueAtTime(0.25,t); g.gain.exponentialRampToValueAtTime(0.0001,t+1.8); o.connect(f); f.connect(g); out(g,0.3); o.start(t); o.stop(t+1.9);
+      var k=ac.createBufferSource(); k.buffer=noiseBuf(0.08); var kg=ac.createGain(); env(kg,t+1.7,0.002,0.4,0.06); k.connect(kg); out(kg,0.6); k.start(t+1.7);
+      var h=ac.createOscillator(); h.type='sine'; h.frequency.value=50; var hg=ac.createGain(); hg.gain.setValueAtTime(0.0001,t+3.2); hg.gain.exponentialRampToValueAtTime(0.06,t+3.5); hg.gain.exponentialRampToValueAtTime(0.0001,t+5);
+      h.connect(hg); out(hg,0); h.start(t+3.2); h.stop(t+5.1); },
+    growl:function(t,far){ var vol=far?0.3:1, D=2.3;
+      // Tonhöhe: anschwellen, Spitze, abfallen (mit leichtem Zittern)
+      function contour(param,mul){ param.setValueAtTime(70*mul,t); param.exponentialRampToValueAtTime(150*mul,t+0.45); param.exponentialRampToValueAtTime(120*mul,t+1.3); param.exponentialRampToValueAtTime(55*mul,t+D); }
+      var voice=ac.createGain(); voice.gain.value=0.5;
+      [1,1.013,0.5].forEach(function(mul,i){ var o=ac.createOscillator(); o.type=i===2?'triangle':'sawtooth'; contour(o.frequency,mul);
+        var j=ac.createOscillator(); j.frequency.value=5.5+Math.random()*3; var jg=ac.createGain(); jg.gain.value=4*mul; j.connect(jg); jg.connect(o.frequency);
+        var og=ac.createGain(); og.gain.value=i===2?0.9:0.6; o.connect(og); og.connect(voice); o.start(t); j.start(t); o.stop(t+D+0.1); j.stop(t+D+0.1); });
+      // Rauheit: Atem-Rauschen
+      var n=ac.createBufferSource(); n.buffer=noiseBuf(D+0.2); var nf=ac.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=1100; nf.Q.value=0.7;
+      var ng=ac.createGain(); ng.gain.value=0.55; n.connect(nf); nf.connect(ng); ng.connect(voice); n.start(t); n.stop(t+D+0.2);
+      // Verzerrung
+      var ws=ac.createWaveShaper(), curve=new Float32Array(1024); for(var i=0;i<1024;i++){ var x=i/511.5-1; curve[i]=Math.tanh(x*6); } ws.curve=curve; ws.oversample='2x';
+      voice.connect(ws);
+      // Klangfarbe "Aaah": Formanten
+      var mix=ac.createGain(); mix.gain.value=1;
+      [[650,4,1],[1150,6,0.6],[2500,8,0.25]].forEach(function(fm){ var f=ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value=fm[0]; f.Q.value=fm[1]; var fg=ac.createGain(); fg.gain.value=fm[2]*2.2; ws.connect(f); f.connect(fg); fg.connect(mix); });
+      var body=ac.createBiquadFilter(); body.type='lowpass'; body.frequency.value=260; var bg=ac.createGain(); bg.gain.value=0.7; ws.connect(body); body.connect(bg); bg.connect(mix);
+      var lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=far?900:3800;
+      var g=ac.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.32*vol,t+0.35); g.gain.setValueAtTime(0.3*vol,t+1.4); g.gain.exponentialRampToValueAtTime(0.0001,t+D);
+      mix.connect(lp); lp.connect(g); out(g,far?1.0:0.5); },
+    clang:function(t,far){ var vol=far?0.3:1;
+      // harter Schlag: Rauschen durch unharmonische Resonatoren, kurz ausklingend
+      var n=ac.createBufferSource(); n.buffer=noiseBuf(0.6); var mix=ac.createGain();
+      [[180,8],[410,14],[760,18],[1330,22],[2170,26]].forEach(function(p){ var f=ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value=p[0]*(0.85+Math.random()*0.3); f.Q.value=p[1]; n.connect(f); f.connect(mix); });
+      var g=ac.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(2.2*vol,t+0.004); g.gain.exponentialRampToValueAtTime(0.0001,t+0.42);
+      var lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=far?1100:5200;
+      mix.connect(g); g.connect(lp); out(lp,far?1.0:0.55); n.start(t); n.stop(t+0.6);
+      // dumpfer Aufprall
+      var o=ac.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(42,t+0.25);
+      var og=ac.createGain(); env(og,t,0.003,0.4*vol,0.3); o.connect(og); out(og,far?0.8:0.3); o.start(t); o.stop(t+0.4);
+      // Nachscheppern: ein paar kurze Klirrer
+      for(var i=0;i<4;i++){ var tt=t+0.09+i*0.07+Math.random()*0.05, k=ac.createBufferSource(); k.buffer=noiseBuf(0.06);
+        var kf=ac.createBiquadFilter(); kf.type='bandpass'; kf.frequency.value=2200+Math.random()*1800; kf.Q.value=5;
+        var kg=ac.createGain(); env(kg,tt,0.002,0.3*vol*(1-i*0.2),0.045); k.connect(kf); kf.connect(kg); out(kg,far?0.8:0.4); k.start(tt); } }
+  };
+  function sfx(name){ if(!audio()) { toast('Ton wird von diesem Browser nicht unterstützt.'); return; } SFX[name](ac.currentTime+0.02); }
+  function startAmbient(){
+    if(!audio()) { toast('Ton wird von diesem Browser nicht unterstützt.'); return false; }
+    var t=ac.currentTime, g=ac.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(1,t+3); g.connect(master);
+    var nodes=[];
+    [55,55.6,82.4].forEach(function(fr,i){ var o=ac.createOscillator(); o.type='sawtooth'; o.frequency.value=fr; var f=ac.createBiquadFilter(); f.type='lowpass'; f.frequency.value=180+i*40;
+      var lfo=ac.createOscillator(); lfo.frequency.value=0.05+i*0.03; var lg=ac.createGain(); lg.gain.value=70; lfo.connect(lg); lg.connect(f.frequency);
+      var og=ac.createGain(); og.gain.value=i===2?0.025:0.05; o.connect(f); f.connect(og); og.connect(g); o.start(t); lfo.start(t); nodes.push(o,lfo); });
+    var hum=ac.createOscillator(); hum.frequency.value=50; var hg=ac.createGain(); hg.gain.value=0.018; hum.connect(hg); hg.connect(g); hum.start(t); nodes.push(hum);
+    var w=ac.createBufferSource(); w.buffer=noiseBuf(4); w.loop=true; var wf=ac.createBiquadFilter(); wf.type='bandpass'; wf.frequency.value=420; wf.Q.value=0.6;
+    var wl=ac.createOscillator(); wl.frequency.value=0.08; var wlg=ac.createGain(); wlg.gain.value=220; wl.connect(wlg); wlg.connect(wf.frequency);
+    var wg=ac.createGain(); wg.gain.value=0.03; w.connect(wf); wf.connect(wg); wg.connect(g); w.start(t); wl.start(t); nodes.push(w,wl);
+    amb={gain:g,nodes:nodes};
+    (function next(){ ambTimer=setTimeout(function(){ if(!amb) return; var r=Math.random(), tt=ac.currentTime+0.05;
+      if(r<0.55) SFX.clang(tt,true); else if(r<0.8){ SFX.growl(tt,true); } else SFX.squelch(tt);
+      next(); }, 7000+Math.random()*12000); })();
+    return true;
+  }
+  function stopAmbient(){ clearTimeout(ambTimer); if(!amb) return; var t=ac.currentTime, a=amb; amb=null;
+    a.gain.gain.cancelScheduledValues(t); a.gain.gain.setValueAtTime(a.gain.gain.value,t); a.gain.gain.exponentialRampToValueAtTime(0.0001,t+1.2);
+    setTimeout(function(){ a.nodes.forEach(function(n){ try{ n.stop(); }catch(e){} }); a.gain.disconnect(); },1400); }
+  function duck(on){ if(!amb||!ac) return; var t=ac.currentTime; amb.gain.gain.cancelScheduledValues(t); amb.gain.gain.setValueAtTime(Math.max(0.0001,amb.gain.gain.value),t); amb.gain.gain.exponentialRampToValueAtTime(on?0.35:1,t+0.4); }
+  $('ambToggle').addEventListener('click',function(){
+    if(amb){ stopAmbient(); this.textContent='Atmosphäre an'; this.setAttribute('aria-pressed','false'); }
+    else if(startAmbient()){ this.textContent='Atmosphäre aus'; this.setAttribute('aria-pressed','true'); }
+  });
+  document.querySelectorAll('[data-sfx]').forEach(function(b){ b.addEventListener('click',function(){ sfx(b.getAttribute('data-sfx')); }); });
+  $('voiceSel').value=voiceMode;
+  $('voiceSel').addEventListener('change',function(){ voiceMode=this.value; try{ localStorage.setItem('doomVoice',voiceMode); }catch(e){} });
+
+  function secretTokens(areaId){ return cur.tokens.filter(function(t){ return t.note && cellArea(t.c,t.r)===areaId; }); }
+  function renderPlay(){
+    $('playTitle').textContent=cur.name||'Ohne Namen';
+    $('showPhotoWrap').hidden=!(cur.bg&&bgImg);
+    var box=$('playChips'), ps=playState(); box.textContent='';
+    cur.areas.forEach(function(a){
+      if(!areaCellCount(a.id)) return;
+      var on=ps.revealed.indexOf(a.id)>=0, c=el('button','chip'+(on?' on':'')); c.type='button'; c.setAttribute('aria-pressed',on?'true':'false');
+      c.appendChild(el('span','dot')); c.appendChild(document.createTextNode(a.name||'Gebiet'));
+      c.addEventListener('click',function(){ reveal(a.id,!on); touch(); renderPlay(); draw(); });
+      box.appendChild(c);
+    });
+    var total=cur.areas.filter(function(a){return areaCellCount(a.id);}).length;
+    $('playStatus').textContent=ps.revealed.length+' von '+total+' aufgedeckt';
+    renderNotes();
+  }
+  var notesOpen=true;
+  function renderNotes(){
+    var p=$('notesPanel'), ps=playState();
+    p.hidden=!notesOpen; p.parentNode.classList.toggle('with-notes',notesOpen);
+    $('notesToggle').setAttribute('aria-expanded',notesOpen?'true':'false');
+    $('notesToggle').textContent=notesOpen?'Notizen ausblenden':'Notizen';
+    if(!notesOpen) return;
+    p.textContent='';
+    function block(a, cls, showSecret){
+      var n=el('div','note'+(cls?' '+cls:'')); n.appendChild(el('h3',null,a.name||'Gebiet'));
+      n.appendChild(el('p',a.note?null:'dim',a.note||'Kein Text.'));
+      if(a.note && showSecret) n.appendChild(speakButton(a.note));
+      if(!showSecret) return n;
+      secretTokens(a.id).forEach(function(t){
+        var what=(TYPE[t.t]?TYPE[t.t].n:'Symbol')+(t.t==='key'&&t.col?(' ('+COLNAME[t.col]+')'):'');
+        if(ps.unlocked.indexOf(t.id)>=0){ var s=el('div','secret'); s.appendChild(el('span','secret-lbl','Auflösung · '+what)); s.appendChild(el('p',null,t.note));
+          var row=el('div','bar'); row.appendChild(speakButton(t.note));
+          var hide=el('button','btn sm','Verbergen'); hide.type='button';
+          hide.addEventListener('click',function(){ var u=ps.unlocked.indexOf(t.id); if(u>=0) ps.unlocked.splice(u,1); var d=ps.done.indexOf(t.id); if(d>=0) ps.done.splice(d,1); touch(); renderNotes(); draw(); });
+          row.appendChild(hide); s.appendChild(row); n.appendChild(s); }
+        else { var b=el('button','btn sm','Auflösung zeigen: '+what); b.type='button';
+          b.addEventListener('click',function(){ ps.unlocked.push(t.id); touch(); renderNotes(); }); n.appendChild(b); }
+      });
+      return n;
+    }
+    p.appendChild(el('h2',null,'Spielleiter-Notizen'));
+    if(cur.note){ var sn=el('div','note'); sn.appendChild(el('h3',null,'Szenario')); sn.appendChild(el('p',null,cur.note)); sn.appendChild(speakButton(cur.note)); p.appendChild(sn); }
+    var order=ps.revealed.slice().reverse();
+    order.forEach(function(id,i){ var a=areaById(id); if(a) p.appendChild(block(a, i===0&&!a.start?'new':'', true)); });
+    var hidden=cur.areas.filter(function(a){ return ps.revealed.indexOf(a.id)<0 && areaCellCount(a.id); });
+    if(hidden.length){
+      var det=el('details','hidden-notes'); det.appendChild(el('summary',null,'Noch verdeckte Gebiete ('+hidden.length+')'));
+      hidden.forEach(function(a){ det.appendChild(block(a,'',false)); });
+      p.appendChild(det);
+    }
+  }
+  $('notesToggle').addEventListener('click',function(){ notesOpen=!notesOpen; if(!notesOpen && synth){ synth.cancel(); speakingText=null; } renderNotes(); layout(); });
+  $('showPhoto').addEventListener('change',draw);
+  twoTap($('resetPlay'),'Alles verdecken?',function(){ resetPlay(); anim={}; renderPlay(); draw(); toast('Neu gestartet. Nur der Startbereich ist sichtbar.'); });
+  $('playBack').addEventListener('click',function(){ stopAmbient(); var b=$('ambToggle'); b.textContent='Atmosphäre an'; b.setAttribute('aria-pressed','false'); if(synth) synth.cancel(); goList(); });
+  $('fullscreen').addEventListener('click',function(){
+    try{ if(document.fullscreenElement){ document.exitFullscreen(); return; }
+      var p=document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+      if(p && p.catch) p.catch(function(){ toast('Vollbild wird hier nicht unterstützt.'); }); else if(!p) toast('Vollbild wird hier nicht unterstützt.');
+    }catch(e){ toast('Vollbild wird hier nicht unterstützt.'); }
+  });
+  document.addEventListener('fullscreenchange',function(){ setTimeout(layout,80); });
+  var wake=null;
+  function requestWake(){ try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(function(w){ wake=w; }).catch(function(){}); }catch(e){} }
+  function releaseWake(){ try{ if(wake){ wake.release(); wake=null; } }catch(e){} }
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible' && mode==='play') requestWake(); });
+
+  // ---------- import / export ----------
+  function blobToDataURL(b){ return new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){ res(r.result); }; r.onerror=rej; r.readAsDataURL(b); }); }
+  function dataURLToBlob(u){ var parts=u.split(','), mime=(parts[0].match(/data:([^;]+)/)||[])[1]||'image/jpeg', bin=atob(parts[1]), arr=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i); return new Blob([arr],{type:mime}); }
+  $('exportScen').addEventListener('click',function(){
+    if(!cur) return;
+    var data={format:'doom-kartenaufdecker', version:2, name:cur.name, cols:cur.cols, rows:cur.rows,
+      note:cur.note||'', areas:cur.areas.map(function(a){ return {id:a.id,name:a.name,start:!!a.start,note:a.note||''}; }), cells:cur.cells, tokens:cur.tokens, doors:cur.doors, bgHint:cur.bgHint||null};
+    var blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+    var fname=((cur.name||'szenario').replace(/[^\wäöüÄÖÜß -]+/g,'').trim().replace(/\s+/g,'-')||'szenario')+'.json';
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500);
+    toast('Download von „'+fname+'“ gestartet (ohne Foto). Klappt nur, wenn die App als Datei oder von deiner Homepage läuft.');
+  });
+  $('fileImport').addEventListener('change',function(e){
+    var f=e.target.files&&e.target.files[0]; e.target.value=''; if(!f) return;
+    f.text().then(function(txt){
+      var d=JSON.parse(txt); if(d.format!=='doom-kartenaufdecker' || d.version!==2) throw new Error('format');
+      var okNum=function(v){ return typeof v==='number' && isFinite(v); };
+      var areas=(d.areas||[]).map(function(a){ return {id:String(a.id||uid()), name:String(a.name||''), start:!!a.start, note:String(a.note||'').slice(0,4000)}; });
+      var ids={}; areas.forEach(function(a){ ids[a.id]=1; });
+      var cells={}; Object.keys(d.cells||{}).forEach(function(k){ if(/^\d+,\d+$/.test(k) && ids[d.cells[k]]) cells[k]=d.cells[k]; });
+      var tokens=(d.tokens||[]).filter(function(t){ return TYPE[t.t] && okNum(t.c) && okNum(t.r); }).map(function(t){
+        return {id:uid(), t:t.t, c:t.c|0, r:t.r|0, w:Math.max(1,Math.min(6,t.w|0||1)), h:Math.max(1,Math.min(6,t.h|0||1)), col:COL[t.col]?t.col:null, label:String(t.label||'').slice(0,6), note:String(t.note||'').slice(0,4000)}; });
+      var doors=(d.doors||[]).filter(function(x){ return okNum(x.c)&&okNum(x.r)&&(x.side==='w'||x.side==='n'); }).map(function(x){ return {c:x.c|0,r:x.r|0,side:x.side,kind:x.kind==='sec'?'sec':'door',col:COL[x.col]?x.col:null}; });
+      var s={id:uid(), name:String(d.name||'Importiert'), note:String(d.note||'').slice(0,4000), cols:Math.max(4,Math.min(80,d.cols|0||30)), rows:Math.max(4,Math.min(80,d.rows|0||24)),
+        areas:areas, cells:cells, tokens:tokens, doors:doors, bg:null, bgHint:d.bgHint&&okNum(d.bgHint.x)?{x:d.bgHint.x,y:d.bgHint.y,cw:d.bgHint.cw}:null, play:null, updated:Date.now()};
+      scenarios.push(s); return dbPut(s).then(function(){ renderList(); toast('„'+s.name+'“ importiert.'); });
+    }).catch(function(){ toast('Diese Datei ist kein Szenario des Kartenaufdeckers.'); });
+  });
+
+  // ---------- boot ----------
+  dbAll().then(function(list){
+    scenarios=list||[];
+    // older copies of the example get the current texts
+    scenarios.forEach(function(s){
+      if(!s.example || (s.exampleRev||0)>=EXAMPLE_REV) return;
+      applyExampleTexts(s); dbPut(s);
+    });
+    var seeded=false; try{ seeded=localStorage.getItem('doomKartenSeeded')==='1'; }catch(e){}
+    if(!scenarios.length && !seeded){ var s=buildExample(); scenarios.push(s); dbPut(s); SCEN.forEach(addCampaign); try{ localStorage.setItem('doomKartenSeeded','1'); }catch(e){} }
+    var seeded2=false; try{ seeded2=localStorage.getItem('doomKampagneSeeded')==='1'; }catch(e){}
+    if(!seeded2){ SCEN.forEach(function(def){ if(!scenarios.some(function(x){return x.campaign===def.key;})) addCampaign(def); }); try{ localStorage.setItem('doomKampagneSeeded','1'); }catch(e){} }
+    // newer drawings of campaign scenarios replace older ones (keeps the user's photo template)
+    scenarios.forEach(function(x,i){ var def=SCEN.filter(function(d){return d.key===x.campaign;})[0];
+      if(def && (x.campaignRev||0)<def.rev){ var n=buildCampaign(def); n.id=x.id; n.bg=x.bg; scenarios[i]=n; dbPut(n); } });
+    setView('list'); renderList();
+  });
+})();
+</script>
+</body>
+</html>
