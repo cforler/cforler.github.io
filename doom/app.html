@@ -126,6 +126,12 @@ footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid va
 .die .rr{position:absolute;left:4px;top:3px;font-family:var(--display);font-size:11px;font-weight:700;opacity:.9}
 .hint{font-size:13px;color:var(--muted);margin:0}
 .rerolled{font-size:13px;color:var(--accent);font-weight:600}
+.chip{cursor:help;font-family:inherit}
+button.chip{min-height:30px}
+.chip:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.chip[aria-expanded="true"]{border-color:var(--accent)}
+.tip{position:fixed;z-index:30;max-width:280px;background:var(--panel-2);border:1px solid var(--accent);border-radius:8px;padding:8px 10px;font-size:13px;line-height:1.4;color:var(--fg);box-shadow:0 6px 18px rgba(0,0,0,.45);pointer-events:none}
+.tip b{display:block;font-family:var(--display);font-size:14px;letter-spacing:.03em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -197,6 +203,17 @@ footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid va
       rerolled:'Neu geworfen: {n} Würfel. Ein weiterer Neuwurf ist für diesen Angriff nicht erlaubt.', rerollBlocked:'Kein Neuwurf: Die Waffe wurde zerstört.',
       histBroken:'zerstört', histIntact:'intakt', histRe:'neu', diceLabel:'Würfel', ammoMark:'Munition', pickLabel:'zum Neuwurf ausgewählt',
       ammoTypes:{shells:'Patronen/Kugeln', rockets:'Raketen/Granaten', cells:'Energiezellen'},
+      perkInfo:{melee:'Kann nur Figuren auf angrenzenden Feldern angreifen.', inv:'Hat jeder Marine immer dabei, muss nicht gefunden werden.',
+        sweep:'Voller Schaden gegen alle gegnerischen Figuren, die an den Angreifer angrenzen. Weichen mehrere aus, gibt es nur einen Neuwurf (der erste ausweichende Spieler links vom Angreifer).',
+        deadly:'Nach dem Wurf +1 Schaden je Todbringend-Symbol.',
+        blow:'Nach dem ersten Angriff (egal ob Treffer) darf auf ein angrenzendes Feld weiter angegriffen werden, dafür 1 grünen oder blauen Würfel entfernen. Beliebig oft, solange jedes Mal ein Würfel wegfällt.',
+        acc:'Nach dem Wurf +1 Reichweite je Zielgenauigkeit-Symbol.',
+        seek:'Braucht keine Sichtlinie zum Ziel, höchstens 8 Felder. Geht nicht durch geschlossene Türen oder Wände, aber durch blockierende Hindernisse.',
+        blast:'Trifft alle Figuren bis x Felder um das Zielfeld (x = Anzahl Symbole) mit vollem Schaden. Nicht durch Wände, geschlossene Türen oder blockierende Hindernisse. Bei Fehlschuss kann der Schuss abweichen.',
+        knock:'Nach mindestens 1 Schaden darf der Angreifer jedes getroffene Ziel bis zu 3 freie Felder verschieben, nicht durch geschlossene Türen oder Wände.',
+        aimed:'Nach dem Wurf dürfen einige oder alle Würfel neu geworfen werden, das zweite Ergebnis gilt. Zielen und Ausweichen heben sich auf.',
+        scuttle:'Kann sich für 1 Bewegungspunkt von Schacht zu Schacht bewegen, aber nicht in einen Schacht mit Marine oder einen noch nicht aufgedeckten.',
+        watch:'Darf sofort einen freien Angriff gegen jede gegnerische Figur machen, die in ein angrenzendes Feld zieht, bevor diese etwas anderes tut. Unbegrenzt oft.'},
       perks:{melee:'Nur Nahkampf', inv:'Immer im Inventar', sweep:'Abräumen', deadly:'Todbringend', blow:'Durchschlagskraft', acc:'Zielgenauigkeit', seek:'Aufspüren', blast:'Explodieren', knock:'Zurückstoßen', aimed:'Zielen', scuttle:'Anschleichen', watch:'Wachsamkeit'},
       wn:{fist:'Faust', saw:'Kettensäge', pistol:'Pistole', shotgun:'Schrotflinte', mg:'Maschinengewehr', chaingun:'Chaingun', grenade:'Granate', rocket:'Raketenwerfer', plasma:'Plasmagewehr', bfg:'BFG'}},
     en:{eyebrow:'UAC · Armory', title:'Doom Dice Cup', tabMarine:'Marines', tabGM:'Invader', tabsLabel:'View',
@@ -213,6 +230,17 @@ footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid va
       rerolled:'Re-rolled: {n} dice. No further re-roll is allowed for this attack.', rerollBlocked:'No re-roll: the weapon was destroyed.',
       histBroken:'destroyed', histIntact:'intact', histRe:'re-roll', diceLabel:'Die', ammoMark:'ammo', pickLabel:'selected for re-roll',
       ammoTypes:{shells:'Shells/Bullets', rockets:'Rockets/Grenades', cells:'Energy cells'},
+      perkInfo:{melee:'Can only attack figures on adjacent squares.', inv:'Every marine always has it; it does not have to be found.',
+        sweep:'Full damage to all enemy figures adjacent to the attacker. If several dodge, only one re-roll is made (the first dodging player to the attacker’s left).',
+        deadly:'After rolling, +1 damage per Deadly icon.',
+        blow:'After the first attack (hit or not), the attacker may attack an adjacent square too by removing 1 green or 1 blue die. Can continue as long as a die is dropped each time.',
+        acc:'After rolling, +1 range per Accuracy icon.',
+        seek:'Needs no line of sight to the target, maximum 8 squares. Cannot pass closed doors or walls, but can pass blocking obstacles.',
+        blast:'Hits all figures within x squares of the target square (x = number of icons) for full damage. Not through walls, closed doors or blocking obstacles. A missed shot may scatter.',
+        knock:'After dealing at least 1 damage, the attacker may move each affected target up to 3 empty squares, not through closed doors or walls.',
+        aimed:'After rolling, some or all dice may be re-rolled; the second result must be accepted. Aimed and Dodge cancel each other out.',
+        scuttle:'Can move between ducts for 1 movement point, but not into a duct occupied by a marine or one not yet revealed.',
+        watch:'May immediately make one free attack against any enemy figure that moves into an adjacent square, before it can do anything else. No limit.'},
       perks:{melee:'Melee only', inv:'Always in inventory', sweep:'Sweep', deadly:'Deadly', blow:'Blow-through', acc:'Accuracy', seek:'Seeking', blast:'Blast', knock:'Knockback', aimed:'Aimed', scuttle:'Scuttle', watch:'Watchful'},
       wn:{fist:'Fist', saw:'Chainsaw', pistol:'Pistol', shotgun:'Shotgun', mg:'Machine Gun', chaingun:'Chaingun', grenade:'Grenade', rocket:'Rocket Launcher', plasma:'Plasma Gun', bfg:'BFG'}}
   };
@@ -320,13 +348,41 @@ footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid va
     vibrate(cur.miss?[40,40,40]:30);
   }
 
+  // perk chips with explanation (hover, focus or tap)
+  var tipEl=null, tipFor=null;
+  function hideTip(){ if(tipEl) tipEl.hidden=true; if(tipFor){ tipFor.setAttribute('aria-expanded','false'); tipFor=null; } }
+  function showTip(btn,p){
+    if(!tipEl){ tipEl=el('div','tip'); tipEl.id='perkTip'; tipEl.setAttribute('role','tooltip'); document.body.appendChild(tipEl); }
+    if(tipFor && tipFor!==btn) tipFor.setAttribute('aria-expanded','false');
+    tipEl.textContent=''; tipEl.appendChild(el('b',null,perkText(p))); tipEl.appendChild(document.createTextNode(T[lang].perkInfo[p[0]]||''));
+    tipEl.hidden=false; tipFor=btn; btn.setAttribute('aria-expanded','true');
+    var r=btn.getBoundingClientRect(), w=tipEl.offsetWidth, h=tipEl.offsetHeight;
+    var x=Math.min(Math.max(8,r.left), window.innerWidth-w-8), y=r.bottom+8;
+    if(y+h>window.innerHeight-8) y=r.top-h-8;
+    tipEl.style.left=x+'px'; tipEl.style.top=Math.max(8,y)+'px';
+  }
+  function perkChip(p){
+    var b=el('button','chip'+(p[0]==='melee'?' warn':''),perkText(p)); b.type='button';
+    b.setAttribute('aria-expanded','false'); b.setAttribute('aria-describedby','perkTip');
+    b.addEventListener('pointerenter',function(e){ if(e.pointerType==='mouse'){ showTip(b,p); shownAt=Date.now(); } });
+    b.addEventListener('pointerleave',function(e){ if(e.pointerType==='mouse') hideTip(); });
+    var shownAt=0;
+    b.addEventListener('focus',function(){ showTip(b,p); shownAt=Date.now(); });
+    b.addEventListener('blur',function(){ if(tipFor===b) hideTip(); });
+    b.addEventListener('click',function(e){ e.stopPropagation(); if(tipFor===b && Date.now()-shownAt>400) hideTip(); else showTip(b,p); });
+    return b;
+  }
+  document.addEventListener('click',hideTip);
+  window.addEventListener('scroll',function(){ if(tipFor && tipEl && !tipEl.hidden){ var r=tipFor.getBoundingClientRect(); if(r.bottom<0||r.top>window.innerHeight) hideTip(); else { var h=tipEl.offsetHeight, y=r.bottom+8; if(y+h>window.innerHeight-8) y=r.top-h-8; tipEl.style.top=Math.max(8,y)+'px'; } } },{passive:true});
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') hideTip(); });
+
   function bonusStat(k, total, raw, plus, perkKey){
     var s=stat(k, String(total));
     if(plus) s.appendChild(el('span','sub',t('diceRaw')+' '+raw+' +'+plus+' '+T[lang].perks[perkKey]));
     return s;
   }
   function render(){
-    resultBox.textContent='';
+    hideTip(); resultBox.textContent='';
     if(!cur){ resultBox.appendChild(el('p','empty',t(current==='sl'?'emptyGM':'emptyMarine'))); return; }
     var w=cur.weapon, c=cur;
     var head=el('div','result-head');
@@ -340,7 +396,7 @@ footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid va
     }
     if(w.perks && w.perks.length){
       var ch=el('div','chips');
-      w.perks.forEach(function(p){ ch.appendChild(el('span','chip'+(p[0]==='melee'?' warn':''),perkText(p))); });
+      w.perks.forEach(function(p){ ch.appendChild(perkChip(p)); });
       resultBox.appendChild(ch);
     }
     var canPick=!c.rerolled && !(c.check&&c.check.broken);
