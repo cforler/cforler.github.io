@@ -1,396 +1,496 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-    <title>Doom Würfelbecher</title>
-    <meta name="claude:viewport-fit-sides" content="cover">
-    <style>
-      /* Layout: one narrow column, result panel on top, weapon grid below. Deliberately single dark theme (UAC terminal). */
-      :root{
-          --bg:#13171b; --panel:#1c2228; --panel-2:#242b33; --line:#36404a;
-          --fg:#e8e4dc; --muted:#a3aab2; --accent:#f2a93b; --accent-ink:#1a1406;
-          --bad:#ff6b5b; --good:#7fd18b;
-          --d-red:#c23b2e; --d-yellow:#e9b729; --d-blue:#2f6db3; --d-green:#3c8c4c;
-          --display:'Chakra Petch', 'Arial Narrow', system-ui, sans-serif;
-          --body:'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
-          color-scheme: dark;
-      }
-      *{box-sizing:border-box}
-      html,body{background:var(--bg)}
-      body{color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4;
-           padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:14px 32px;
-           -webkit-tap-highlight-color:transparent}
-      .wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
-      header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--line);padding-bottom:10px}
-      .eyebrow{font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
-      h1{margin:0;font-family:var(--display);font-weight:700;font-size:28px;line-height:1;letter-spacing:.02em;text-transform:uppercase;text-wrap:balance}
-      .switch{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted);cursor:pointer;min-height:44px;user-select:none}
-      .switch input{appearance:none;-webkit-appearance:none;width:44px;height:26px;border-radius:13px;background:var(--panel-2);border:1px solid var(--line);position:relative;cursor:pointer;flex:none;margin:0}
-      .switch input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform .15s}
-      .switch input:checked{background:var(--accent);border-color:var(--accent)}
-      .switch input:checked::after{transform:translateX(18px);background:var(--accent-ink)}
-      .switch input:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#13171b">
+<style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Doom Würfelbecher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: one narrow column, result panel on top, weapon grid below. Deliberately single dark theme (UAC terminal). */
+:root{
+  --bg:#13171b; --panel:#1c2228; --panel-2:#242b33; --line:#36404a;
+  --fg:#e8e4dc; --muted:#a3aab2; --accent:#f2a93b; --accent-ink:#1a1406;
+  --bad:#ff6b5b; --good:#7fd18b;
+  --d-red:#c23b2e; --d-yellow:#e9b729; --d-blue:#2f6db3; --d-green:#3c8c4c;
+  --display:'Chakra Petch', 'Arial Narrow', system-ui, sans-serif;
+  --body:'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:14px 32px;
+  -webkit-tap-highlight-color:transparent}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--line);padding-bottom:10px}
+.eyebrow{font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+h1{margin:0;font-family:var(--display);font-weight:700;font-size:28px;line-height:1;letter-spacing:.02em;text-transform:uppercase;text-wrap:balance}
+.switch{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted);cursor:pointer;min-height:44px;user-select:none}
+.switch input{appearance:none;-webkit-appearance:none;width:44px;height:26px;border-radius:13px;background:var(--panel-2);border:1px solid var(--line);position:relative;cursor:pointer;flex:none;margin:0}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform .15s}
+.switch input:checked{background:var(--accent);border-color:var(--accent)}
+.switch input:checked::after{transform:translateX(18px);background:var(--accent-ink)}
+.switch input:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 
-      .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px}
-      .tab{min-height:44px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
-      .tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
-      .tab:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
-      /* result */
-      .result{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px;min-height:212px}
-      .result-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-      .weapon-name{font-family:var(--display);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.04em}
-      .weapon-meta{font-size:13px;color:var(--muted)}
-      .dice{display:flex;flex-wrap:wrap;gap:8px}
-      .die{width:64px;height:64px;border-radius:10px;display:grid;grid-template-rows:1fr auto;align-items:center;justify-items:center;padding:6px 4px 5px;color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);position:relative}
-      .die.red{background:var(--d-red)} .die.blue{background:var(--d-blue)} .die.green{background:var(--d-green)}
-      .die.yellow{background:var(--d-yellow);color:#231a02}
-      .die .dmg{font-family:var(--display);font-weight:700;font-size:28px;line-height:1}
-      .die .dmg small{font-size:12px;font-weight:600;margin-left:1px;opacity:.85}
-      .die .rng{font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.04em;opacity:.95}
-      .die .ammo{position:absolute;top:4px;right:4px;width:16px;height:16px}
-      .die .x{font-family:var(--display);font-weight:700;font-size:34px;line-height:1}
-      .die.rolling{animation:shake .32s ease-in-out}
-      @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg) scale(.94)}60%{transform:rotate(7deg) scale(1.04)}}
-      @media (prefers-reduced-motion: reduce){.die.rolling{animation:none}}
-      .totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-      .stat{background:var(--panel-2);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
-      .stat .k{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-      .stat .v{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.05;font-variant-numeric:tabular-nums}
-      .stat .v.small{font-size:17px;line-height:1.5}
-      .stat .sub{font-size:12px;color:var(--accent);font-variant-numeric:tabular-nums}
-      .verdict{font-family:var(--display);font-weight:700;font-size:22px;text-transform:uppercase;letter-spacing:.05em}
-      .verdict.miss{color:var(--bad)} .verdict.hit{color:var(--good)}
-      .muted-totals .v{opacity:.4;text-decoration:line-through}
-      .check{border-top:1px dashed var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px}
-      .check .lbl{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-      .check-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-      .check-row .die{width:48px;height:48px}
-      .check-row .die .dmg{font-size:20px} .check-row .die .x{font-size:26px}
-      .broken{font-family:var(--display);font-weight:700;font-size:17px;color:var(--bad);text-transform:uppercase}
-      .intact{font-family:var(--display);font-weight:700;font-size:17px;color:var(--good);text-transform:uppercase}
-      .note{font-size:13px;color:var(--muted)}
-      .empty{color:var(--muted);font-size:15px;margin:auto 0;text-align:left}
-      .actions{display:flex;gap:8px;flex-wrap:wrap}
-      .btn{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.06em;text-transform:uppercase;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);cursor:pointer}
-      .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-      .btn:disabled{opacity:.45;cursor:default}
-      .btn:focus-visible,.weapon:focus-visible,.step button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px}
+.tab{min-height:44px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.tab:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+/* result */
+.result{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px;min-height:212px}
+.result-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.weapon-name{font-family:var(--display);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.04em}
+.weapon-meta{font-size:13px;color:var(--muted)}
+.dice{display:flex;flex-wrap:wrap;gap:8px}
+.die{width:64px;height:64px;border-radius:10px;display:grid;grid-template-rows:1fr auto;align-items:center;justify-items:center;padding:6px 4px 5px;color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);position:relative}
+.die.red{background:var(--d-red)} .die.blue{background:var(--d-blue)} .die.green{background:var(--d-green)}
+.die.yellow{background:var(--d-yellow);color:#231a02}
+.die .dmg{font-family:var(--display);font-weight:700;font-size:28px;line-height:1}
+.die .dmg small{font-size:12px;font-weight:600;margin-left:1px;opacity:.85}
+.die .rng{font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.04em;opacity:.95}
+.die .ammo{position:absolute;top:4px;right:4px;width:16px;height:16px}
+.die .x{font-family:var(--display);font-weight:700;font-size:34px;line-height:1}
+.die.rolling{animation:shake .32s ease-in-out}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg) scale(.94)}60%{transform:rotate(7deg) scale(1.04)}}
+@media (prefers-reduced-motion: reduce){.die.rolling{animation:none}}
+.totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:var(--panel-2);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat .k{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.05;font-variant-numeric:tabular-nums}
+.stat .v.small{font-size:17px;line-height:1.5}
+.stat .sub{font-size:12px;color:var(--accent);font-variant-numeric:tabular-nums}
+.verdict{font-family:var(--display);font-weight:700;font-size:22px;text-transform:uppercase;letter-spacing:.05em}
+.verdict.miss{color:var(--bad)} .verdict.hit{color:var(--good)}
+.muted-totals .v{opacity:.4;text-decoration:line-through}
+.check{border-top:1px dashed var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.check .lbl{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.check-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.check-row .die{width:48px;height:48px}
+.check-row .die .dmg{font-size:20px} .check-row .die .x{font-size:26px}
+.broken{font-family:var(--display);font-weight:700;font-size:17px;color:var(--bad);text-transform:uppercase}
+.intact{font-family:var(--display);font-weight:700;font-size:17px;color:var(--good);text-transform:uppercase}
+.note{font-size:13px;color:var(--muted)}
+.empty{color:var(--muted);font-size:15px;margin:auto 0;text-align:left}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.06em;text-transform:uppercase;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.weapon:focus-visible,.step button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 
-      /* weapons */
-      h2{margin:0;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-      .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-      @media (min-width:560px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-      .weapon{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:76px;text-align:left;color:var(--fg);cursor:pointer;display:flex;flex-direction:column;gap:7px;font:inherit;touch-action:manipulation}
-      .weapon:active{transform:scale(.98)}
-      .weapon.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
-      .weapon .n{font-family:var(--display);font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.03em;line-height:1.1}
-      .pips{display:flex;gap:4px;flex-wrap:wrap}
-      .pip{width:14px;height:14px;border-radius:3px}
-      .pip.red{background:var(--d-red)} .pip.yellow{background:var(--d-yellow)} .pip.blue{background:var(--d-blue)} .pip.green{background:var(--d-green)}
-      .weapon .a{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-      .monsters .weapon{background:var(--panel-2)}
-      .totals.two{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .mstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-      .mstats .stat{background:transparent;border:1px solid var(--line)}
-      .mstats .stat .v{font-size:20px}
-      .chips{display:flex;flex-wrap:wrap;gap:6px}
-      .chip{font-size:13px;font-weight:600;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--fg);background:var(--panel-2)}
-      .chip.warn{border-color:var(--accent);color:var(--accent)}
+/* weapons */
+h2{margin:0;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:560px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.weapon{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:76px;text-align:left;color:var(--fg);cursor:pointer;display:flex;flex-direction:column;gap:7px;font:inherit;touch-action:manipulation}
+.weapon:active{transform:scale(.98)}
+.weapon.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.weapon .n{font-family:var(--display);font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.03em;line-height:1.1}
+.pips{display:flex;gap:4px;flex-wrap:wrap}
+.pip{width:14px;height:14px;border-radius:3px}
+.pip.red{background:var(--d-red)} .pip.yellow{background:var(--d-yellow)} .pip.blue{background:var(--d-blue)} .pip.green{background:var(--d-green)}
+.weapon .a{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.monsters .weapon{background:var(--panel-2)}
+.totals.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.mstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mstats .stat{background:transparent;border:1px solid var(--line)}
+.mstats .stat .v{font-size:20px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:13px;font-weight:600;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--fg);background:var(--panel-2)}
+.chip.warn{border-color:var(--accent);color:var(--accent)}
 
-      /* free roll */
-      .free{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:12px}
-      .steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-      @media (min-width:560px){.steps{grid-template-columns:repeat(4,minmax(0,1fr))}}
-      .step{display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--panel-2);border-radius:8px;padding:4px}
-      .step button{width:44px;height:44px;border-radius:6px;border:none;background:var(--bg);color:var(--fg);font-family:var(--display);font-size:22px;cursor:pointer}
-      .step .c{display:flex;align-items:center;gap:6px;font-family:var(--display);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
-      .step .c .pip{width:18px;height:18px}
+/* free roll */
+.free{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:12px}
+.steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:560px){.steps{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.step{display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--panel-2);border-radius:8px;padding:4px}
+.step button{width:44px;height:44px;border-radius:6px;border:none;background:var(--bg);color:var(--fg);font-family:var(--display);font-size:22px;cursor:pointer}
+.step .c{display:flex;align-items:center;gap:6px;font-family:var(--display);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
+.step .c .pip{width:18px;height:18px}
 
-      /* history */
-      .hist{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
-      .hist li{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:8px 10px;background:var(--panel);border-radius:8px;border:1px solid var(--line)}
-      .hist li .w{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-      .hist li .r{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-      .hist li .r.bad{color:var(--bad)}
-      footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:10px}
-    </style>
-
-    <div class="wrap">
-      <header>
-        <div>
-          <div class="eyebrow">UAC · Waffenkammer</div>
-          <h1>Doom Würfelbecher</h1>
-        </div>
-      </header>
-
-      <div class="tabs" role="tablist" aria-label="Ansicht">
-        <button class="tab" role="tab" type="button" id="tab-marine" aria-controls="view-marine" data-view="marine">Marines</button>
-        <button class="tab" role="tab" type="button" id="tab-sl" aria-controls="view-sl" data-view="sl">Spielleiter</button>
-      </div>
-
-      <label class="switch" for="campaign" id="campaignWrap"><input type="checkbox" id="campaign"> Kampagne: Waffen können zerstört werden</label>
-
-      <section class="result" id="result" aria-live="polite">
-        <p class="empty">Tippe unten auf eine Waffe oder einen Eindringling. Es wird sofort mit den passenden Würfeln geworfen.</p>
-      </section>
-
-      <section style="display:flex;flex-direction:column;gap:8px" id="view-marine" role="tabpanel" aria-labelledby="tab-marine">
-        <h2>Waffen</h2>
-        <div class="grid" id="weapons"></div>
-      </section>
-
-      <section style="display:flex;flex-direction:column;gap:8px" id="view-sl" role="tabpanel" aria-labelledby="tab-sl" hidden>
-        <h2>Eindringlinge</h2>
-        <div class="grid monsters" id="monsters"></div>
-      </section>
-
-      <section class="free">
-        <h2>Freier Wurf</h2>
-        <div class="steps" id="steps"></div>
-        <div class="actions">
-          <button class="btn primary" id="freeRoll" type="button">Würfeln</button>
-          <button class="btn" id="freeReset" type="button">Zurücksetzen</button>
-        </div>
-      </section>
-
-      <section style="display:flex;flex-direction:column;gap:8px">
-        <h2>Letzte Würfe</h2>
-        <ul class="hist" id="hist"><li><span class="w">Noch nichts gewürfelt</span><span class="r"></span></li></ul>
-      </section>
-
-      <footer>Würfelseiten nach einer Aufstellung im FFG-Forum, Waffen- und Eindringlingswerte nach den Referenzblättern des Grundspiels. Deadly wird auf den Schaden, Accuracy auf die Reichweite addiert (je +1, bei ×2 +2 usw.). Boni von Karten und andere Fähigkeiten sind nicht eingerechnet. Ein Fehlschuss-Symbol lässt den ganzen Angriff verfehlen. Ein Munitionssymbol kostet einen Marker des passenden Typs.</footer>
+/* history */
+.hist{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.hist li{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:8px 10px;background:var(--panel);border-radius:8px;border:1px solid var(--line)}
+.hist li .w{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist li .r{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hist li .r.bad{color:var(--bad)}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:10px}
+.lang{min-height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.08em;cursor:pointer}
+.lang:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.die.pickable{cursor:pointer;border:none;font:inherit;outline-offset:3px}
+.die.pickable:focus-visible{outline:2px solid var(--fg)}
+.die.picked{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--accent);transform:translateY(-3px)}
+.die .rr{position:absolute;left:4px;top:3px;font-family:var(--display);font-size:11px;font-weight:700;opacity:.9}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.rerolled{font-size:13px;color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow" data-t="eyebrow"></div>
+      <h1 data-t="title"></h1>
     </div>
+    <button class="lang" type="button" id="langBtn"></button>
+  </header>
 
-    <script>
-      (function(){
-          var FACES = {
-              red:    [{d:4,r:0,a:1},{d:3,r:1,a:1},{d:3,r:1},{d:2,r:2},{d:1,r:3},{m:1}],
-              yellow: [{d:0,r:4,a:1},{d:1,r:3,a:1},{d:1,r:3},{d:2,r:2},{d:3,r:1},{m:1}],
-              blue:   [{d:1,r:1},{d:2,r:1},{d:2,r:0},{d:2,r:0},{d:3,r:0},{d:3,r:0}],
-              green:  [{d:1,r:1},{d:1,r:2},{d:0,r:2},{d:0,r:2},{d:0,r:3},{d:0,r:3}]
-          };
-          var NAMES = {red:'Rot',yellow:'Gelb',blue:'Blau',green:'Grün'};
-          var WEAPONS = [
-              {id:'fist', n:'Faust', dice:['red'], ammo:null, destr:false, perks:['Nur Nahkampf','Immer im Inventar']},
-              {id:'saw', n:'Kettensäge', dice:['red'], ammo:null, destr:true, perks:['Nur Nahkampf','Sweep','Deadly']},
-              {id:'pistol', n:'Pistole', dice:['yellow','green'], ammo:'Patronen/Kugeln', destr:false, perks:['Immer im Inventar']},
-              {id:'shotgun', n:'Schrotflinte', dice:['red','blue'], ammo:'Patronen/Kugeln', destr:true, perks:['Deadly','Blow-through']},
-              {id:'mg', n:'Maschinengewehr', dice:['yellow','blue','green'], ammo:'Patronen/Kugeln', destr:true, perks:['Accuracy ×2']},
-              {id:'chaingun', n:'Chaingun', dice:['red','green','green'], ammo:'Patronen/Kugeln', destr:true, perks:['Accuracy','Blow-through']},
-              {id:'grenade', n:'Granate', dice:['yellow','blue','blue'], ammo:'Raketen/Granaten', destr:false, perks:['Immer im Inventar','Seeking','Blast']},
-              {id:'rocket', n:'Raketenwerfer', dice:['yellow','blue','green','green'], ammo:'Raketen/Granaten', destr:true, perks:['Blast','Knockback']},
-              {id:'plasma', n:'Plasmagewehr', dice:['red','yellow','blue','green'], ammo:'Energiezellen', destr:true, perks:['Accuracy']},
-              {id:'bfg', n:'BFG', dice:['red','yellow','blue','blue','green','green'], ammo:'Energiezellen', destr:true, perks:['Blast ×2','Deadly']}
-          ];
-          var MONSTERS = [
-              {id:'zombie', n:'Zombie', monster:true, dice:['red','blue'], mv:3, ar:2, wd:2, perks:['Nur Nahkampf']},
-              {id:'imp', n:'Imp', monster:true, dice:['yellow','blue'], mv:4, ar:2, wd:1, perks:['Accuracy']},
-              {id:'trite', n:'Trite', monster:true, dice:['red','green'], mv:5, ar:1, wd:1, perks:['Nur Nahkampf','Scuttle']},
-              {id:'demon', n:'Demon', monster:true, dice:['red','blue','blue'], mv:4, ar:3, wd:2, perks:['Nur Nahkampf','Watchful']},
-              {id:'mancubus', n:'Mancubus', monster:true, dice:['yellow','blue','green'], mv:2, ar:3, wd:3, perks:['Deadly','Blow-through']},
-              {id:'hellknight', n:'Hell Knight', monster:true, dice:['red','blue','blue'], mv:3, ar:4, wd:3, perks:['Nur Nahkampf','Sweep','Knockback']},
-              {id:'archvile', n:'Archvile', monster:true, dice:['yellow','blue','green','green'], mv:4, ar:3, wd:2, perks:['Accuracy ×4','Aimed']},
-              {id:'cyberdemon', n:'Cyberdemon', monster:true, dice:['red','yellow','blue','blue','green','green'], mv:4, ar:5, wd:4, perks:['Aimed']}
-          ];
+  <div class="tabs" role="tablist" id="tablist">
+    <button class="tab" role="tab" type="button" id="tab-marine" aria-controls="view-marine" data-view="marine" data-t="tabMarine"></button>
+    <button class="tab" role="tab" type="button" id="tab-sl" aria-controls="view-sl" data-view="sl" data-t="tabGM"></button>
+  </div>
 
-          function rnd6(){
-              try{ var a=new Uint32Array(1); var lim=4294967296-(4294967296%6), v;
-                   do{ crypto.getRandomValues(a); v=a[0]; }while(v>=lim); return v%6; }
-              catch(e){ return Math.floor(Math.random()*6); }
-          }
-          function roll(color){ var f=FACES[color][rnd6()]; return {color:color,d:f.d||0,r:f.r||0,a:!!f.a,m:!!f.m}; }
+  <label class="switch" for="campaign" id="campaignWrap"><input type="checkbox" id="campaign"> <span data-t="campaign"></span></label>
 
-          function el(tag, cls, text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
-          var SVGNS='http://www.w3.org/2000/svg';
-          function ammoIcon(){
-              var s=document.createElementNS(SVGNS,'svg'); s.setAttribute('viewBox','0 0 16 16'); s.setAttribute('class','ammo'); s.setAttribute('aria-hidden','true');
-              var p=document.createElementNS(SVGNS,'path'); p.setAttribute('d','M6 1.5c1.2 0 2 1.6 2 3.5v9H4V5c0-1.9.8-3.5 2-3.5zM11 4c.9 0 1.5 1.2 1.5 2.6V14h-3V6.6C9.5 5.2 10.1 4 11 4z');
-              p.setAttribute('fill','currentColor'); s.appendChild(p); return s;
-          }
-          function dieEl(f, animate){
-              var d=el('div','die '+f.color+(animate?' rolling':''));
-              var label=NAMES[f.color]+': ';
-              if(f.m){ d.appendChild(el('div','x','✕')); d.appendChild(el('div','rng','Fehlschuss')); label+='Fehlschuss'; }
-              else{
-                  var dm=el('div','dmg'); dm.textContent=String(f.d); var sm=el('small',null,'S'); dm.appendChild(sm); d.appendChild(dm);
-                  d.appendChild(el('div','rng','Rw '+f.r));
-                  label+=f.d+' Schaden, Reichweite '+f.r;
-                  if(f.a){ d.appendChild(ammoIcon()); label+=', Munition'; }
-              }
-              d.setAttribute('role','img'); d.setAttribute('aria-label',label);
-              return d;
-          }
-          function stat(k,v,small){ var s=el('div','stat'); s.appendChild(el('span','k',k)); s.appendChild(el('span','v'+(small?' small':''),v)); return s; }
-          function vibrate(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+  <section class="result" id="result" aria-live="polite"></section>
 
-          var campaign=document.getElementById('campaign');
-          try{ campaign.checked = localStorage.getItem('doomCampaign')==='1'; }catch(e){}
-          campaign.addEventListener('change',function(){ try{ localStorage.setItem('doomCampaign', campaign.checked?'1':'0'); }catch(e){} });
+  <section style="display:flex;flex-direction:column;gap:8px" id="view-marine" role="tabpanel" aria-labelledby="tab-marine">
+    <h2 data-t="weapons"></h2>
+    <div class="grid" id="weapons"></div>
+  </section>
 
-          var resultBox=document.getElementById('result');
-          var histBox=document.getElementById('hist');
-          var history=[];
-          var last=null;
+  <section style="display:flex;flex-direction:column;gap:8px" id="view-sl" role="tabpanel" aria-labelledby="tab-sl" hidden>
+    <h2 data-t="invaders"></h2>
+    <div class="grid monsters" id="monsters"></div>
+  </section>
 
-          function doRoll(weapon){
-              last=weapon;
-              var faces=weapon.dice.map(roll);
-              var miss=faces.some(function(f){return f.m;});
-              var dmg=0, rng=0, ammo=false;
-              faces.forEach(function(f){ dmg+=f.d; rng+=f.r; if(f.a) ammo=true; });
-              var bonus={dmgRaw:dmg, rngRaw:rng, dead:perkValue(weapon.perks,'Deadly'), acc:perkValue(weapon.perks,'Accuracy')};
-              dmg+=bonus.dead; rng+=bonus.acc;
-              var check=null;
-              if(miss && campaign.checked && weapon.destr){
-                  var missDice=faces.filter(function(f){return f.m;}).map(function(f){return roll(f.color);});
-                  check={faces:missDice, broken:missDice.some(function(f){return f.m;})};
-              }
-              render(weapon, faces, miss, dmg, rng, ammo, check, bonus);
-              addHistory(weapon.n, miss, dmg, rng, check);
-              vibrate(miss?[40,40,40]:30);
-              markSelected(weapon.id);
-          }
+  <section class="free">
+    <h2 data-t="freeRoll"></h2>
+    <div class="steps" id="steps"></div>
+    <div class="actions">
+      <button class="btn primary" id="freeRoll" type="button" data-t="roll"></button>
+      <button class="btn" id="freeReset" type="button" data-t="reset"></button>
+    </div>
+  </section>
 
-          function perkValue(perks, name){
-              var v=0;
-              (perks||[]).forEach(function(p){
-                  if(p.indexOf(name)===0){ var m=p.match(/×\s*(\d+)/); v+= m ? parseInt(m[1],10) : 1; }
-              });
-              return v;
-          }
-          function bonusStat(k, total, raw, plus, label){
-              var s=stat(k, String(total));
-              if(plus) s.appendChild(el('span','sub','Würfel '+raw+' +'+plus+' '+label));
-              return s;
-          }
-          function render(weapon, faces, miss, dmg, rng, ammo, check, bonus){
-              resultBox.textContent='';
-              var head=el('div','result-head');
-              head.appendChild(el('span','weapon-name',weapon.n));
-              head.appendChild(el('span','weapon-meta', weapon.monster ? 'Eindringling' : (weapon.ammo ? weapon.ammo : 'keine Munition nötig')));
-              resultBox.appendChild(head);
-              if(weapon.monster){
-                  var ms=el('div','mstats');
-                  ms.appendChild(stat('Bewegung', String(weapon.mv)));
-                  ms.appendChild(stat('Rüstung', String(weapon.ar)));
-                  ms.appendChild(stat('Wunden', String(weapon.wd)));
-                  resultBox.appendChild(ms);
-              }
-              if(weapon.perks && weapon.perks.length){
-                  var ch=el('div','chips');
-                  weapon.perks.forEach(function(p){ ch.appendChild(el('span','chip'+(p==='Nur Nahkampf'?' warn':''),p)); });
-                  resultBox.appendChild(ch);
-              }
+  <section style="display:flex;flex-direction:column;gap:8px">
+    <h2 data-t="history"></h2>
+    <ul class="hist" id="hist"></ul>
+  </section>
 
-              var dice=el('div','dice'); faces.forEach(function(f){ dice.appendChild(dieEl(f,true)); }); resultBox.appendChild(dice);
+  <footer data-t="footer"></footer>
+</div>
 
-              resultBox.appendChild(el('div','verdict '+(miss?'miss':'hit'), miss?'Fehlschuss':'Treffer'));
+<script>
+(function(){
+  var FACES = {
+    red:    [{d:4,r:0,a:1},{d:3,r:1,a:1},{d:3,r:1},{d:2,r:2},{d:1,r:3},{m:1}],
+    yellow: [{d:0,r:4,a:1},{d:1,r:3,a:1},{d:1,r:3},{d:2,r:2},{d:3,r:1},{m:1}],
+    blue:   [{d:1,r:1},{d:2,r:1},{d:2,r:0},{d:2,r:0},{d:3,r:0},{d:3,r:0}],
+    green:  [{d:1,r:1},{d:1,r:2},{d:0,r:2},{d:0,r:2},{d:0,r:3},{d:0,r:3}]
+  };
+  var T={
+    de:{eyebrow:'UAC · Waffenkammer', title:'Doom Würfelbecher', tabMarine:'Marines', tabGM:'Spielleiter', tabsLabel:'Ansicht',
+      campaign:'Kampagne: Waffen können zerstört werden', weapons:'Waffen', invaders:'Eindringlinge', freeRoll:'Freier Wurf', roll:'Würfeln', reset:'Zurücksetzen',
+      history:'Letzte Würfe', noHistory:'Noch nichts gewürfelt',
+      footer:'Würfelseiten nach einer Aufstellung im FFG-Forum, Waffen- und Eindringlingswerte nach den Referenzblättern des Grundspiels. Todbringend erhöht den Schaden, Zielgenauigkeit die Reichweite um +1 je Symbol auf der Karte (×2 = +2 usw.). Boni von Karten und andere Fähigkeiten sind nicht eingerechnet. Ein Fehlschuss-Symbol lässt den ganzen Angriff verfehlen. Ein Munitionssymbol kostet einen Marker des passenden Typs. Ein Angriff darf nur einmal neu geworfen werden.',
+      emptyMarine:'Tippe unten auf eine Waffe. Es wird sofort mit ihren Würfeln geworfen.', emptyGM:'Tippe unten auf einen Eindringling. Es wird sofort sein Angriff gewürfelt.',
+      freeEmpty:'Wähle mit + mindestens einen Würfel für den freien Wurf.', freeName:'Freier Wurf', freeAmmo:'je nach Waffe',
+      colors:{red:'Rot',yellow:'Gelb',blue:'Blau',green:'Grün'}, less:'weniger', more:'mehr',
+      miss:'Fehlschuss', hit:'Treffer', dmgShort:'S', rngShort:'Rw', dmg:'Schaden', rng:'Reichweite', ammo:'Munition', ammoUsed:'−1 Marker', ammoNone:'keine',
+      noAmmo:'keine Munition nötig', noAmmoShort:'keine Munition', invader:'Eindringling', move:'Bewegung', armor:'Rüstung', wounds:'Wunden', mvShort:'Bew', arShort:'Rü', wdShort:'Wu',
+      diceRaw:'Würfel', check:'Prüfwurf (Kampagne)', broken:'Waffe zerstört – sofort abwerfen', intact:'Waffe bleibt intakt', noCheck:'Kein Prüfwurf: {w} kann nicht zerstört werden.',
+      again:'Nochmal würfeln', pickHint:'Neu werfen: Tippe die Würfel an, die du neu werfen willst.', reroll:'Ausgewählte neu würfeln ({n})', rerollAll:'Alle wählen',
+      rerolled:'Neu geworfen: {n} Würfel. Ein weiterer Neuwurf ist für diesen Angriff nicht erlaubt.', rerollBlocked:'Kein Neuwurf: Die Waffe wurde zerstört.',
+      histBroken:'zerstört', histIntact:'intakt', histRe:'neu', diceLabel:'Würfel', ammoMark:'Munition', pickLabel:'zum Neuwurf ausgewählt',
+      ammoTypes:{shells:'Patronen/Kugeln', rockets:'Raketen/Granaten', cells:'Energiezellen'},
+      perks:{melee:'Nur Nahkampf', inv:'Immer im Inventar', sweep:'Abräumen', deadly:'Todbringend', blow:'Durchschlagskraft', acc:'Zielgenauigkeit', seek:'Aufspüren', blast:'Explodieren', knock:'Zurückstoßen', aimed:'Zielen', scuttle:'Anschleichen', watch:'Wachsamkeit'},
+      wn:{fist:'Faust', saw:'Kettensäge', pistol:'Pistole', shotgun:'Schrotflinte', mg:'Maschinengewehr', chaingun:'Chaingun', grenade:'Granate', rocket:'Raketenwerfer', plasma:'Plasmagewehr', bfg:'BFG'}},
+    en:{eyebrow:'UAC · Armory', title:'Doom Dice Cup', tabMarine:'Marines', tabGM:'Invader', tabsLabel:'View',
+      campaign:'Campaign: weapons can be destroyed', weapons:'Weapons', invaders:'Invaders', freeRoll:'Free roll', roll:'Roll', reset:'Reset',
+      history:'Recent rolls', noHistory:'Nothing rolled yet',
+      footer:'Die faces from a list in the FFG forum, weapon and invader stats from the base game reference sheets. Deadly adds to damage, Accuracy adds to range: +1 per icon on the card (×2 = +2 etc.). Card bonuses and other abilities are not included. A miss icon makes the whole attack miss. An ammo icon costs one token of the matching type. An attack may only be re-rolled once.',
+      emptyMarine:'Tap a weapon below to roll its dice right away.', emptyGM:'Tap an invader below to roll its attack right away.',
+      freeEmpty:'Use + to add at least one die to the free roll.', freeName:'Free roll', freeAmmo:'depends on weapon',
+      colors:{red:'Red',yellow:'Yellow',blue:'Blue',green:'Green'}, less:'fewer', more:'more',
+      miss:'Miss', hit:'Hit', dmgShort:'D', rngShort:'Rg', dmg:'Damage', rng:'Range', ammo:'Ammo', ammoUsed:'−1 token', ammoNone:'none',
+      noAmmo:'no ammo needed', noAmmoShort:'no ammo', invader:'Invader', move:'Movement', armor:'Armor', wounds:'Wounds', mvShort:'Mv', arShort:'Ar', wdShort:'Wd',
+      diceRaw:'Dice', check:'Check roll (campaign)', broken:'Weapon destroyed – discard it now', intact:'Weapon stays intact', noCheck:'No check roll: the {w} cannot be destroyed.',
+      again:'Roll again', pickHint:'Re-roll: tap the dice you want to roll again.', reroll:'Re-roll selected ({n})', rerollAll:'Select all',
+      rerolled:'Re-rolled: {n} dice. No further re-roll is allowed for this attack.', rerollBlocked:'No re-roll: the weapon was destroyed.',
+      histBroken:'destroyed', histIntact:'intact', histRe:'re-roll', diceLabel:'Die', ammoMark:'ammo', pickLabel:'selected for re-roll',
+      ammoTypes:{shells:'Shells/Bullets', rockets:'Rockets/Grenades', cells:'Energy cells'},
+      perks:{melee:'Melee only', inv:'Always in inventory', sweep:'Sweep', deadly:'Deadly', blow:'Blow-through', acc:'Accuracy', seek:'Seeking', blast:'Blast', knock:'Knockback', aimed:'Aimed', scuttle:'Scuttle', watch:'Watchful'},
+      wn:{fist:'Fist', saw:'Chainsaw', pistol:'Pistol', shotgun:'Shotgun', mg:'Machine Gun', chaingun:'Chaingun', grenade:'Grenade', rocket:'Rocket Launcher', plasma:'Plasma Gun', bfg:'BFG'}}
+  };
+  var lang='de';
+  try{ lang=localStorage.getItem('doomLang') || ((navigator.language||'de').slice(0,2)==='de'?'de':'en'); }catch(e){ lang=((navigator.language||'de').slice(0,2)==='de'?'de':'en'); }
+  if(!T[lang]) lang='de';
+  function t(k,vars){ var v=T[lang][k]; if(typeof v==='string' && vars) Object.keys(vars).forEach(function(x){ v=v.replace('{'+x+'}',vars[x]); }); return v; }
 
-              var t=el('div','totals'+(miss?' muted-totals':'')+(weapon.monster?' two':''));
-              t.appendChild(bonusStat('Schaden', dmg, bonus.dmgRaw, bonus.dead, 'Deadly'));
-              t.appendChild(bonusStat('Reichweite', rng, bonus.rngRaw, bonus.acc, 'Accuracy'));
-              if(!weapon.monster){
-                  var ammoText = !weapon.ammo ? '∞' : (ammo ? '−1 Marker' : 'keine');
-                  var am=stat('Munition', ammoText, true);
-                  if(miss) am.querySelector('.v').style.cssText='opacity:1;text-decoration:none';
-                  t.appendChild(am);
-              }
-              resultBox.appendChild(t);
+  // perks: [key, level]
+  var WEAPONS = [
+    {id:'fist', dice:['red'], ammo:null, destr:false, perks:[['melee'],['inv']]},
+    {id:'saw', dice:['red'], ammo:null, destr:true, perks:[['melee'],['sweep'],['deadly']]},
+    {id:'pistol', dice:['yellow','green'], ammo:'shells', destr:false, perks:[['inv']]},
+    {id:'shotgun', dice:['red','blue'], ammo:'shells', destr:true, perks:[['deadly'],['blow']]},
+    {id:'mg', dice:['yellow','blue','green'], ammo:'shells', destr:true, perks:[['acc',2]]},
+    {id:'chaingun', dice:['red','green','green'], ammo:'shells', destr:true, perks:[['acc'],['blow']]},
+    {id:'grenade', dice:['yellow','blue','blue'], ammo:'rockets', destr:false, perks:[['inv'],['seek'],['blast']]},
+    {id:'rocket', dice:['yellow','blue','green','green'], ammo:'rockets', destr:true, perks:[['blast'],['knock']]},
+    {id:'plasma', dice:['red','yellow','blue','green'], ammo:'cells', destr:true, perks:[['acc']]},
+    {id:'bfg', dice:['red','yellow','blue','blue','green','green'], ammo:'cells', destr:true, perks:[['blast',2],['deadly']]}
+  ];
+  var MONSTERS = [
+    {id:'zombie', n:'Zombie', monster:true, dice:['red','blue'], mv:3, ar:2, wd:2, perks:[['melee']]},
+    {id:'imp', n:'Imp', monster:true, dice:['yellow','blue'], mv:4, ar:2, wd:1, perks:[['acc']]},
+    {id:'trite', n:'Trite', monster:true, dice:['red','green'], mv:5, ar:1, wd:1, perks:[['melee'],['scuttle']]},
+    {id:'demon', n:'Demon', monster:true, dice:['red','blue','blue'], mv:4, ar:3, wd:2, perks:[['melee'],['watch']]},
+    {id:'mancubus', n:'Mancubus', monster:true, dice:['yellow','blue','green'], mv:2, ar:3, wd:3, perks:[['deadly'],['blow']]},
+    {id:'hellknight', n:'Hell Knight', monster:true, dice:['red','blue','blue'], mv:3, ar:4, wd:3, perks:[['melee'],['sweep'],['knock']]},
+    {id:'archvile', n:'Archvile', monster:true, dice:['yellow','blue','green','green'], mv:4, ar:3, wd:2, perks:[['acc',4],['aimed']]},
+    {id:'cyberdemon', n:'Cyberdemon', monster:true, dice:['red','yellow','blue','blue','green','green'], mv:4, ar:5, wd:4, perks:[['aimed']]}
+  ];
+  function wname(w){ return w.free ? t('freeName') : (w.n || T[lang].wn[w.id]); }
+  function perkText(p){ return T[lang].perks[p[0]]+(p[1]?(' ×'+p[1]):''); }
+  function perkValue(perks,key){ var v=0; (perks||[]).forEach(function(p){ if(p[0]===key) v+=p[1]||1; }); return v; }
+  function ammoName(w){ return w.free ? t('freeAmmo') : (w.ammo ? T[lang].ammoTypes[w.ammo] : null); }
 
-              if(check){
-                  var c=el('div','check');
-                  c.appendChild(el('div','lbl','Prüfwurf (Kampagne)'));
-                  var row=el('div','check-row');
-                  check.faces.forEach(function(f){ row.appendChild(dieEl(f,true)); });
-                  row.appendChild(el('span', check.broken?'broken':'intact', check.broken?'Waffe zerstört – sofort abwerfen':'Waffe bleibt intakt'));
-                  c.appendChild(row);
-                  resultBox.appendChild(c);
-              } else if(miss && campaign.checked && !weapon.destr){
-                  resultBox.appendChild(el('p','note','Kein Prüfwurf: '+weapon.n+' kann nicht zerstört werden.'));
-              }
+  function rnd6(){
+    try{ var a=new Uint32Array(1); var lim=4294967296-(4294967296%6), v;
+      do{ crypto.getRandomValues(a); v=a[0]; }while(v>=lim); return v%6; }
+    catch(e){ return Math.floor(Math.random()*6); }
+  }
+  function roll(color){ var f=FACES[color][rnd6()]; return {color:color,d:f.d||0,r:f.r||0,a:!!f.a,m:!!f.m}; }
 
+  function el(tag, cls, text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+  var SVGNS='http://www.w3.org/2000/svg';
+  function ammoIcon(){
+    var s=document.createElementNS(SVGNS,'svg'); s.setAttribute('viewBox','0 0 16 16'); s.setAttribute('class','ammo'); s.setAttribute('aria-hidden','true');
+    var p=document.createElementNS(SVGNS,'path'); p.setAttribute('d','M6 1.5c1.2 0 2 1.6 2 3.5v9H4V5c0-1.9.8-3.5 2-3.5zM11 4c.9 0 1.5 1.2 1.5 2.6V14h-3V6.6C9.5 5.2 10.1 4 11 4z');
+    p.setAttribute('fill','currentColor'); s.appendChild(p); return s;
+  }
+  function faceLabel(f){
+    var l=T[lang].colors[f.color]+': ';
+    if(f.m) return l+t('miss');
+    l+=f.d+' '+t('dmg')+', '+t('rng')+' '+f.r; if(f.a) l+=', '+t('ammoMark'); return l;
+  }
+  function fillDie(d,f){
+    if(f.m){ d.appendChild(el('div','x','✕')); d.appendChild(el('div','rng',t('miss'))); }
+    else{
+      var dm=el('div','dmg'); dm.textContent=String(f.d); dm.appendChild(el('small',null,t('dmgShort'))); d.appendChild(dm);
+      d.appendChild(el('div','rng',t('rngShort')+' '+f.r));
+      if(f.a) d.appendChild(ammoIcon());
+    }
+  }
+  function dieEl(f, animate){
+    var d=el('div','die '+f.color+(animate?' rolling':'')); fillDie(d,f);
+    d.setAttribute('role','img'); d.setAttribute('aria-label',faceLabel(f)); return d;
+  }
+  function stat(k,v,small){ var s=el('div','stat'); s.appendChild(el('span','k',k)); s.appendChild(el('span','v'+(small?' small':''),v)); return s; }
+  function vibrate(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 
-              var acts=el('div','actions');
-              var again=el('button','btn primary','Nochmal würfeln'); again.type='button';
-              again.addEventListener('click',function(){ doRoll(last); });
-              acts.appendChild(again);
-              resultBox.appendChild(acts);
-          }
+  var campaign=document.getElementById('campaign');
+  try{ campaign.checked = localStorage.getItem('doomCampaign')==='1'; }catch(e){}
+  campaign.addEventListener('change',function(){ try{ localStorage.setItem('doomCampaign', campaign.checked?'1':'0'); }catch(e){} });
 
-          function addHistory(name, miss, dmg, rng, check){
-              history.unshift({name:name, text: miss ? ('Fehlschuss'+(check?(check.broken?' · zerstört':' · intakt'):'')) : (dmg+' S · Rw '+rng), bad:miss});
-              history=history.slice(0,8);
-              histBox.textContent='';
-              history.forEach(function(h){
-                  var li=el('li'); li.appendChild(el('span','w',h.name)); li.appendChild(el('span','r'+(h.bad?' bad':''),h.text)); histBox.appendChild(li);
-              });
-          }
+  var resultBox=document.getElementById('result');
+  var histBox=document.getElementById('hist');
+  var hist=[];
+  var cur=null; // {weapon, faces, picked:[], rerolled:n, check, fresh:[]}
 
-          // weapon + monster grids
-          var btns={};
-          function addButtons(list, gridId){
-              var grid=document.getElementById(gridId);
-              list.forEach(function(w){
-                  var b=el('button','weapon'); b.type='button';
-                  b.appendChild(el('span','n',w.n));
-                  var p=el('span','pips'); w.dice.forEach(function(c){ var x=el('span','pip '+c); x.setAttribute('aria-hidden','true'); p.appendChild(x); }); b.appendChild(p);
-                  b.appendChild(el('span','a', w.monster ? ('Bew '+w.mv+' · Rü '+w.ar+' · Wu '+w.wd) : (w.ammo ? w.ammo : 'keine Munition')));
-                  b.setAttribute('aria-label', w.n+', Würfel: '+w.dice.map(function(c){return NAMES[c];}).join(', '));
-                  b.addEventListener('click',function(){ doRoll(w); resultBox.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth', block:'start'}); });
-                  grid.appendChild(b); btns[w.id]=b;
-              });
-          }
-          addButtons(WEAPONS,'weapons');
-          addButtons(MONSTERS,'monsters');
+  function evaluate(c){
+    var miss=c.faces.some(function(f){return f.m;}), dmg=0, rng=0, ammo=false;
+    c.faces.forEach(function(f){ dmg+=f.d; rng+=f.r; if(f.a) ammo=true; });
+    var b={dmgRaw:dmg, rngRaw:rng, dead:perkValue(c.weapon.perks,'deadly'), acc:perkValue(c.weapon.perks,'acc')};
+    c.miss=miss; c.dmg=dmg+b.dead; c.rng=rng+b.acc; c.ammo=ammo; c.bonus=b;
+  }
+  function doRoll(weapon){
+    cur={weapon:weapon, faces:weapon.dice.map(roll), picked:[], rerolled:0, fresh:weapon.dice.map(function(){return true;})};
+    evaluate(cur);
+    // campaign check happens on the first roll, before any re-roll
+    if(cur.miss && campaign.checked && weapon.destr){
+      var md=cur.faces.filter(function(f){return f.m;}).map(function(f){return roll(f.color);});
+      cur.check={faces:md, broken:md.some(function(f){return f.m;})};
+    }
+    hist.unshift({cur:cur}); hist=hist.slice(0,8);
+    render(); renderHistory();
+    vibrate(cur.miss?[40,40,40]:30);
+    markSelected(weapon.id);
+  }
+  function doReroll(){
+    if(!cur || cur.rerolled || !cur.picked.length || (cur.check&&cur.check.broken)) return;
+    var n=0; cur.fresh=cur.faces.map(function(){return false;});
+    cur.picked.forEach(function(i){ cur.faces[i]=roll(cur.faces[i].color); cur.fresh[i]=true; n++; });
+    cur.rerolled=n; cur.picked=[];
+    evaluate(cur); render(); renderHistory();
+    vibrate(cur.miss?[40,40,40]:30);
+  }
 
-          // tabs: Marines / Spielleiter
-          var tabs=document.querySelectorAll('.tab');
-          var emptyHint={marine:'Tippe unten auf eine Waffe. Es wird sofort mit ihren Würfeln geworfen.', sl:'Tippe unten auf einen Eindringling. Es wird sofort sein Angriff gewürfelt.'};
-          var current=null;
-          function setView(v, fromHash){
-              if(v!=='marine' && v!=='sl') v='marine';
-              if(v===current) return;
-              current=v;
-              tabs.forEach(function(t){ var on=t.getAttribute('data-view')===v; t.setAttribute('aria-selected', on?'true':'false'); t.tabIndex=on?0:-1; });
-              document.getElementById('view-marine').hidden = v!=='marine';
-              document.getElementById('view-sl').hidden = v!=='sl';
-              document.getElementById('campaignWrap').hidden = v!=='marine';
-              resultBox.textContent=''; resultBox.appendChild(el('p','empty',emptyHint[v]));
-              markSelected(null);
-              try{ localStorage.setItem('doomView', v); }catch(e){}
-              if(!fromHash){ try{ history.replaceState(null,'','#'+v); }catch(e){ location.hash=v; } }
-          }
-          tabs.forEach(function(t){
-              t.addEventListener('click',function(){ setView(t.getAttribute('data-view')); });
-              t.addEventListener('keydown',function(e){
-                  if(e.key==='ArrowRight'||e.key==='ArrowLeft'){ var n=current==='marine'?'sl':'marine'; setView(n); document.getElementById('tab-'+n).focus(); e.preventDefault(); }
-              });
-          });
-          window.addEventListener('hashchange',function(){ setView(location.hash.slice(1), true); });
-          var startView=location.hash.slice(1);
-          if(startView!=='marine' && startView!=='sl'){ try{ startView=localStorage.getItem('doomView')||'marine'; }catch(e){ startView='marine'; } }
-          setView(startView, location.hash.slice(1)===startView);
-          function markSelected(id){ Object.keys(btns).forEach(function(k){ btns[k].classList.toggle('sel', k===id); }); }
+  function bonusStat(k, total, raw, plus, perkKey){
+    var s=stat(k, String(total));
+    if(plus) s.appendChild(el('span','sub',t('diceRaw')+' '+raw+' +'+plus+' '+T[lang].perks[perkKey]));
+    return s;
+  }
+  function render(){
+    resultBox.textContent='';
+    if(!cur){ resultBox.appendChild(el('p','empty',t(current==='sl'?'emptyGM':'emptyMarine'))); return; }
+    var w=cur.weapon, c=cur;
+    var head=el('div','result-head');
+    head.appendChild(el('span','weapon-name',wname(w)));
+    head.appendChild(el('span','weapon-meta', w.monster ? t('invader') : (ammoName(w) || t('noAmmo'))));
+    resultBox.appendChild(head);
+    if(w.monster){
+      var ms=el('div','mstats');
+      ms.appendChild(stat(t('move'), String(w.mv))); ms.appendChild(stat(t('armor'), String(w.ar))); ms.appendChild(stat(t('wounds'), String(w.wd)));
+      resultBox.appendChild(ms);
+    }
+    if(w.perks && w.perks.length){
+      var ch=el('div','chips');
+      w.perks.forEach(function(p){ ch.appendChild(el('span','chip'+(p[0]==='melee'?' warn':''),perkText(p))); });
+      resultBox.appendChild(ch);
+    }
+    var canPick=!c.rerolled && !(c.check&&c.check.broken);
+    var dice=el('div','dice');
+    c.faces.forEach(function(f,i){
+      var d;
+      if(canPick){
+        d=el('button','die pickable '+f.color+(c.fresh[i]?' rolling':'')); d.type='button';
+        var on=c.picked.indexOf(i)>=0; if(on) d.classList.add('picked');
+        d.setAttribute('aria-pressed',on?'true':'false');
+        d.setAttribute('aria-label',faceLabel(f)+(on?', '+t('pickLabel'):''));
+        fillDie(d,f);
+        d.addEventListener('click',function(){ var j=c.picked.indexOf(i); if(j>=0) c.picked.splice(j,1); else c.picked.push(i); c.fresh=c.faces.map(function(){return false;}); render(); var b=resultBox.querySelectorAll('.die.pickable')[i]; if(b) b.focus(); });
+      } else {
+        d=dieEl(f, c.fresh[i]);
+        if(c.rerolled && c.fresh[i]) d.appendChild(el('span','rr','↻'));
+      }
+      dice.appendChild(d);
+    });
+    c.fresh=c.faces.map(function(){return false;});
+    resultBox.appendChild(dice);
 
-          // free roll
-          var counts={red:0,yellow:0,blue:0,green:0};
-          var stepsBox=document.getElementById('steps');
-          var countEls={};
-          ['red','yellow','blue','green'].forEach(function(c){
-              var s=el('div','step');
-              var minus=el('button',null,'−'); minus.type='button'; minus.setAttribute('aria-label',NAMES[c]+' weniger');
-              var plus=el('button',null,'+'); plus.type='button'; plus.setAttribute('aria-label',NAMES[c]+' mehr');
-              var mid=el('span','c'); var pp=el('span','pip '+c); pp.setAttribute('aria-hidden','true'); var num=el('span',null,'0'); mid.appendChild(pp); mid.appendChild(num);
-              mid.setAttribute('aria-label',NAMES[c]);
-              minus.addEventListener('click',function(){ counts[c]=Math.max(0,counts[c]-1); num.textContent=counts[c]; });
-              plus.addEventListener('click',function(){ counts[c]=Math.min(6,counts[c]+1); num.textContent=counts[c]; });
-              s.appendChild(minus); s.appendChild(mid); s.appendChild(plus); stepsBox.appendChild(s); countEls[c]=num;
-          });
-          document.getElementById('freeReset').addEventListener('click',function(){ Object.keys(counts).forEach(function(c){ counts[c]=0; countEls[c].textContent='0'; }); });
-          document.getElementById('freeRoll').addEventListener('click',function(){
-              var dice=[]; ['red','yellow','blue','green'].forEach(function(c){ for(var i=0;i<counts[c];i++) dice.push(c); });
-              if(!dice.length){ resultBox.textContent=''; resultBox.appendChild(el('p','empty','Wähle mit + mindestens einen Würfel für den freien Wurf.')); return; }
-              doRoll({id:'free', n:'Freier Wurf', dice:dice, ammo:'je nach Waffe', destr:false});
-              resultBox.scrollIntoView({behavior:'smooth', block:'start'});
-          });
-      })();
-    </script>
+    resultBox.appendChild(el('div','verdict '+(c.miss?'miss':'hit'), c.miss?t('miss'):t('hit')));
+    var tt=el('div','totals'+(c.miss?' muted-totals':'')+(w.monster?' two':''));
+    tt.appendChild(bonusStat(t('dmg'), c.dmg, c.bonus.dmgRaw, c.bonus.dead, 'deadly'));
+    tt.appendChild(bonusStat(t('rng'), c.rng, c.bonus.rngRaw, c.bonus.acc, 'acc'));
+    if(!w.monster){
+      var am=stat(t('ammo'), (!w.ammo && !w.free) ? '∞' : (c.ammo ? t('ammoUsed') : t('ammoNone')), true);
+      if(c.miss) am.querySelector('.v').style.cssText='opacity:1;text-decoration:none';
+      tt.appendChild(am);
+    }
+    resultBox.appendChild(tt);
 
-</body></html>
+    if(c.check){
+      var ck=el('div','check'); ck.appendChild(el('div','lbl',t('check')));
+      var row=el('div','check-row'); c.check.faces.forEach(function(f){ row.appendChild(dieEl(f,false)); });
+      row.appendChild(el('span', c.check.broken?'broken':'intact', c.check.broken?t('broken'):t('intact')));
+      ck.appendChild(row); resultBox.appendChild(ck);
+    } else if(c.miss && campaign.checked && !w.destr && !w.monster && !w.free){
+      resultBox.appendChild(el('p','note',t('noCheck',{w:wname(w)})));
+    }
+
+    if(c.rerolled) resultBox.appendChild(el('p','rerolled',t('rerolled',{n:c.rerolled})));
+    else if(c.check && c.check.broken) resultBox.appendChild(el('p','hint',t('rerollBlocked')));
+    else resultBox.appendChild(el('p','hint',t('pickHint')));
+
+    var acts=el('div','actions');
+    if(canPick){
+      var rr=el('button','btn primary',t('reroll',{n:c.picked.length})); rr.type='button'; rr.disabled=!c.picked.length;
+      rr.addEventListener('click',doReroll); acts.appendChild(rr);
+      var all=el('button','btn',t('rerollAll')); all.type='button';
+      all.addEventListener('click',function(){ c.picked=c.faces.map(function(f,i){return i;}); c.fresh=c.faces.map(function(){return false;}); render(); });
+      acts.appendChild(all);
+    }
+    var again=el('button','btn'+(canPick?'':' primary'),t('again')); again.type='button';
+    again.addEventListener('click',function(){ doRoll(cur.weapon); });
+    acts.appendChild(again);
+    resultBox.appendChild(acts);
+  }
+
+  function renderHistory(){
+    histBox.textContent='';
+    if(!hist.length){ var li0=el('li'); li0.appendChild(el('span','w',t('noHistory'))); li0.appendChild(el('span','r')); histBox.appendChild(li0); return; }
+    hist.forEach(function(h){
+      var c=h.cur, txt = c.miss ? (t('miss')+(c.check?(' · '+(c.check.broken?t('histBroken'):t('histIntact'))):'')) : (c.dmg+' '+t('dmgShort')+' · '+t('rngShort')+' '+c.rng);
+      if(c.rerolled) txt+=' · '+t('histRe');
+      var li=el('li'); li.appendChild(el('span','w',wname(c.weapon))); li.appendChild(el('span','r'+(c.miss?' bad':''),txt)); histBox.appendChild(li);
+    });
+  }
+
+  // weapon + monster grids
+  var btns={};
+  function buildButtons(){
+    [['weapons',WEAPONS],['monsters',MONSTERS]].forEach(function(g){
+      var grid=document.getElementById(g[0]); grid.textContent='';
+      g[1].forEach(function(w){
+        var b=el('button','weapon'); b.type='button';
+        b.appendChild(el('span','n',wname(w)));
+        var p=el('span','pips'); w.dice.forEach(function(c){ var x=el('span','pip '+c); x.setAttribute('aria-hidden','true'); p.appendChild(x); }); b.appendChild(p);
+        b.appendChild(el('span','a', w.monster ? (t('mvShort')+' '+w.mv+' · '+t('arShort')+' '+w.ar+' · '+t('wdShort')+' '+w.wd) : (ammoName(w) || t('noAmmoShort'))));
+        b.setAttribute('aria-label', wname(w)+', '+t('diceRaw')+': '+w.dice.map(function(c){return T[lang].colors[c];}).join(', '));
+        b.addEventListener('click',function(){ doRoll(w); resultBox.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth', block:'start'}); });
+        grid.appendChild(b); btns[w.id]=b;
+      });
+    });
+    if(cur) markSelected(cur.weapon.id);
+  }
+
+  // tabs
+  var tabs=document.querySelectorAll('.tab');
+  var current=null;
+  function setView(v, fromHash){
+    if(v!=='marine' && v!=='sl') v='marine';
+    if(v===current) return;
+    current=v;
+    tabs.forEach(function(x){ var on=x.getAttribute('data-view')===v; x.setAttribute('aria-selected', on?'true':'false'); x.tabIndex=on?0:-1; });
+    document.getElementById('view-marine').hidden = v!=='marine';
+    document.getElementById('view-sl').hidden = v!=='sl';
+    document.getElementById('campaignWrap').hidden = v!=='marine';
+    cur=null; render(); markSelected(null);
+    try{ localStorage.setItem('doomView', v); }catch(e){}
+    if(!fromHash){ try{ history.replaceState(null,'','#'+v); }catch(e){ location.hash=v; } }
+  }
+  tabs.forEach(function(x){
+    x.addEventListener('click',function(){ setView(x.getAttribute('data-view')); });
+    x.addEventListener('keydown',function(e){
+      if(e.key==='ArrowRight'||e.key==='ArrowLeft'){ var n=current==='marine'?'sl':'marine'; setView(n); document.getElementById('tab-'+n).focus(); e.preventDefault(); }
+    });
+  });
+  window.addEventListener('hashchange',function(){ setView(location.hash.slice(1), true); });
+  function markSelected(id){ Object.keys(btns).forEach(function(k){ btns[k].classList.toggle('sel', k===id); }); }
+
+  // free roll
+  var counts={red:0,yellow:0,blue:0,green:0}, countEls={}, stepBtns=[];
+  var stepsBox=document.getElementById('steps');
+  ['red','yellow','blue','green'].forEach(function(c){
+    var s=el('div','step');
+    var minus=el('button',null,'−'); minus.type='button';
+    var plus=el('button',null,'+'); plus.type='button';
+    var mid=el('span','c'); var pp=el('span','pip '+c); pp.setAttribute('aria-hidden','true'); var num=el('span',null,'0'); mid.appendChild(pp); mid.appendChild(num);
+    minus.addEventListener('click',function(){ counts[c]=Math.max(0,counts[c]-1); num.textContent=counts[c]; });
+    plus.addEventListener('click',function(){ counts[c]=Math.min(6,counts[c]+1); num.textContent=counts[c]; });
+    s.appendChild(minus); s.appendChild(mid); s.appendChild(plus); stepsBox.appendChild(s); countEls[c]=num; stepBtns.push([c,minus,plus,mid]);
+  });
+  document.getElementById('freeReset').addEventListener('click',function(){ Object.keys(counts).forEach(function(c){ counts[c]=0; countEls[c].textContent='0'; }); });
+  document.getElementById('freeRoll').addEventListener('click',function(){
+    var dice=[]; ['red','yellow','blue','green'].forEach(function(c){ for(var i=0;i<counts[c];i++) dice.push(c); });
+    if(!dice.length){ cur=null; resultBox.textContent=''; resultBox.appendChild(el('p','empty',t('freeEmpty'))); return; }
+    doRoll({id:'free', free:true, dice:dice, ammo:null, destr:false, perks:[]});
+    resultBox.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  // language
+  function applyLang(){
+    document.documentElement.lang=lang;
+    document.title=t('title');
+    document.querySelectorAll('[data-t]').forEach(function(n){ n.textContent=t(n.getAttribute('data-t')); });
+    document.getElementById('tablist').setAttribute('aria-label',t('tabsLabel'));
+    var lb=document.getElementById('langBtn'); lb.textContent=lang==='de'?'EN':'DE';
+    lb.setAttribute('aria-label',lang==='de'?'Switch to English':'Auf Deutsch umschalten');
+    stepBtns.forEach(function(s){ var n=T[lang].colors[s[0]]; s[1].setAttribute('aria-label',n+' '+t('less')); s[2].setAttribute('aria-label',n+' '+t('more')); s[3].setAttribute('aria-label',n); });
+    buildButtons(); render(); renderHistory();
+  }
+  document.getElementById('langBtn').addEventListener('click',function(){ lang=lang==='de'?'en':'de'; try{ localStorage.setItem('doomLang',lang); }catch(e){} applyLang(); });
+
+  var startView=location.hash.slice(1);
+  if(startView!=='marine' && startView!=='sl'){ try{ startView=localStorage.getItem('doomView')||'marine'; }catch(e){ startView='marine'; } }
+  applyLang();
+  setView(startView, location.hash.slice(1)===startView);
+})();
+</script>
+</body>
+</html>

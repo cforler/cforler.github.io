@@ -126,6 +126,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
       <div class="eyebrow">UAC · Lageplan</div>
       <h1>Doom Kartenaufdecker</h1>
     </div>
+    <div class="bar"><button class="btn" type="button" id="langBtn"></button></div>
     <div class="bar" id="topActions">
       <label class="btn file-label" for="fileImport">Importieren<input type="file" id="fileImport" accept=".json,application/json"></label>
       <button class="btn primary" type="button" id="newScen">Neues Szenario</button>
@@ -255,19 +256,117 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
 (function(){
   'use strict';
   var $=function(id){ return document.getElementById(id); };
-  function el(tag, cls, text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+  // ---------- Sprache / language ----------
+  var LANG='de';
+  try{ LANG=localStorage.getItem('doomLang') || ((navigator.language||'de').slice(0,2)==='de'?'de':'en'); }catch(e){ LANG=((navigator.language||'de').slice(0,2)==='de'?'de':'en'); }
+  if(LANG!=='de' && LANG!=='en') LANG='de';
+  var DICT={
+    'Doom Kartenaufdecker':'Doom Map Revealer','UAC · Lageplan':'UAC · Site Map','Importieren':'Import','Neues Szenario':'New scenario',
+    'Fertig':'Done','Exportieren':'Export','Spielen':'Play','Werkzeug':'Tool','Gebiete':'Areas','+ Gebiet':'+ Area','Name des Gebiets':'Area name',
+    'Beim Start sichtbar':'Visible at start','Text beim Aufdecken (sehen alle)':'Text when revealed (everyone sees it)',
+    'Was die Marines sehen, wenn das Gebiet aufgeht':'What the marines see when the area opens',
+    'Geheimes, das erst beim Auslösen erscheinen soll, gehört als Symbol-Notiz an eine Begegnung oder einen Schlüssel (Werkzeug „Symbol-Notiz“).':'Secrets that should only appear when triggered belong in a symbol note on an encounter or key (tool “Symbol note”).',
+    'Gebiet löschen':'Delete area','Symbol':'Symbol','Farbe':'Color','Breite':'Width','Höhe':'Height','Beschriftung (optional)':'Label (optional)','z. B. BFG':'e.g. BFG',
+    'Symbol-Notiz':'Symbol note','Tippe auf der Karte auf ein Symbol, zum Beispiel eine Begegnung oder einen Schlüssel.':'Tap a symbol on the map, for example an encounter or a key.',
+    'Erscheint, wenn das Symbol im Spiel angetippt wird':'Appears when the symbol is tapped during play','z. B. Der Marine findet den roten Schlüssel.':'e.g. The marine finds the red key.',
+    'Tür':'Door','Tippe nahe an die Kante zwischen zwei Feldern. Nochmal tippen entfernt die Tür.':'Tap close to the edge between two squares. Tap again to remove the door.',
+    'Szenario':'Scenario','Name':'Name','Spielleiter-Notiz zum Szenario':'GM note for the scenario','Ziel, Siegbedingungen, Sonderregeln':'Goal, victory conditions, special rules',
+    'Spalten':'Columns','Zeilen':'Rows','Foto-Vorlage':'Photo template','Foto wählen':'Choose photo','Drehen ↻':'Rotate ↻','Entfernen':'Remove','Deckkraft':'Opacity',
+    'Größe (Breite in Feldern)':'Size (width in squares)','Links / rechts':'Left / right','Hoch / runter':'Up / down',
+    'Die Vorlage hilft beim Abzeichnen. Schiebe sie so, dass ihre Felder auf dem Raster liegen.':'The template helps with tracing. Move it so its squares sit on the grid.',
+    'Zurück':'Back','Foto':'Photo','Notizen':'Notes','Notizen ausblenden':'Hide notes','Vollbild':'Full screen','Neu starten':'Restart',
+    'Atmosphäre an':'Atmosphere on','Atmosphäre aus':'Atmosphere off','Sirene':'Siren','Stromausfall':'Power failure','Brüllen':'Roar','Metall':'Metal','Stimme':'Voice',
+    'Funkspruch':'Radio','Bordcomputer':'Ship computer','Dämon':'Demon','Normal':'Normal',
+    'Tür antippen: öffnet sie und deckt das Gebiet dahinter auf. Symbol antippen: als erledigt markieren (Monster tot, Gegenstand genommen).':'Tap a door: opens it and reveals the area behind. Tap a symbol: mark it as done (monster dead, item taken).',
+    'Szenarien bleiben nur in diesem Browser auf diesem Gerät gespeichert. „Exportieren“ macht daraus eine Datei, die sich auf einem anderen Gerät importieren lässt.':'Scenarios are stored only in this browser on this device. “Export” turns one into a file you can import on another device.',
+    'Verkleinern':'Zoom out','Vergrößern':'Zoom in','Atmosphäre':'Atmosphere','Gebiete aufdecken':'Reveal areas',
+    'Gebiet malen':'Paint area','Radieren':'Erase','Entfernen ':'Remove','Verschieben':'Pan',
+    'Wähle rechts ein Gebiet und streiche über die Felder, die dazugehören.':'Pick an area on the right and swipe over the squares that belong to it.',
+    'Streiche über Felder, um sie aus allen Gebieten zu entfernen.':'Swipe over squares to remove them from all areas.',
+    'Wähle ein Symbol und tippe auf das Feld oben links, wo es liegen soll.':'Pick a symbol and tap the top-left square where it should go.',
+    'Tippe nahe an eine Kante zwischen zwei Feldern, um dort eine Tür zu setzen oder zu entfernen.':'Tap close to an edge between two squares to place or remove a door.',
+    'Tippe auf ein Symbol oder eine Tür, um es zu entfernen.':'Tap a symbol or door to remove it.',
+    'Tippe auf ein Symbol und schreibe rechts, was passiert, wenn es im Spiel angetippt wird. Symbole mit Notiz tragen einen kleinen Punkt.':'Tap a symbol and write on the right what happens when it is tapped during play. Symbols with a note carry a small dot.',
+    'Wische, um die Karte zu verschieben. Mit − und + änderst du die Größe.':'Swipe to move the map. Use − and + to change the size.',
+    'Zombie':'Zombie','Imp':'Imp','Trite':'Trite','Demon':'Demon','Mancubus':'Mancubus','Hell Knight':'Hell Knight','Archvile':'Archvile','Cyberdemon':'Cyberdemon','Marine':'Marine',
+    'Waffe':'Weapon','Munition':'Ammo','Gesundheit':'Health','Rüstung':'Armor','Berserker':'Berserk','Adrenalin':'Adrenaline','Schlüssel':'Key','Begegnung':'Encounter',
+    'Platzhalter':'Placeholder','Schacht':'Duct','Teleporter':'Teleporter','Hindernis':'Obstacle','Säure':'Acid','Fass':'Barrel',
+    'Weiß (immer)':'White (always)','Rot':'Red','Grün':'Green','Blau':'Blue','Gelb':'Yellow',
+    'Rote Sicherheitstür':'Red security door','Blaue Sicherheitstür':'Blue security door','Gelbe Sicherheitstür':'Yellow security door',
+    'Neues Spiel':'New game','Fortsetzen':'Continue','Bearbeiten':'Edit','Löschen':'Delete','Wirklich?':'Sure?','Wirklich löschen?':'Really delete?','Alles verdecken?':'Hide everything?',
+    'Noch kein Szenario':'No scenario yet','Kampagne laden (I–V)':'Load campaign (I–V)','Kampagne laden (II–V)':'Load campaign (II–V)','Beispiel „Knietief in Leichen“ laden':'Load example “Knee-Deep in the Dead”',
+    'Lege ein neues Szenario an, importiere eine Szenario-Datei oder lade die Kampagne.':'Create a new scenario, import a scenario file or load the campaign.',
+    'Szenario gelöscht.':'Scenario deleted.','Beispiel geladen.':'Example loaded.','Ohne Namen':'Untitled','Neues Szenario ':'New scenario','Start':'Start','Stahlkammer':'Steel vault',
+    'Lege zuerst mit „+ Gebiet“ ein Gebiet an.':'First add an area with “+ Area”.','Das Symbol passt hier nicht mehr aufs Raster.':'The symbol does not fit on the grid here.',
+    'Bitte eine Bilddatei wählen (JPG oder PNG).':'Please choose an image file (JPG or PNG).','Das Foto ließ sich nicht öffnen.':'The photo could not be opened.',
+    'Vorlage geladen. Mit den Reglern ausrichten.':'Template loaded. Align it with the sliders.',
+    'Vorlage geladen und auf die Beispielkarte ausgerichtet. Mit den Reglern nachjustieren.':'Template loaded and aligned to the map. Fine-tune with the sliders.',
+    'Neu gestartet. Nur der Startbereich ist sichtbar.':'Restarted. Only the start area is visible.','Vollbild wird hier nicht unterstützt.':'Full screen is not supported here.',
+    'Diese Datei ist kein Szenario des Kartenaufdeckers.':'This file is not a Map Revealer scenario.','Speichern fehlgeschlagen.':'Saving failed.',
+    'Auflösung wieder verborgen.':'Resolution hidden again.','Kein Text.':'No text.','Spielleiter-Notizen':'GM notes','Auflösung':'Resolution','Verbergen':'Hide',
+    '▶ Vorlesen':'▶ Read aloud','■ Stopp':'■ Stop','Vorlesen wird von diesem Browser nicht unterstützt.':'Read-aloud is not supported by this browser.',
+    'Vorlesen hat nicht geklappt.':'Read-aloud did not work.','Ton wird von diesem Browser nicht unterstützt.':'Sound is not supported by this browser.',
+    'Gebiet':'Area','Tür ':'Door',
+    'I: Knietief in Leichen':'I: Knee-Deep in the Dead','II: Die Gestade der Hölle':'II: The Shores of Hell','III: Inferno':'III: Inferno',
+    'IV: Im Namen des Fleisches':'IV: Thy Flesh Consumed','V: …und dann kam die Hölle':'V: …and Hell Followed'
+  };
+  var CN_EN={'rot':'red','grün':'green','blau':'blue','gelb':'yellow','weiß':'white'};
+  var PAT=[
+    [/^Gebiet (\d+)$/, function(m){ return 'Area '+m[1]; }],
+    [/^(Start · )?(\d+) Felder$/, function(m){ return (m[1]?'Start · ':'')+m[2]+' squares'; }],
+    [/^(\d+) von (\d+) aufgedeckt$/, function(m){ return m[1]+' of '+m[2]+' revealed'; }],
+    [/^(\d+) Gebiete · (\d+) Symbole(?: · (\d+) aufgedeckt)?$/, function(m){ return m[1]+' areas · '+m[2]+' symbols'+(m[3]?(' · '+m[3]+' revealed'):''); }],
+    [/^(.+) aufgedeckt\.$/, function(m){ return m[1].split(', ').map(L).join(', ')+' revealed.'; }],
+    [/^Noch verdeckte Gebiete \((\d+)\)$/, function(m){ return 'Areas still hidden ('+m[1]+')'; }],
+    [/^Auflösung für (.+) in den Spielleiter-Notizen\.$/, function(m){ return 'The resolution for '+L(m[1])+' is in the GM notes.'; }],
+    [/^Auflösung · (.+)$/, function(m){ return 'Resolution · '+L(m[1]); }],
+    [/^Auflösung zeigen: (.+)$/, function(m){ return 'Show resolution: '+L(m[1]); }],
+    [/^Notiz für: (.+?) in (.+)$/, function(m){ return 'Note for: '+L(m[1])+' in '+L(m[2]); }],
+    [/^Notiz für: (.+)$/, function(m){ return 'Note for: '+L(m[1]); }],
+    [/^(\d+) Szenarien geladen\.$/, function(m){ return m[1]+' scenarios loaded.'; }],
+    [/^„(.+)“ importiert\.$/, function(m){ return '“'+m[1]+'” imported.'; }],
+    [/^Download von „(.+)“ gestartet/, function(m){ return 'Download of “'+m[1]+'” started (without photo). Only works when the app runs as a file or from your homepage.'; }],
+    [/^Jetzt „(.+)“ auf der Karte einzeichnen\.$/, function(m){ return 'Now draw “'+L(m[1])+'” on the map.'; }],
+    [/^Karte (.*)$/, function(m){ return 'Map '+L(m[1]); }],
+    [/^(.+) \((rot|grün|blau|gelb|weiß)\)$/, function(m){ return L(m[1])+' ('+CN_EN[m[2]]+')'; }]
+  ];
+  function L(s){
+    if(LANG==='de' || s==null || typeof s!=='string') return s;
+    var k=s.trim(); if(!k) return s;
+    var out=null;
+    if(Object.prototype.hasOwnProperty.call(DICT,k)) out=DICT[k];
+    else for(var i=0;i<PAT.length;i++){ var m=k.match(PAT[i][0]); if(m){ out=PAT[i][1](m); break; } }
+    if(out==null) return s;
+    var lead=s.match(/^\s*/)[0], trail=s.match(/\s*$/)[0]; return lead+out+trail;
+  }
+  // static page text: remember the German originals once, re-apply on switch
+  var STATIC=[];
+  function collectStatic(){
+    var w=document.createTreeWalker(document.querySelector('.wrap'), NodeFilter.SHOW_TEXT, null);
+    var n; while((n=w.nextNode())){ if(n.nodeValue.trim()) STATIC.push({n:n, de:n.nodeValue}); }
+    document.querySelectorAll('.wrap [placeholder], .wrap [aria-label]').forEach(function(e){
+      ['placeholder','aria-label'].forEach(function(a){ if(e.hasAttribute(a)) STATIC.push({e:e, a:a, de:e.getAttribute(a)}); }); });
+  }
+  function applyStatic(){
+    STATIC.forEach(function(x){ if(x.n) x.n.nodeValue=L(x.de); else x.e.setAttribute(x.a, L(x.de)); });
+    document.documentElement.lang=LANG; document.title=L('Doom Kartenaufdecker');
+  }
+  function el(tag, cls, text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=L(text); return e; }
   function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
   var toastTimer;
   function toast(msg){ var t=document.querySelector('.toast'); if(!t){ t=el('div','toast'); t.setAttribute('role','status'); document.body.appendChild(t); }
-    t.textContent=msg; t.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.hidden=true; },2600); }
+    t.textContent=L(msg); t.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.hidden=true; },2600); }
+  function setBtnText(btn, txt){ var n=btn.firstChild; if(n && n.nodeType===3 && btn.childNodes.length===1) n.nodeValue=txt; else btn.textContent=txt; }
   function twoTap(btn, armedText, fn){
-    var orig=btn.textContent, t=null;
+    var orig=null, t=null;
+    function base(){ return btn._de || (btn._de=STATIC_DE(btn)); }
     btn.addEventListener('click',function(){
-      if(btn.classList.contains('armed')){ clearTimeout(t); btn.classList.remove('armed'); btn.textContent=orig; fn(); return; }
-      btn.classList.add('armed'); btn.textContent=armedText;
-      t=setTimeout(function(){ btn.classList.remove('armed'); btn.textContent=orig; },3000);
+      if(btn.classList.contains('armed')){ clearTimeout(t); btn.classList.remove('armed'); setBtnText(btn,L(base())); fn(); return; }
+      base(); btn.classList.add('armed'); setBtnText(btn,L(armedText));
+      t=setTimeout(function(){ btn.classList.remove('armed'); setBtnText(btn,L(base())); },3000);
     });
   }
+  function STATIC_DE(btn){ for(var i=0;i<STATIC.length;i++){ if(STATIC[i].n && STATIC[i].n.parentNode===btn) return STATIC[i].de; } return btn._deText || btn.textContent; }
 
   // ---------- palette definitions ----------
   var AREA_COLORS=['#9aa3ad','#7d8590','#c860d0','#7a6cf0','#6fb8f0','#58b86a','#e6c94a','#f0a050','#f07068','#4fd6c8','#d0d070','#ff8ab6'];
@@ -1001,7 +1100,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
 
   function mountCanvas(scroller){
     scroller.textContent=''; canvas=el('canvas'); canvas.setAttribute('role','img');
-    canvas.setAttribute('aria-label','Karte '+(cur.name||'')); scroller.appendChild(canvas);
+    canvas.setAttribute('aria-label',L('Karte '+(cur.name||''))); scroller.appendChild(canvas);
     bindPointer();
   }
   function loadBg(){
@@ -1065,18 +1164,35 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     slime:'Schädliches Hindernis. Wer das Feld betritt, erleidet 1 Verletzung (unabhängig von Rüstung), wer den ganzen Zug darauf bleibt, eine weitere.',
     barrel:'Explosives Fass. Versperrt Sicht und Bewegung. Explodiert bei 1 Schaden und verletzt alle Figuren daneben.'
   };
+  var ABIL_EN={zombie:'Melee only',imp:'Accuracy',trite:'Melee only, Scuttle (uses ducts)',demon:'Melee only, Watchful. Occupies 2 squares',
+    mancubus:'Deadly, Blow-through',hellknight:'Melee only, Sweep, Knockback',archvile:'Accuracy ×4, Aimed',cyberdemon:'Aimed'};
+  var INFO_EN={
+    weapon:'Weapon. A marine entering the square picks it up automatically.', ammo:'Ammo. Goes into the marine’s ammo bin.',
+    health:'Health. Discard to return up to 3 lost wound tokens.', armor:'Armor. Goes into the marine’s equipment bin.',
+    berserk:'Berserk. The marine may only attack with fists, but kills any invader instantly. Lasts two turns.',
+    adrenaline:'Adrenaline. Discard at the start of a later turn: +4 movement that turn.',
+    encounter:'Encounter. When a marine ends here, tap it: the resolution appears in the GM notes.',
+    x:'Placeholder. What goes here is in the area description.', duct:'Duct. Only invaders with Scuttle can move from duct to duct.',
+    teleporter:'Teleporter. For 1 movement point a marine moves to another teleporter of the same color. Landing on an invader kills it.',
+    block:'Blocking obstacle. Blocks line of sight and movement.',
+    slime:'Damaging obstacle. Entering costs 1 wound (regardless of armor); staying the whole turn costs another.',
+    barrel:'Exploding barrel. Blocks line of sight and movement. Explodes at 1 damage and wounds all adjacent figures.'
+  };
   function tokenInfo(t){
-    var d=TYPE[t.t]; if(!d) return null;
+    var d=TYPE[t.t]; if(!d) return null; var en=LANG==='en', cn=en?CN_EN[COLNAME[t.col]]:COLNAME[t.col];
     if(d.g==='monster'){ var s=STATS[t.t];
-      var col= t.col==='white' ? 'Weiß: wird immer aufgestellt.' : ('Wird nur aufgestellt, wenn der '+COLNAME[t.col]+'e Marine mitspielt.');
-      return {h:d.n+(t.col&&t.col!=='white'?' ('+COLNAME[t.col]+')':''), b:'Bewegung '+s[0]+' · Rüstung '+s[1]+' · Wunden '+s[2]+'. '+ABIL[t.t]+'. '+col}; }
-    if(d.g==='marine') return {h:'Marine ('+COLNAME[t.col]+')', b:'Startfeld dieses Marines.'};
-    if(d.g==='key') return {h:'Schlüssel ('+COLNAME[t.col]+')', b:'Schließt alle '+COLNAME[t.col]+'en Sicherheitstüren für die Marines auf.'};
-    return {h:d.n+(t.label?(': '+t.label):''), b:INFO[t.t]||''};
+      var col= en ? (t.col==='white' ? 'White: always placed.' : ('Only placed if the '+cn+' marine is playing.'))
+                  : (t.col==='white' ? 'Weiß: wird immer aufgestellt.' : ('Wird nur aufgestellt, wenn der '+cn+'e Marine mitspielt.'));
+      return {h:L(d.n)+(t.col&&t.col!=='white'?' ('+cn+')':''), b:(en?'Movement ':'Bewegung ')+s[0]+(en?' · Armor ':' · Rüstung ')+s[1]+(en?' · Wounds ':' · Wunden ')+s[2]+'. '+(en?ABIL_EN:ABIL)[t.t]+'. '+col}; }
+    if(d.g==='marine') return {h:'Marine ('+cn+')', b:en?'Start square of this marine.':'Startfeld dieses Marines.'};
+    if(d.g==='key') return {h:(en?'Key (':'Schlüssel (')+cn+')', b:en?('Unlocks all '+cn+' security doors for the marines.'):('Schließt alle '+cn+'en Sicherheitstüren für die Marines auf.')};
+    return {h:L(d.n)+(t.label?(': '+t.label):''), b:(en?INFO_EN:INFO)[t.t]||''};
   }
   function doorInfo(d){
-    if(d.kind==='sec') return {h:COLNAME[d.col]+'e Sicherheitstür', b:'Verschlossen, bis die Marines den '+COLNAME[d.col]+'en Schlüssel haben. Eindringlinge können sie nie öffnen.'};
-    return {h:'Tür', b:'Öffnen oder Schließen kostet 2 Bewegungspunkte von einem angrenzenden Feld.'};
+    var en=LANG==='en', cn=en?CN_EN[COLNAME[d.col]]:COLNAME[d.col];
+    if(d.kind==='sec') return en ? {h:cn.charAt(0).toUpperCase()+cn.slice(1)+' security door', b:'Locked until the marines have the '+cn+' key. Invaders can never open it.'}
+      : {h:COLNAME[d.col]+'e Sicherheitstür', b:'Verschlossen, bis die Marines den '+COLNAME[d.col]+'en Schlüssel haben. Eindringlinge können sie nie öffnen.'};
+    return en ? {h:'Door', b:'Opening or closing costs 2 movement points from an adjacent square.'} : {h:'Tür', b:'Öffnen oder Schließen kostet 2 Bewegungspunkte von einem angrenzenden Feld.'};
   }
   var tipEl=null;
   function hideTip(){ if(tipEl) tipEl.hidden=true; }
@@ -1118,7 +1234,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     var box=$('listBox'); box.textContent='';
     if(!scenarios.length){
       var e=el('div','empty'); e.appendChild(el('h2',null,'Noch kein Szenario'));
-      e.appendChild(el('p',null,'Lege ein neues Szenario an, importiere eine Szenario-Datei oder lade das Beispiel „Knietief in Leichen“.'));
+      e.appendChild(el('p',null,'Lege ein neues Szenario an, importiere eine Szenario-Datei oder lade die Kampagne.'));
       var b=el('button','btn primary','Kampagne laden (I–V)'); b.type='button'; b.addEventListener('click',function(){ addExample(); Promise.all(SCEN.map(addCampaign)).then(renderList); }); e.appendChild(b);
       box.appendChild(e); return;
     }
@@ -1137,7 +1253,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
       if(s.play && (s.play.revealed.some(function(id){return startIds.indexOf(id)<0;}) || s.play.done.length)){
         var go=el('button','btn','Fortsetzen'); go.type='button'; go.addEventListener('click',function(){ openScenario(s,'play'); }); bar.appendChild(go); }
       var ed=el('button','btn','Bearbeiten'); ed.type='button'; ed.addEventListener('click',function(){ openScenario(s,'edit'); }); bar.appendChild(ed);
-      var del=el('button','btn danger','Löschen'); del.type='button';
+      var del=el('button','btn danger','Löschen'); del._de='Löschen'; del.type='button';
       twoTap(del,'Wirklich?',function(){ dbDel(s.id).then(function(){ scenarios=scenarios.filter(function(x){return x.id!==s.id;}); renderList(); toast('Szenario gelöscht.'); }); });
       bar.appendChild(del); body.appendChild(bar); card.appendChild(body); grid.appendChild(card);
     });
@@ -1186,7 +1302,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     $('secNote').hidden = tool!=='note';
     if(tool!=='note') noteTok=null;
     renderNoteTarget();
-    $('toolHint').textContent=HINTS[tool];
+    $('toolHint').textContent=L(HINTS[tool]);
     if(canvas) canvas.style.touchAction = (mode==='edit' && tool!=='pan') ? 'none' : 'manipulation';
   }
   function miniIcon(type, col){
@@ -1197,7 +1313,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
   function renderPalette(){
     var box=$('palette'); box.textContent='';
     TYPES.forEach(function(d){
-      var b=el('button','pal'); b.type='button'; b.setAttribute('aria-pressed',tokType===d.t?'true':'false'); b.setAttribute('aria-label',d.n);
+      var b=el('button','pal'); b.type='button'; b.setAttribute('aria-pressed',tokType===d.t?'true':'false'); b.setAttribute('aria-label',L(d.n));
       var choices=colorChoices(d.g); b.appendChild(miniIcon(d.t, choices?(choices.indexOf(tokColor)>=0?tokColor:choices[0]):null)); b.appendChild(el('span',null,d.n));
       b.addEventListener('click',function(){ tokType=d.t; $('tokW').value=d.w; $('tokH').value=d.h; var ch=colorChoices(d.g); if(ch && ch.indexOf(tokColor)<0) tokColor=ch[0]; renderPalette(); });
       box.appendChild(b);
@@ -1205,13 +1321,13 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     var cb=$('tokColors'); cb.textContent=''; var ch=colorChoices(TYPE[tokType].g);
     cb.parentNode.querySelector('.lbl').hidden=!ch; cb.hidden=!ch;
     (ch||[]).forEach(function(k){ var s=el('button','sw'); s.type='button'; s.style.background=COL[k]; s.setAttribute('aria-pressed',tokColor===k?'true':'false');
-      s.setAttribute('aria-label',{white:'Weiß (immer)',red:'Rot',green:'Grün',blue:'Blau',yellow:'Gelb'}[k]);
+      s.setAttribute('aria-label',L({white:'Weiß (immer)',red:'Rot',green:'Grün',blue:'Blau',yellow:'Gelb'}[k]));
       s.addEventListener('click',function(){ tokColor=k; renderPalette(); }); cb.appendChild(s); });
   }
   function renderDoorKinds(){
     var box=$('doorKinds'); box.textContent='';
     [{kind:'door',col:null,n:'Tür',bg:'#e8ecef'},{kind:'sec',col:'red',n:'Rote Sicherheitstür',bg:COL.red},{kind:'sec',col:'blue',n:'Blaue Sicherheitstür',bg:COL.blue},{kind:'sec',col:'yellow',n:'Gelbe Sicherheitstür',bg:COL.yellow}].forEach(function(k){
-      var s=el('button','sw'); s.type='button'; s.style.background='repeating-linear-gradient(45deg,'+k.bg+' 0 6px,#2b3036 6px 9px)'; s.setAttribute('aria-label',k.n);
+      var s=el('button','sw'); s.type='button'; s.style.background='repeating-linear-gradient(45deg,'+k.bg+' 0 6px,#2b3036 6px 9px)'; s.setAttribute('aria-label',L(k.n));
       s.setAttribute('aria-pressed',(doorKind.kind===k.kind&&doorKind.col===k.col)?'true':'false');
       s.addEventListener('click',function(){ doorKind={kind:k.kind,col:k.col}; renderDoorKinds(); }); box.appendChild(s);
     });
@@ -1234,7 +1350,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     if(has){ $('bgOpacity').value=cur.bg.opacity==null?0.6:cur.bg.opacity; $('bgSize').value=cur.bg.cw; $('bgX').value=cur.bg.x; $('bgY').value=cur.bg.y; }
   }
   function renderEditor(){
-    $('editTitle').textContent=cur.name||'Ohne Namen'; $('scenName').value=cur.name||''; $('scenNote').value=cur.note||'';
+    $('editTitle').textContent=L(cur.name||'Ohne Namen'); $('scenName').value=cur.name||''; $('scenNote').value=cur.note||'';
     $('gridCols').value=cur.cols; $('gridRows').value=cur.rows;
     renderTools(); renderPalette(); renderDoorKinds(); renderAreaList(); renderBgControls();
   }
@@ -1245,9 +1361,9 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     if(!cur) return;
     var has=!!noteTok; $('noteField').hidden=!has;
     if(has){ var d=TYPE[noteTok.t], A=areaById(cellArea(noteTok.c,noteTok.r));
-      $('noteTarget').textContent='Notiz für: '+d.n+(A?(' in '+A.name):'');
+      $('noteTarget').textContent=L('Notiz für: '+d.n+(A?(' in '+A.name):''));
       $('tokNote').value=noteTok.note||''; }
-    else $('noteTarget').textContent='Tippe auf der Karte auf ein Symbol, zum Beispiel eine Begegnung oder einen Schlüssel.';
+    else $('noteTarget').textContent=L('Tippe auf der Karte auf ein Symbol, zum Beispiel eine Begegnung oder einen Schlüssel.');
   }
   $('tokNote').addEventListener('input',function(){ if(!noteTok) return; noteTok.note=this.value; touch(); draw(); });
   $('scenNote').addEventListener('input',function(){ cur.note=this.value; touch(); });
@@ -1257,7 +1373,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     if(cur.play) cur.play.revealed=cur.play.revealed.filter(function(x){return x!==id;});
     activeAreaId=cur.areas[0]?cur.areas[0].id:null; touch(); renderAreaList(); draw();
   });
-  $('scenName').addEventListener('input',function(){ cur.name=this.value; $('editTitle').textContent=cur.name||'Ohne Namen'; touch(); });
+  $('scenName').addEventListener('input',function(){ cur.name=this.value; $('editTitle').textContent=L(cur.name||'Ohne Namen'); touch(); });
   function resizeGrid(){
     var c=Math.max(4,Math.min(80,+$('gridCols').value||cur.cols)), r=Math.max(4,Math.min(80,+$('gridRows').value||cur.rows));
     cur.cols=c; cur.rows=r;
@@ -1344,7 +1460,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
   }
   if(synth){ try{ synth.getVoices(); synth.onvoiceschanged=function(){}; }catch(e){} }
   function refreshSpeakBtns(){ speakBtns=speakBtns.filter(function(b){ return b.isConnected; });
-    speakBtns.forEach(function(b){ var on=b._text===speakingText; b.textContent=on?'■ Stopp':'▶ Vorlesen'; b.setAttribute('aria-pressed',on?'true':'false'); }); }
+    speakBtns.forEach(function(b){ var on=b._text===speakingText; b.textContent=L(on?'■ Stopp':'▶ Vorlesen'); b.setAttribute('aria-pressed',on?'true':'false'); }); }
   function speak(text){
     if(!synth){ toast('Vorlesen wird von diesem Browser nicht unterstützt.'); return; }
     if(speakingText===text){ synth.cancel(); speakingText=null; refreshSpeakBtns(); return; }
@@ -1362,7 +1478,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     var b=el('button','btn sm speak','▶ Vorlesen'); b.type='button'; b._text=text; b.setAttribute('aria-pressed','false');
     if(!synth){ b.hidden=true; }
     b.addEventListener('click',function(){ speak(text); }); speakBtns.push(b);
-    if(speakingText===text){ b.textContent='■ Stopp'; b.setAttribute('aria-pressed','true'); }
+    if(speakingText===text){ b.textContent=L('■ Stopp'); b.setAttribute('aria-pressed','true'); }
     return b;
   }
   // ---------- Atmosphäre (alles live erzeugt, keine Audiodateien) ----------
@@ -1454,8 +1570,8 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     setTimeout(function(){ a.nodes.forEach(function(n){ try{ n.stop(); }catch(e){} }); a.gain.disconnect(); },1400); }
   function duck(on){ if(!amb||!ac) return; var t=ac.currentTime; amb.gain.gain.cancelScheduledValues(t); amb.gain.gain.setValueAtTime(Math.max(0.0001,amb.gain.gain.value),t); amb.gain.gain.exponentialRampToValueAtTime(on?0.35:1,t+0.4); }
   $('ambToggle').addEventListener('click',function(){
-    if(amb){ stopAmbient(); this.textContent='Atmosphäre an'; this.setAttribute('aria-pressed','false'); }
-    else if(startAmbient()){ this.textContent='Atmosphäre aus'; this.setAttribute('aria-pressed','true'); }
+    if(amb){ stopAmbient(); this.textContent=L('Atmosphäre an'); this.setAttribute('aria-pressed','false'); }
+    else if(startAmbient()){ this.textContent=L('Atmosphäre aus'); this.setAttribute('aria-pressed','true'); }
   });
   document.querySelectorAll('[data-sfx]').forEach(function(b){ b.addEventListener('click',function(){ sfx(b.getAttribute('data-sfx')); }); });
   $('voiceSel').value=voiceMode;
@@ -1463,18 +1579,18 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
 
   function secretTokens(areaId){ return cur.tokens.filter(function(t){ return t.note && cellArea(t.c,t.r)===areaId; }); }
   function renderPlay(){
-    $('playTitle').textContent=cur.name||'Ohne Namen';
+    $('playTitle').textContent=L(cur.name||'Ohne Namen');
     $('showPhotoWrap').hidden=!(cur.bg&&bgImg);
     var box=$('playChips'), ps=playState(); box.textContent='';
     cur.areas.forEach(function(a){
       if(!areaCellCount(a.id)) return;
       var on=ps.revealed.indexOf(a.id)>=0, c=el('button','chip'+(on?' on':'')); c.type='button'; c.setAttribute('aria-pressed',on?'true':'false');
-      c.appendChild(el('span','dot')); c.appendChild(document.createTextNode(a.name||'Gebiet'));
+      c.appendChild(el('span','dot')); c.appendChild(document.createTextNode(L(a.name||'Gebiet')));
       c.addEventListener('click',function(){ reveal(a.id,!on); touch(); renderPlay(); draw(); });
       box.appendChild(c);
     });
     var total=cur.areas.filter(function(a){return areaCellCount(a.id);}).length;
-    $('playStatus').textContent=ps.revealed.length+' von '+total+' aufgedeckt';
+    $('playStatus').textContent=L(ps.revealed.length+' von '+total+' aufgedeckt');
     renderNotes();
   }
   var notesOpen=true;
@@ -1482,7 +1598,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     var p=$('notesPanel'), ps=playState();
     p.hidden=!notesOpen; p.parentNode.classList.toggle('with-notes',notesOpen);
     $('notesToggle').setAttribute('aria-expanded',notesOpen?'true':'false');
-    $('notesToggle').textContent=notesOpen?'Notizen ausblenden':'Notizen';
+    $('notesToggle').textContent=L(notesOpen?'Notizen ausblenden':'Notizen');
     if(!notesOpen) return;
     p.textContent='';
     function block(a, cls, showSecret){
@@ -1516,7 +1632,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
   $('notesToggle').addEventListener('click',function(){ notesOpen=!notesOpen; if(!notesOpen && synth){ synth.cancel(); speakingText=null; } renderNotes(); layout(); });
   $('showPhoto').addEventListener('change',draw);
   twoTap($('resetPlay'),'Alles verdecken?',function(){ resetPlay(); anim={}; renderPlay(); draw(); toast('Neu gestartet. Nur der Startbereich ist sichtbar.'); });
-  $('playBack').addEventListener('click',function(){ stopAmbient(); var b=$('ambToggle'); b.textContent='Atmosphäre an'; b.setAttribute('aria-pressed','false'); if(synth) synth.cancel(); goList(); });
+  $('playBack').addEventListener('click',function(){ stopAmbient(); var b=$('ambToggle'); b.textContent=L('Atmosphäre an'); b.setAttribute('aria-pressed','false'); if(synth) synth.cancel(); goList(); });
   $('fullscreen').addEventListener('click',function(){
     try{ if(document.fullscreenElement){ document.exitFullscreen(); return; }
       var p=document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
@@ -1558,6 +1674,18 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
       scenarios.push(s); return dbPut(s).then(function(){ renderList(); toast('„'+s.name+'“ importiert.'); });
     }).catch(function(){ toast('Diese Datei ist kein Szenario des Kartenaufdeckers.'); });
   });
+
+  // ---------- language switch ----------
+  collectStatic();
+  function applyLang(){
+    applyStatic();
+    var lb=$('langBtn'); lb.textContent=LANG==='de'?'EN':'DE'; lb.setAttribute('aria-label',LANG==='de'?'Switch to English':'Auf Deutsch umschalten');
+    if(mode==='list') renderList();
+    else if(mode==='edit'){ renderEditor(); draw(); }
+    else if(mode==='play'){ renderPlay(); var b=$('ambToggle'); b.textContent=L(amb?'Atmosphäre aus':'Atmosphäre an'); }
+  }
+  $('langBtn').addEventListener('click',function(){ LANG=LANG==='de'?'en':'de'; try{ localStorage.setItem('doomLang',LANG); }catch(e){} applyLang(); });
+  applyLang();
 
   // ---------- boot ----------
   dbAll().then(function(list){
